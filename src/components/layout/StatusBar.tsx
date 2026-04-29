@@ -25,7 +25,7 @@ export function StatusBar() {
           {charCount.toLocaleString()} <Trans>字符</Trans>
         </span>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2" role="status" aria-live="polite" aria-atomic="true">
         {isDirty ? (
           <>
             <Pencil className="h-3 w-3 text-muted-foreground" />

@@ -1,0 +1,9 @@
+[package]
+name = "migration"
+version = "0.1.0"
+edition.workspace = true
+
+[dependencies]
+sea-orm = { workspace = true }
+sea-orm-migration = { workspace = true }
+entity = { path = "../entity" }

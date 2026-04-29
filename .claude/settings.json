@@ -1,0 +1,35 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'CHANGED=$(git diff --name-only HEAD 2>/dev/null | grep -E \"^(src/|src-tauri/src/)\" | head -1); if [ -n \"$CHANGED\" ]; then echo \"[dev-workflow] 检测到 src/ 或 src-tauri/src/ 下有代码变更，请运行 /simplify 检查代码质量\"; fi'"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(pnpm format:*)",
+      "Bash(pnpm lint:*)",
+      "Bash(pnpm lingui:*)",
+      "Bash(pnpm tauri:*)",
+      "Bash(pnpm install:*)",
+      "Bash(pnpm approve-builds:*)",
+      "Bash(pnpm commitlint:*)",
+      "Bash(pnpm changelog:latest)",
+      "Bash(pnpm lefthook:*)",
+      "Bash(pnpm config:*)",
+      "Bash(cargo fmt:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo build:*)",
+      "Bash(cargo clean:*)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs"
+    ]
+  }
+}

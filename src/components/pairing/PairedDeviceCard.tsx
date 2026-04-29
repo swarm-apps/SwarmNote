@@ -1,71 +1,66 @@
 import { useLingui } from "@lingui/react/macro";
-import { Loader2, Unlink } from "lucide-react";
-import type { PairedDeviceInfo } from "@/commands/pairing";
-import { unpairDevice } from "@/commands/pairing";
+import { Unlink } from "lucide-react";
+import { useState } from "react";
+import type { Device } from "@/commands/pairing";
 import { ConnectionBadge } from "@/components/pairing/ConnectionBadge";
-import { Button } from "@/components/ui/button";
-import { useAsyncAction } from "@/hooks/useAsyncAction";
-import { formatDate, formatRelativeTime } from "@/lib/dateUtils";
+import { formatRelativeTime } from "@/lib/dateUtils";
 import { cn } from "@/lib/utils";
-import { DeviceInfoCard } from "./DeviceInfoCard";
+import { DeviceAvatar } from "./DeviceAvatar";
+import { UnpairConfirmDialog } from "./UnpairConfirmDialog";
 
 interface PairedDeviceCardProps {
-  device: PairedDeviceInfo;
+  device: Device;
   onUnpaired?: () => void;
+  isLast?: boolean;
 }
 
-export function PairedDeviceCard({ device, onUnpaired }: PairedDeviceCardProps) {
+export function PairedDeviceCard({ device, onUnpaired, isLast }: PairedDeviceCardProps) {
   const { t } = useLingui();
-  const { loading, run } = useAsyncAction();
-  const isOnline = device.isOnline ?? false;
-
-  async function handleUnpair() {
-    await run(async () => {
-      await unpairDevice(device.peerId);
-      onUnpaired?.();
-    });
-  }
+  const isOnline = device.status === "online";
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   return (
-    <div className="flex items-center justify-between rounded-lg border p-4">
-      <DeviceInfoCard
-        hostname={device.hostname}
-        os={device.os}
-        platform={device.platform}
-        className="border-0 p-0"
+    <>
+      <div
+        className={cn(
+          "group flex items-center gap-2.5 px-3.5 py-2.5 transition-colors hover:bg-muted/50",
+          !isLast && "border-b",
+        )}
       >
-        <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              "inline-block h-2 w-2 rounded-full",
-              isOnline ? "bg-green-500" : "bg-muted-foreground/30",
+        <DeviceAvatar os={device.os} />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13px] font-medium">{device.name ?? device.hostname}</span>
+            {isOnline && device.connection && (
+              <ConnectionBadge type={device.connection} latency={device.latency} />
             )}
-          />
-          {isOnline && device.connection ? (
-            <ConnectionBadge type={device.connection} latency={device.rttMs} />
-          ) : (
-            device.rttMs != null && (
-              <span className="text-xs text-muted-foreground">{device.rttMs}ms</span>
-            )
-          )}
+          </div>
+          <div className="text-[11px] text-muted-foreground">
+            {isOnline
+              ? `${device.name ? `${device.hostname} · ` : ""}${device.os} · ${device.platform}`
+              : `${device.name ? `${device.hostname} · ` : ""}${device.os} · ${device.platform} · ${t`最后在线 ${formatRelativeTime(device.lastSeen ?? null)}`}`}
+          </div>
         </div>
-        <div className="text-xs text-muted-foreground">
-          {isOnline
-            ? `配对于 ${formatDate(device.pairedAt)}`
-            : `最后在线 ${formatRelativeTime(device.lastSeen)}`}
-        </div>
-      </DeviceInfoCard>
+        <button
+          type="button"
+          onClick={() => setConfirmOpen(true)}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground/60 opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+          title={t`取消配对`}
+        >
+          <Unlink className="h-3.5 w-3.5" />
+        </button>
+      </div>
 
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={handleUnpair}
-        disabled={loading}
-        className="shrink-0 text-muted-foreground hover:text-destructive"
-        title={t`取消配对`}
-      >
-        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unlink className="h-4 w-4" />}
-      </Button>
-    </div>
+      <UnpairConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        deviceName={device.name ?? device.hostname}
+        peerId={device.peerId}
+        onConfirm={() => {
+          setConfirmOpen(false);
+          onUnpaired?.();
+        }}
+      />
+    </>
   );
 }

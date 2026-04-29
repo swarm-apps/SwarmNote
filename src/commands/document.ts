@@ -49,6 +49,26 @@ export async function renameDocument(
   });
 }
 
+export interface MoveDocumentResult {
+  new_rel_path: string;
+  is_dir: boolean;
+}
+
+/**
+ * Atomically move a document or folder on disk and update the DB + open Y.Docs.
+ * `toRelPath` must be the full target path (including filename/dirname), not
+ * the destination parent directory. Rejects folder-into-self and existing
+ * targets.
+ */
+export async function moveDocument(
+  fromRelPath: string,
+  toRelPath: string,
+): Promise<MoveDocumentResult> {
+  return invoke<MoveDocumentResult>("move_document", {
+    input: { from_rel_path: fromRelPath, to_rel_path: toRelPath },
+  });
+}
+
 export async function saveMedia(
   relPath: string,
   fileName: string,

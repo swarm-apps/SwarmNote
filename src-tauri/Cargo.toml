@@ -1,17 +1,9 @@
-[workspace]
-members = [".", "entity", "migration"]
-resolver = "2"
-
-[workspace.dependencies]
-sea-orm = { version = "~2.0.0-rc", features = ["sqlx-sqlite", "runtime-tokio", "macros", "with-uuid", "with-chrono"] }
-uuid = { version = "1", features = ["v7", "serde"] }
-
 [package]
 name = "swarmnote"
-version = "0.2.1"
+version = "0.3.0"
 description = "A Tauri App"
 authors = ["you"]
-edition = "2021"
+edition.workspace = true
 
 [lib]
 # The `_lib` suffix may seem redundant but it is necessary
@@ -24,43 +16,45 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
+# Tauri
 tauri = { version = "2", features = ["tray-icon", "image-png", "protocol-asset"] }
 tauri-plugin-opener = "2"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
-swarm-p2p-core = { path = "../libs/core" }
-log = "0.4"
-chrono = { version = "0.4", features = ["serde"] }
-hostname = "0.4"
-thiserror = "2"
-directories = "6"
-sea-orm = { workspace = true }
-entity = { path = "entity" }
-migration = { path = "migration" }
-uuid = { workspace = true }
-tokio = { version = "1", features = ["sync", "time", "macros"] }
-tokio-util = "0.7"
-dashmap = "6"
-sha2 = "0.10"
-serde_bytes = "0.11"
-blake3 = "1"
 tauri-plugin-store = "2.4.2"
 tauri-plugin-dialog = "2.6.0"
 tauri-plugin-notification = "2"
 tauri-plugin-mcp-bridge = "0.10"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
+
+# Core (platform-independent business logic)
+swarmnote-core = { path = "../crates/core" }
+
+# libp2p keypair types surface through here for pairing commands
+swarm-p2p-core = { path = "../libs/core" }
+
+# Sibling crates
+entity = { path = "../crates/entity" }
+
+# Platform-specific: keychain (DesktopKeychain) + file watcher (notify)
+keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
 notify = { version = "8", features = [] }
 notify-debouncer-mini = "0.6"
-rand = "0.9"
-tracing = "0.1.44"
-tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
-regex-lite = "0.1"
-pathdiff = "0.2"
-yrs = { version = "0.25", features = ["sync"] }
-yrs-blocknote = { path = "../crates/yrs-blocknote", features = ["uuid"] }
+
+# Helpers
+async-trait = { workspace = true }
+blake3 = { workspace = true }
+chrono = { workspace = true }
+directories = "6"
+log = { workspace = true }
+sea-orm = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+uuid = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"
-
+migration = { path = "../crates/migration" }

@@ -13,10 +13,45 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
+#. js-lingui-explicit-id
+#: src/lib/dateUtils.ts:4
+msgid "从未在线"
+msgstr "从未在线"
+
+#. js-lingui-explicit-id
+#: src/lib/dateUtils.ts:10
+msgid "刚刚"
+msgstr "刚刚"
+
+#. js-lingui-explicit-id
+#: src/lib/dateUtils.ts:11
+msgid "{minutes} 分钟前"
+msgstr "{minutes} 分钟前"
+
+#. js-lingui-explicit-id
+#: src/lib/dateUtils.ts:13
+msgid "{hours} 小时前"
+msgstr "{hours} 小时前"
+
+#. js-lingui-explicit-id
+#: src/lib/dateUtils.ts:15
+msgid "{days} 天前"
+msgstr "{days} 天前"
+
+#. js-lingui-explicit-id
+#: src/hooks/useKeyboardShortcuts.ts:30
+msgid "新建笔记"
+msgstr "新建笔记"
+
 #. placeholder {0}: event.payload.relPath
-#: src/components/editor/NoteEditor.tsx:238
+#: src/components/editor/NoteEditor.tsx:248
 msgid "\"{0}\" 已被外部修改。是否重新加载？当前未保存的编辑将丢失。"
 msgstr "\"{0}\" 已被外部修改。是否重新加载？当前未保存的编辑将丢失。"
+
+#. placeholder {0}: pairedDevices.length
+#: src/routes/settings/devices.tsx:217
+msgid "{0} 台"
+msgstr "{0} 台"
 
 #: src/routes/settings/devices.tsx:81
 #: src/routes/settings/devices.tsx:111
@@ -24,40 +59,47 @@ msgstr "\"{0}\" 已被外部修改。是否重新加载？当前未保存的编�
 #~ msgstr "{0} 台设备"
 
 #. placeholder {0}: onlineDevices.length
-#: src/components/workspace/WorkspacePicker.tsx:121
+#: src/components/workspace/WorkspacePicker.tsx:84
 msgid "{0} 台设备在线，可同步工作区"
 msgstr "{0} 台设备在线，可同步工作区"
 
+#. placeholder {0}: formatSeconds(remaining)
+#: src/components/pairing/CodePairingCard.tsx:89
+msgid "{0} 后过期"
+msgstr "{0} 后过期"
+
+#. placeholder {0}: item.ws.docCount
 #. placeholder {0}: ws.docCount
-#: src/components/workspace/WorkspaceSyncDialog.tsx:290
+#: src/components/workspace/WorkspaceSyncDialog.tsx:109
+#: src/components/workspace/WorkspaceSyncDialog.tsx:345
 msgid "{0} 篇文档"
 msgstr "{0} 篇文档"
 
-#. placeholder {0}: activeSync.completed
-#. placeholder {1}: activeSync.total
 #: src/components/workspace/WorkspaceSyncDialog.tsx:75
-msgid "{0}/{1} 篇文档"
-msgstr "{0}/{1} 篇文档"
+#~ msgid "{0}/{1} 篇文档"
+#~ msgstr "{0}/{1} 篇文档"
 
 #: src/routes/settings/devices.tsx:14
-msgid "{count} 台设备"
-msgstr "{count} 台设备"
+#~ msgid "{count} 台设备"
+#~ msgstr "{count} 台设备"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:358
+#: src/components/workspace/WorkspaceSyncDialog.tsx:418
 msgid "{doneCount} 个成功，{errorCount} 个失败"
 msgstr "{doneCount} 个成功，{errorCount} 个失败"
 
-#. placeholder {0}: syncState.completed
-#. placeholder {1}: syncState.total
 #: src/components/layout/SyncStatusBar.tsx:37
-msgid "{peerCount} 台 · 同步中 {0}/{1}"
-msgstr "{peerCount} 台 · 同步中 {0}/{1}"
+#~ msgid "{peerCount} 台 · 同步中 {0}/{1}"
+#~ msgstr "{peerCount} 台 · 同步中 {0}/{1}"
 
-#: src/components/layout/SyncStatusBar.tsx:45
+#: src/components/layout/SyncStatusBar.tsx:35
+msgid "{peerCount} 台 · 同步中 {completed}/{total}"
+msgstr "{peerCount} 台 · 同步中 {completed}/{total}"
+
+#: src/components/layout/SyncStatusBar.tsx:43
 msgid "{peerCount} 台设备在线"
 msgstr "{peerCount} 台设备在线"
 
-#: src/components/layout/SyncStatusBar.tsx:41
+#: src/components/layout/SyncStatusBar.tsx:39
 msgid "{peerCount} 台设备在线 · 已同步"
 msgstr "{peerCount} 台设备在线 · 已同步"
 
@@ -65,15 +107,15 @@ msgstr "{peerCount} 台设备在线 · 已同步"
 msgid "P2P 同步"
 msgstr "P2P 同步"
 
-#: src/routes/settings/sync.tsx:30
+#: src/routes/settings/network.tsx:26
 msgid "P2P 网络"
 msgstr "P2P 网络"
 
 #: src/routes/settings/sync.tsx:21
-msgid "P2P 网络状态与工作区同步"
-msgstr "P2P 网络状态与工作区同步"
+#~ msgid "P2P 网络状态与工作区同步"
+#~ msgstr "P2P 网络状态与工作区同步"
 
-#: src/components/onboarding/PairingStep.tsx:165
+#: src/components/onboarding/PairingStep.tsx:172
 msgid "P2P 节点启动失败"
 msgstr "P2P 节点启动失败"
 
@@ -82,8 +124,8 @@ msgid "P2P 节点未运行"
 msgstr "P2P 节点未运行"
 
 #: src/routes/settings/about.tsx:82
-msgid "SwarmNote 版本与设备信息"
-msgstr "SwarmNote 版本与设备信息"
+#~ msgid "SwarmNote 版本与设备信息"
+#~ msgstr "SwarmNote 版本与设备信息"
 
 #: src/components/onboarding/DeviceNameStep.tsx:58
 msgid "上一步"
@@ -95,9 +137,13 @@ msgstr "下一步"
 
 #: src/components/upgrade/ForceUpdateDialog.tsx:90
 #: src/components/upgrade/PromptUpdateDialog.tsx:96
-#: src/routes/settings/about.tsx:252
+#: src/routes/settings/about.tsx:184
 msgid "下载中..."
 msgstr "下载中..."
+
+#: src/routes/settings/general.tsx:52
+msgid "中文"
+msgstr "中文"
 
 #: src/components/pairing/ConnectionBadge.tsx:40
 msgid "中继"
@@ -111,13 +157,26 @@ msgstr "为你的设备取个名字，方便在 P2P 网络中识别。"
 #~ msgid "主题"
 #~ msgstr "主题"
 
-#: src/components/settings/WorkspaceSyncList.tsx:80
+#: src/components/settings/WorkspaceSyncList.tsx:75
 msgid "仅本地"
 msgstr "仅本地"
 
+#: src/routes/workspace-manager.tsx:73
+msgid "从列表移除"
+msgstr "从列表移除"
+
+#. placeholder {0}: onlineDevices.length
+#: src/routes/workspace-manager.tsx:283
+msgid "从已配对设备同步工作区到本地。{0} 台设备在线。"
+msgstr "从已配对设备同步工作区到本地。{0} 台设备在线。"
+
 #: src/components/onboarding/CompleteStep.tsx:36
-msgid "你可以在 Workspace Picker 中选择要同步的工作区"
-msgstr "你可以在 Workspace Picker 中选择要同步的工作区"
+#~ msgid "你可以在 Workspace Picker 中选择要同步的工作区"
+#~ msgstr "你可以在 Workspace Picker 中选择要同步的工作区"
+
+#: src/components/onboarding/CompleteStep.tsx:36
+msgid "你可以在工作区管理窗口中选择要同步的工作区"
+msgstr "你可以在工作区管理窗口中选择要同步的工作区"
 
 #: src/components/onboarding/CompleteStep.tsx:38
 msgid "你可以稍后在设置 → 设备中配对设备"
@@ -132,17 +191,20 @@ msgid "你的设备身份已建立，可以开始使用 SwarmNote 了。"
 msgstr "你的设备身份已建立，可以开始使用 SwarmNote 了。"
 
 #: src/routes/settings/devices.tsx:136
-msgid "使用配对码与远程设备配对"
-msgstr "使用配对码与远程设备配对"
+#~ msgid "使用配对码与远程设备配对"
+#~ msgstr "使用配对码与远程设备配对"
 
 #: src/components/onboarding/PathChoiceStep.tsx:37
 msgid "全新开始"
 msgstr "全新开始"
 
-#: src/routes/settings.tsx:20
-#: src/routes/settings/about.tsx:79
+#: src/routes/settings.tsx:29
 msgid "关于"
 msgstr "关于"
+
+#: src/components/pairing/CodePairingCard.tsx:72
+msgid "关闭"
+msgstr "关闭"
 
 #: src/components/settings/NetworkStatusCard.tsx:121
 msgid "关闭 P2P 网络将断开与所有设备的连接，笔记将停止同步。"
@@ -152,13 +214,23 @@ msgstr "关闭 P2P 网络将断开与所有设备的连接，笔记将停止同�
 msgid "关闭网络"
 msgstr "关闭网络"
 
-#: src/components/workspace/WorkspacePicker.tsx:130
+#. placeholder {0}: formatRelativeTime(device.lastSeen ?? null)
+#: src/components/pairing/PairedDeviceCard.tsx:41
+msgid "最后在线 {0}"
+msgstr "最后在线 {0}"
+
+#: src/components/workspace/WorkspacePicker.tsx:93
 msgid "最近打开"
 msgstr "最近打开"
 
-#: src/components/layout/CommandPalette.tsx:63
+#: src/components/layout/CommandPalette.tsx:56
 msgid "最近文件"
 msgstr "最近文件"
+
+#. placeholder {0}: item.ws.docCount
+#: src/components/workspace/WorkspaceSyncDialog.tsx:114
+msgid "准备同步 · {0} 篇文档"
+msgstr "准备同步 · {0} 篇文档"
 
 #: src/components/onboarding/CompleteStep.tsx:32
 msgid "准备就绪!"
@@ -168,83 +240,123 @@ msgstr "准备就绪!"
 #~ msgid "切换主题"
 #~ msgstr "切换主题"
 
-#: src/components/layout/CommandPalette.tsx:54
+#: src/lib/commands.ts:51
 msgid "切换侧边栏"
 msgstr "切换侧边栏"
+
+#: src/routes/workspace-manager.tsx:258
+msgid "创建"
+msgstr "创建"
 
 #: src/components/layout/EmptyState.tsx:20
 msgid "创建你的第一篇笔记，开始记录想法"
 msgstr "创建你的第一篇笔记，开始记录想法"
 
-#: src/components/workspace/WorkspacePicker.tsx:101
+#: src/components/workspace/WorkspacePicker.tsx:64
 msgid "创建新工作区"
 msgstr "创建新工作区"
 
-#: src/components/filetree/FileTree.tsx:71
+#: src/components/filetree/FileTree.tsx:83
 #: src/components/filetree/FileTreeContextMenu.tsx:57
 msgid "删除"
 msgstr "删除"
 
-#: src/components/onboarding/PairingStep.tsx:285
-#: src/components/pairing/CodePairingCard.tsx:188
+#: src/routes/settings/devices.tsx:254
+msgid "刷新"
+msgstr "刷新"
+
+#: src/components/onboarding/PairingStep.tsx:292
 msgid "刷新码"
 msgstr "刷新码"
 
+#: src/components/editor/NoteEditor.tsx:101
+msgid "加载中..."
+msgstr "加载中..."
+
 #: src/routes/settings/about.tsx:216
-msgid "去中心化 P2P 笔记应用"
-msgstr "去中心化 P2P 笔记应用"
+#~ msgid "去中心化 P2P 笔记应用"
+#~ msgstr "去中心化 P2P 笔记应用"
+
+#: src/routes/settings/about.tsx:69
+msgid "去中心化、本地优先的 P2P 笔记应用"
+msgstr "去中心化、本地优先的 P2P 笔记应用"
 
 #: src/components/onboarding/WelcomeStep.tsx:18
 msgid "去中心化、本地优先的笔记应用，通过 P2P 网络在设备间安全同步。"
 msgstr "去中心化、本地优先的笔记应用，通过 P2P 网络在设备间安全同步。"
 
+#: src/routes/settings/about.tsx:123
+msgid "反馈"
+msgstr "反馈"
+
 #: src/components/upgrade/PromptUpdateDialog.tsx:47
 msgid "发现新版本"
 msgstr "发现新版本"
 
-#: src/components/filetree/FileTree.tsx:72
-#: src/components/onboarding/PairingStep.tsx:264
-#: src/components/onboarding/PairingStep.tsx:298
-#: src/components/pairing/CodePairingCard.tsx:161
-#: src/components/pairing/CodePairingCard.tsx:202
+#: src/components/filetree/FileTree.tsx:84
+#: src/components/onboarding/PairingStep.tsx:271
+#: src/components/onboarding/PairingStep.tsx:305
+#: src/components/pairing/FoundDeviceDialog.tsx:72
+#: src/components/pairing/InputCodeDialog.tsx:89
+#: src/components/pairing/UnpairConfirmDialog.tsx:55
 #: src/components/settings/NetworkStatusCard.tsx:125
-#: src/components/workspace/WorkspaceSyncDialog.tsx:324
+#: src/components/workspace/WorkspaceSyncDialog.tsx:379
 msgid "取消"
 msgstr "取消"
 
-#: src/components/pairing/PairedDeviceCard.tsx:65
+#: src/components/pairing/UnpairConfirmDialog.tsx:50
+msgid "取消与 {deviceName} 的配对后，将停止与该设备的笔记同步。"
+msgstr "取消与 {deviceName} 的配对后，将停止与该设备的笔记同步。"
+
+#: src/components/pairing/PairedDeviceCard.tsx:48
 msgid "取消配对"
 msgstr "取消配对"
 
-#: src/components/settings/WorkspaceSyncList.tsx:105
-msgid "各工作区的同步状态"
-msgstr "各工作区的同步状态"
+#: src/components/pairing/UnpairConfirmDialog.tsx:64
+#~ msgid "取消配对中..."
+#~ msgstr "取消配对中..."
 
-#: src/routes/settings.tsx:18
-#: src/routes/settings/sync.tsx:18
+#: src/components/pairing/UnpairConfirmDialog.tsx:53
+#~ msgid "取消配对后将停止与该设备的笔记同步。"
+#~ msgstr "取消配对后将停止与该设备的笔记同步。"
+
+#: src/components/layout/EditorPane.tsx:47
+#: src/routes/settings/general.tsx:77
+msgid "可读行宽"
+msgstr "可读行宽"
+
+#: src/components/settings/WorkspaceSyncList.tsx:102
+#~ msgid "各工作区的同步状态"
+#~ msgstr "各工作区的同步状态"
+
+#: src/routes/workspace-manager.tsx:295
 msgid "同步"
 msgstr "同步"
 
 #. placeholder {0}: syncState.completed
 #. placeholder {1}: syncState.total
-#: src/components/settings/WorkspaceSyncList.tsx:29
+#: src/components/settings/WorkspaceSyncList.tsx:25
 msgid "同步中 · {0}/{1} 篇"
 msgstr "同步中 · {0}/{1} 篇"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:309
+#: src/components/workspace/WorkspaceSyncDialog.tsx:364
 msgid "同步位置"
 msgstr "同步位置"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:85
-#: src/components/workspace/WorkspaceSyncDialog.tsx:206
+#: src/components/workspace/WorkspaceSyncDialog.tsx:264
 msgid "同步完成"
 msgstr "同步完成"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:208
+#. placeholder {0}: item.ws.docCount
+#: src/components/workspace/WorkspaceSyncDialog.tsx:122
+msgid "同步完成 · {0} 篇文档"
+msgstr "同步完成 · {0} 篇文档"
+
+#: src/components/workspace/WorkspaceSyncDialog.tsx:266
 msgid "同步工作区"
 msgstr "同步工作区"
 
-#: src/components/workspace/WorkspacePicker.tsx:118
+#: src/components/workspace/WorkspacePicker.tsx:81
 msgid "同步已配对设备工作区"
 msgstr "同步已配对设备工作区"
 
@@ -252,11 +364,15 @@ msgstr "同步已配对设备工作区"
 #~ msgid "同步未启用"
 #~ msgstr "同步未启用"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:343
+#: src/routes/workspace-manager.tsx:280
+msgid "同步远程工作区"
+msgstr "同步远程工作区"
+
+#: src/components/workspace/WorkspaceSyncDialog.tsx:398
 msgid "后台运行"
 msgstr "后台运行"
 
-#: src/components/settings/WorkspaceSyncList.tsx:114
+#: src/components/settings/WorkspaceSyncList.tsx:101
 msgid "启动 P2P 网络后即可同步工作区"
 msgstr "启动 P2P 网络后即可同步工作区"
 
@@ -264,34 +380,75 @@ msgstr "启动 P2P 网络后即可同步工作区"
 msgid "启动中..."
 msgstr "启动中..."
 
+#: src/routes/settings/general.tsx:94
+msgid "启动时自动打开上次使用的工作区"
+msgstr "启动时自动打开上次使用的工作区"
+
 #: src/components/settings/NetworkStatusCard.tsx:108
 msgid "启动网络"
 msgstr "启动网络"
 
+#: src/routes/settings/general.tsx:88
+msgid "启动行为"
+msgstr "启动行为"
+
+#: src/components/layout/TitleBar.tsx:114
+msgid "命令面板"
+msgstr "命令面板"
+
 #: src/components/pairing/CodePairingCard.tsx:116
-msgid "在不同网络环境下，使用配对码连接设备"
-msgstr "在不同网络环境下，使用配对码连接设备"
+#~ msgid "在不同网络环境下，使用配对码连接设备"
+#~ msgstr "在不同网络环境下，使用配对码连接设备"
+
+#: src/components/pairing/CodePairingCard.tsx:93
+msgid "在另一台设备输入此码"
+msgstr "在另一台设备输入此码"
 
 #: src/routes/settings/devices.tsx:123
-msgid "在局域网中发现可配对设备"
-msgstr "在局域网中发现可配对设备"
+#~ msgid "在局域网中发现可配对设备"
+#~ msgstr "在局域网中发现可配对设备"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:272
+#: src/routes/workspace-manager.tsx:255
+msgid "在指定文件夹下创建一个新的工作区。"
+msgstr "在指定文件夹下创建一个新的工作区。"
+
+#: src/routes/workspace-manager.tsx:64
+msgid "在文件管理器中打开"
+msgstr "在文件管理器中打开"
+
+#: src/components/editor/DocumentOutline.tsx:181
+msgid "在文档中添加标题即可看到大纲导航"
+msgstr "在文档中添加标题即可看到大纲导航"
+
+#: src/components/workspace/WorkspaceSyncDialog.tsx:328
 msgid "在线"
 msgstr "在线"
 
-#: src/components/onboarding/PairingStep.tsx:282
-#: src/components/pairing/CodePairingCard.tsx:185
+#: src/components/pairing/CodePairingCard.tsx:101
+#: src/components/pairing/CodePairingCard.tsx:104
+msgid "复制"
+msgstr "复制"
+
+#: src/routes/workspace-manager.tsx:68
+msgid "复制路径"
+msgstr "复制路径"
+
+#: src/components/onboarding/PairingStep.tsx:289
 msgid "复制配对码"
 msgstr "复制配对码"
 
-#: src/components/settings/GeneralSettings.tsx:57
+#: src/routes/settings/general.tsx:42
+#: src/routes/settings/general.tsx:59
 msgid "外观"
 msgstr "外观"
 
 #: src/components/onboarding/WelcomeStep.tsx:25
 msgid "多端协作"
 msgstr "多端协作"
+
+#: src/components/layout/TitleBar.tsx:94
+msgid "大纲"
+msgstr "大纲"
 
 #: src/components/layout/StatusBar.tsx:25
 msgid "字符"
@@ -301,13 +458,20 @@ msgstr "字符"
 msgid "安全加密"
 msgstr "安全加密"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:364
+#: src/components/workspace/WorkspaceSyncDialog.tsx:424
 msgid "完成"
 msgstr "完成"
 
+#: src/routes/workspace-manager.tsx:266
+msgid "将一个本地文件夹作为工作区打开。"
+msgstr "将一个本地文件夹作为工作区打开。"
+
+#: src/routes/workspace-manager.tsx:285
+msgid "将已配对设备的工作区同步到本地。需先启动 P2P 网络。"
+msgstr "将已配对设备的工作区同步到本地。需先启动 P2P 网络。"
+
 #. placeholder {0}: formatSeconds(remaining)
-#: src/components/onboarding/PairingStep.tsx:273
-#: src/components/pairing/CodePairingCard.tsx:175
+#: src/components/onboarding/PairingStep.tsx:280
 msgid "将此配对码告知对方设备，配对码将在 {0} 后过期"
 msgstr "将此配对码告知对方设备，配对码将在 {0} 后过期"
 
@@ -315,17 +479,26 @@ msgstr "将此配对码告知对方设备，配对码将在 {0} 后过期"
 msgid "局域网"
 msgstr "局域网"
 
-#: src/components/layout/TitleBar.tsx:59
+#: src/components/layout/TitleBar.tsx:77
 msgid "展开侧边栏"
 msgstr "展开侧边栏"
 
-#: src/components/settings/WorkspaceSyncList.tsx:102
-msgid "工作区同步"
-msgstr "工作区同步"
+#: src/components/settings/WorkspaceSyncList.tsx:99
+#~ msgid "工作区同步"
+#~ msgstr "工作区同步"
 
-#: src/components/workspace/WorkspacePicker.tsx:161
+#: src/components/workspace/WorkspacePicker.tsx:118
 msgid "工作区管理"
 msgstr "工作区管理"
+
+#: src/components/workspace/WorkspacePopover.tsx:78
+msgid "工作区管理..."
+msgstr "工作区管理..."
+
+#. placeholder {0}: device.name ?? device.hostname
+#: src/components/pairing/NearbyDeviceCard.tsx:35
+msgid "已与 {0} 配对"
+msgstr "已与 {0} 配对"
 
 #: src/components/layout/StatusBar.tsx:40
 msgid "已保存"
@@ -335,27 +508,31 @@ msgstr "已保存"
 msgid "已停止"
 msgstr "已停止"
 
-#: src/routes/settings/about.tsx:259
+#: src/components/pairing/UnpairConfirmDialog.tsx:37
+msgid "已取消与 {deviceName} 的配对"
+msgstr "已取消与 {deviceName} 的配对"
+
+#: src/components/workspace/WorkspaceSyncDialog.tsx:350
+msgid "已同步"
+msgstr "已同步"
+
+#: src/components/settings/WorkspaceSyncList.tsx:57
+msgid "已同步 · 最后同步 {timeStr}"
+msgstr "已同步 · 最后同步 {timeStr}"
+
+#: src/routes/settings/about.tsx:61
 msgid "已是最新"
 msgstr "已是最新"
 
 #: src/routes/settings/about.tsx:212
-msgid "已是最新版本"
-msgstr "已是最新版本"
-
-#: src/components/workspace/WorkspaceSyncDialog.tsx:295
-msgid "已同步"
-msgstr "已同步"
-
-#: src/components/settings/WorkspaceSyncList.tsx:61
-msgid "已同步 · 最后同步 {timeStr}"
-msgstr "已同步 · 最后同步 {timeStr}"
+#~ msgid "已是最新版本"
+#~ msgstr "已是最新版本"
 
 #: src/components/layout/Sidebar.tsx:156
 #: src/components/layout/SyncStatusBar.tsx:33
 #: src/components/layout/SyncStatusBar.tsx:45
-msgid "已连接"
-msgstr "已连接"
+#~ msgid "已连接"
+#~ msgstr "已连接"
 
 #: src/components/layout/Sidebar.tsx:155
 #~ msgid "已连接 · {0} 台设备在线"
@@ -369,7 +546,12 @@ msgstr "已连接 {connectedCount} 台设备"
 msgid "已连接，暂无设备在线"
 msgstr "已连接，暂无设备在线"
 
-#: src/routes/settings/devices.tsx:81
+#. placeholder {0}: onlineDevices.length
+#: src/components/layout/SyncStatusBar.tsx:68
+msgid "已连接设备 ({0})"
+msgstr "已连接设备 ({0})"
+
+#: src/routes/settings/devices.tsx:213
 msgid "已配对设备"
 msgstr "已配对设备"
 
@@ -377,47 +559,55 @@ msgstr "已配对设备"
 msgid "开始使用"
 msgstr "开始使用"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:327
+#: src/components/workspace/WorkspaceSyncDialog.tsx:382
 msgid "开始同步"
 msgstr "开始同步"
 
-#: src/routes/settings/sync.tsx:55
+#: src/routes/settings/network.tsx:39
 msgid "开机自动启动网络"
 msgstr "开机自动启动网络"
 
 #: src/routes/settings/about.tsx:189
-msgid "开源仓库"
-msgstr "开源仓库"
+#~ msgid "开源仓库"
+#~ msgstr "开源仓库"
 
 #: src/components/upgrade/ForceUpdateDialog.tsx:51
 msgid "当前版本 {currentVersion} 已不再支持，请更新到 {latestVersion}"
 msgstr "当前版本 {currentVersion} 已不再支持，请更新到 {latestVersion}"
 
+#: src/routes/settings/devices.tsx:186
+msgid "当前设备"
+msgstr "当前设备"
+
 #: src/routes/settings/about.tsx:150
-msgid "当前运行设备的详细信息"
-msgstr "当前运行设备的详细信息"
+#~ msgid "当前运行设备的详细信息"
+#~ msgstr "当前运行设备的详细信息"
 
 #: src/components/layout/Sidebar.tsx:135
 #~ msgid "快速笔记"
 #~ msgstr "快速笔记"
 
+#: src/routes/settings/general.tsx:93
+msgid "恢复上次工作区"
+msgstr "恢复上次工作区"
+
 #: src/components/onboarding/PathChoiceStep.tsx:60
 msgid "我已有其他设备，想要同步笔记"
 msgstr "我已有其他设备，想要同步笔记"
 
-#: src/components/layout/Sidebar.tsx:71
-msgid "我的笔记"
-msgstr "我的笔记"
+#: src/components/layout/Sidebar.tsx:129
+#~ msgid "我的笔记"
+#~ msgstr "我的笔记"
 
 #: src/components/onboarding/DeviceNameStep.tsx:49
 msgid "我的设备"
 msgstr "我的设备"
 
 #: src/components/pairing/CodePairingCard.tsx:128
-msgid "或 输入配对码连接"
-msgstr "或 输入配对码连接"
+#~ msgid "或 输入配对码连接"
+#~ msgstr "或 输入配对码连接"
 
-#: src/components/onboarding/PairingStep.tsx:214
+#: src/components/onboarding/PairingStep.tsx:221
 msgid "或使用配对码"
 msgstr "或使用配对码"
 
@@ -425,15 +615,33 @@ msgstr "或使用配对码"
 msgid "或按 {modKey}N 快速创建"
 msgstr "或按 {modKey}N 快速创建"
 
-#: src/routes/settings/sync.tsx:58
+#: src/components/workspace/WorkspaceSyncDialog.tsx:131
+#: src/routes/workspace-manager.tsx:273
+msgid "打开"
+msgstr "打开"
+
+#: src/components/workspace/WorkspacePicker.tsx:47
+#: src/routes/workspace-manager.tsx:271
+msgid "打开工作区文件夹"
+msgstr "打开工作区文件夹"
+
+#: src/routes/settings/network.tsx:40
 msgid "打开工作区时自动启动 P2P 节点"
 msgstr "打开工作区时自动启动 P2P 节点"
 
-#: src/components/workspace/WorkspacePicker.tsx:105
+#: src/components/workspace/WorkspacePicker.tsx:68
 msgid "打开文件夹"
 msgstr "打开文件夹"
 
-#: src/components/layout/CommandPalette.tsx:59
+#: src/components/editor/DocumentOutline.tsx:170
+msgid "打开文档以查看大纲"
+msgstr "打开文档以查看大纲"
+
+#: src/routes/workspace-manager.tsx:265
+msgid "打开本地工作区"
+msgstr "打开本地工作区"
+
+#: src/lib/commands.ts:61
 msgid "打开设置"
 msgstr "打开设置"
 
@@ -441,43 +649,68 @@ msgstr "打开设置"
 msgid "打洞"
 msgstr "打洞"
 
-#: src/components/layout/TitleBar.tsx:85
-msgid "搜索..."
-msgstr "搜索..."
+#: src/components/pairing/FoundDeviceDialog.tsx:53
+msgid "找到设备"
+msgstr "找到设备"
 
-#: src/components/layout/CommandPalette.tsx:46
+#: src/routes/settings/general.tsx:133
+#~ msgid "控制应用启动时的默认行为"
+#~ msgstr "控制应用启动时的默认行为"
+
+#: src/components/layout/TitleBar.tsx:85
+#~ msgid "搜索..."
+#~ msgstr "搜索..."
+
+#: src/components/layout/Sidebar.tsx:120
+msgid "搜索文件..."
+msgstr "搜索文件..."
+
+#: src/components/layout/CommandPalette.tsx:43
 msgid "操作"
 msgstr "操作"
 
 #: src/routes/settings/about.tsx:162
-msgid "操作系统"
-msgstr "操作系统"
+#~ msgid "操作系统"
+#~ msgstr "操作系统"
 
-#: src/components/layout/Sidebar.tsx:117
+#: src/components/layout/TitleBar.tsx:77
 msgid "收起侧边栏"
 msgstr "收起侧边栏"
 
-#: src/components/editor/NoteEditor.tsx:239
+#: src/components/editor/NoteEditor.tsx:249
 msgid "文件已修改"
 msgstr "文件已修改"
 
-#: src/components/layout/Sidebar.tsx:87
+#: src/components/layout/TitleBar.tsx:91
+msgid "文件树"
+msgstr "文件树"
+
+#: src/routes/settings/about.tsx:119
+msgid "文档"
+msgstr "文档"
+
+#: src/routes/workspace-manager.tsx:254
+msgid "新建工作区"
+msgstr "新建工作区"
+
+#: src/components/layout/Sidebar.tsx:145
 msgid "新建文件"
 msgstr "新建文件"
 
-#: src/components/filetree/FileTree.tsx:49
+#: src/components/filetree/FileTree.tsx:67
 #: src/components/filetree/FileTreeContextMenu.tsx:43
-#: src/components/layout/Sidebar.tsx:37
-#: src/components/layout/Sidebar.tsx:102
+#: src/components/layout/Sidebar.tsx:84
+#: src/components/layout/Sidebar.tsx:160
 msgid "新建文件夹"
 msgstr "新建文件夹"
 
-#: src/components/filetree/FileTree.tsx:34
+#: src/components/filetree/FileTree.tsx:59
 #: src/components/filetree/FileTreeContextMenu.tsx:39
-#: src/components/layout/CommandPalette.tsx:49
 #: src/components/layout/EmptyState.tsx:24
 #: src/components/layout/EmptyState.tsx:27
-#: src/components/layout/Sidebar.tsx:33
+#: src/components/layout/Sidebar.tsx:80
+#: src/lib/commands.ts:40
+#: src/lib/commands.ts:46
 msgid "新建笔记"
 msgstr "新建笔记"
 
@@ -486,22 +719,39 @@ msgid "新版本 {latestVersion} 可用，当前版本 {currentVersion}"
 msgstr "新版本 {latestVersion} 可用，当前版本 {currentVersion}"
 
 #: src/routes/settings/devices.tsx:14
-msgid "无"
-msgstr "无"
+#~ msgid "无"
+#~ msgstr "无"
+
+#: src/components/editor/EditorTitle.tsx:16
+#: src/components/editor/EditorTitle.tsx:43
+#~ msgid "无标题"
+#~ msgstr "无标题"
 
 #: src/components/layout/Sidebar.tsx:113
 #~ msgid "日记"
 #~ msgstr "日记"
 
-#: src/components/settings/WorkspaceSyncList.tsx:119
+#: src/components/settings/WorkspaceSyncList.tsx:112
 msgid "暂无工作区"
 msgstr "暂无工作区"
 
-#: src/routes/settings/about.tsx:174
-msgid "更多"
-msgstr "更多"
+#: src/components/layout/SyncStatusBar.tsx:73
+msgid "暂无已连接设备"
+msgstr "暂无已连接设备"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:316
+#: src/components/filetree/EmptyTreeState.tsx:12
+msgid "暂无笔记"
+msgstr "暂无笔记"
+
+#: src/routes/settings/devices.tsx:235
+msgid "暂无配对设备"
+msgstr "暂无配对设备"
+
+#: src/routes/settings/about.tsx:174
+#~ msgid "更多"
+#~ msgstr "更多"
+
+#: src/components/workspace/WorkspaceSyncDialog.tsx:371
 msgid "更改"
 msgstr "更改"
 
@@ -510,19 +760,31 @@ msgid "更新内容"
 msgstr "更新内容"
 
 #. placeholder {0}: latestVersion ?? "?"
-#: src/routes/settings/about.tsx:243
+#: src/routes/settings/about.tsx:175
 msgid "更新到 v{0}"
 msgstr "更新到 v{0}"
 
+#: src/routes/settings/devices.tsx:174
+msgid "更新名称失败"
+msgstr "更新名称失败"
+
+#: src/routes/settings/about.tsx:110
+msgid "更新日志"
+msgstr "更新日志"
+
 #: src/routes/settings/about.tsx:206
-msgid "有新版本可用"
-msgstr "有新版本可用"
+#~ msgid "有新版本可用"
+#~ msgstr "有新版本可用"
 
 #: src/components/layout/StatusBar.tsx:33
 msgid "未保存"
 msgstr "未保存"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:257
+#: src/routes/settings/devices.tsx:271
+msgid "未发现附近设备"
+msgstr "未发现附近设备"
+
+#: src/components/workspace/WorkspaceSyncDialog.tsx:313
 msgid "未找到可同步的工作区"
 msgstr "未找到可同步的工作区"
 
@@ -530,65 +792,87 @@ msgstr "未找到可同步的工作区"
 #~ msgid "未连接"
 #~ msgstr "未连接"
 
-#: src/routes/settings/about.tsx:236
+#: src/components/pairing/InputCodeDialog.tsx:93
+msgid "查找中..."
+msgstr "查找中..."
+
+#: src/components/pairing/InputCodeDialog.tsx:97
+msgid "查找设备"
+msgstr "查找设备"
+
+#: src/routes/settings/about.tsx:168
 msgid "检查中..."
 msgstr "检查中..."
 
-#: src/routes/settings/about.tsx:266
+#: src/routes/settings/about.tsx:191
 msgid "检查更新"
 msgstr "检查更新"
 
 #: src/routes/settings/about.tsx:204
-msgid "检查更新中..."
-msgstr "检查更新中..."
+#~ msgid "检查更新中..."
+#~ msgstr "检查更新中..."
 
 #: src/routes/settings/about.tsx:214
-msgid "检查更新失败"
-msgstr "检查更新失败"
+#~ msgid "检查更新失败"
+#~ msgstr "检查更新失败"
 
 #. placeholder {0}: latestVersion ?? "?"
-#: src/routes/settings/about.tsx:121
+#: src/routes/settings/about.tsx:77
 msgid "正在下载 v{0}"
 msgstr "正在下载 v{0}"
 
+#: src/routes/index.tsx:27
+msgid "正在准备工作区..."
+msgstr "正在准备工作区..."
+
+#: src/components/workspace/WorkspaceSyncDialog.tsx:262
+msgid "正在同步..."
+msgstr "正在同步..."
+
+#. placeholder {0}: progress.current
+#. placeholder {1}: progress.total
+#: src/routes/index.tsx:23
+msgid "正在同步文档 {0}/{1}..."
+msgstr "正在同步文档 {0}/{1}..."
+
+#: src/components/onboarding/PairingStep.tsx:161
+msgid "正在启动 P2P 节点..."
+msgstr "正在启动 P2P 节点..."
+
+#: src/components/onboarding/PairingStep.tsx:205
+msgid "正在搜索附近设备..."
+msgstr "正在搜索附近设备..."
+
 #: src/routes/settings/about.tsx:210
-msgid "正在更新..."
-msgstr "正在更新..."
+#~ msgid "正在更新..."
+#~ msgstr "正在更新..."
+
+#: src/components/workspace/WorkspaceSyncDialog.tsx:295
+msgid "正在获取可同步的工作区..."
+msgstr "正在获取可同步的工作区..."
 
 #: src/components/upgrade/ForceUpdateDialog.tsx:86
 #: src/components/upgrade/PromptUpdateDialog.tsx:99
 msgid "正在重启..."
 msgstr "正在重启..."
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:204
-msgid "正在同步..."
-msgstr "正在同步..."
-
-#: src/components/onboarding/PairingStep.tsx:154
-msgid "正在启动 P2P 节点..."
-msgstr "正在启动 P2P 节点..."
-
-#: src/components/onboarding/PairingStep.tsx:198
-msgid "正在搜索附近设备..."
-msgstr "正在搜索附近设备..."
-
-#: src/components/workspace/WorkspaceSyncDialog.tsx:239
-msgid "正在获取可同步的工作区..."
-msgstr "正在获取可同步的工作区..."
-
 #: src/components/upgrade/ForceUpdateDialog.tsx:66
 msgid "此版本为必须更新，将自动下载并安装。"
 msgstr "此版本为必须更新，将自动下载并安装。"
 
-#: src/components/layout/CommandPalette.tsx:44
+#: src/components/filetree/FileTree.tsx:194
+msgid "没有匹配的文件"
+msgstr "没有匹配的文件"
+
+#: src/components/layout/CommandPalette.tsx:41
 msgid "没有找到匹配的命令"
 msgstr "没有找到匹配的命令"
 
-#: src/components/settings/GeneralSettings.tsx:30
+#: src/routes/settings/general.tsx:68
 msgid "浅色"
 msgstr "浅色"
 
-#: src/components/settings/GeneralSettings.tsx:31
+#: src/routes/settings/general.tsx:69
 msgid "深色"
 msgstr "深色"
 
@@ -597,28 +881,71 @@ msgid "添加设备"
 msgstr "添加设备"
 
 #: src/components/filetree/EmptyTreeState.tsx:12
-msgid "点击上方 + 创建第一篇"
-msgstr "点击上方 + 创建第一篇"
+#~ msgid "点击上方 + 创建第一篇"
+#~ msgstr "点击上方 + 创建第一篇"
 
-#: src/components/onboarding/PairingStep.tsx:226
-#: src/components/pairing/CodePairingCard.tsx:121
+#: src/components/editor/MediaLoadingPlaceholder.tsx:32
+msgid "点击重试"
+msgstr "点击重试"
+
+#: src/routes/workspace-manager.tsx:246
+msgid "版本"
+msgstr "版本"
+
+#: src/components/pairing/CodePairingCard.tsx:124
+msgid "生成"
+msgstr "生成"
+
+#: src/components/pairing/CodePairingCard.tsx:120
+msgid "生成 6 位配对码，在另一台设备输入即可配对"
+msgstr "生成 6 位配对码，在另一台设备输入即可配对"
+
+#: src/components/onboarding/PairingStep.tsx:233
 msgid "生成配对码"
 msgstr "生成配对码"
 
-#: src/components/onboarding/PairingStep.tsx:120
-#: src/components/pairing/CodePairingCard.tsx:67
+#: src/components/onboarding/PairingStep.tsx:127
+#: src/components/pairing/CodePairingCard.tsx:55
 msgid "生成配对码失败"
 msgstr "生成配对码失败"
 
+#: src/routes/settings/devices.tsx:236
+msgid "生成配对码或发现附近设备来配对"
+msgstr "生成配对码或发现附近设备来配对"
+
+#: src/routes/settings/devices.tsx:272
+msgid "确保其他设备在同一局域网内"
+msgstr "确保其他设备在同一局域网内"
+
+#: src/components/layout/SyncStatusBar.tsx:75
+msgid "确保其他设备已配对并在同一网络中"
+msgstr "确保其他设备已配对并在同一网络中"
+
 #. placeholder {0}: node.data.name
-#: src/components/filetree/FileTree.tsx:66
+#: src/components/filetree/FileTree.tsx:78
 msgid "确定要删除 \"{0}\" 吗？"
 msgstr "确定要删除 \"{0}\" 吗？"
 
 #. placeholder {0}: node.data.name
-#: src/components/filetree/FileTree.tsx:65
+#: src/components/filetree/FileTree.tsx:77
 msgid "确定要删除文件夹 \"{0}\" 及其所有内容吗？"
 msgstr "确定要删除文件夹 \"{0}\" 及其所有内容吗？"
+
+#: src/components/pairing/UnpairConfirmDialog.tsx:51
+#~ msgid "确定要取消与 {deviceName} 的配对吗？"
+#~ msgstr "确定要取消与 {deviceName} 的配对吗？"
+
+#: src/components/pairing/UnpairConfirmDialog.tsx:47
+msgid "确定要取消配对吗？"
+msgstr "确定要取消配对吗？"
+
+#: src/components/pairing/UnpairConfirmDialog.tsx:58
+msgid "确认"
+msgstr "确认"
+
+#: src/components/pairing/FoundDeviceDialog.tsx:65
+msgid "确认与此设备配对？"
+msgstr "确认与此设备配对？"
 
 #: src/components/settings/NetworkStatusCard.tsx:128
 msgid "确认关闭"
@@ -628,9 +955,17 @@ msgstr "确认关闭"
 msgid "确认关闭网络？"
 msgstr "确认关闭网络？"
 
-#: src/components/filetree/FileTree.tsx:69
+#: src/components/filetree/FileTree.tsx:81
 msgid "确认删除"
 msgstr "确认删除"
+
+#: src/components/pairing/UnpairConfirmDialog.tsx:64
+#~ msgid "确认取消"
+#~ msgstr "确认取消"
+
+#: src/components/pairing/FoundDeviceDialog.tsx:80
+msgid "确认配对"
+msgstr "确认配对"
 
 #: src/components/upgrade/PromptUpdateDialog.tsx:90
 msgid "稍后提醒"
@@ -644,36 +979,57 @@ msgstr "立即更新"
 #~ msgid "笔记"
 #~ msgstr "笔记"
 
-#: src/components/onboarding/PairingStep.tsx:291
-#: src/components/pairing/CodePairingCard.tsx:195
+#: src/components/onboarding/PairingStep.tsx:298
 msgid "等待对方连接..."
 msgstr "等待对方连接..."
 
+#: src/components/layout/SyncStatusBar.tsx:32
+msgid "等待设备连接"
+msgstr "等待设备连接"
+
 #: src/routes/settings/devices.tsx:43
-msgid "管理已配对设备和发现附近设备"
-msgstr "管理已配对设备和发现附近设备"
+#~ msgid "管理已配对设备和发现附近设备"
+#~ msgstr "管理已配对设备和发现附近设备"
 
-#: src/routes/settings.tsx:79
-msgid "管理应用偏好与设备"
-msgstr "管理应用偏好与设备"
+#: src/routes/settings.tsx:76
+#~ msgid "管理应用偏好与设备"
+#~ msgstr "管理应用偏好与设备"
 
-#: src/routes/settings/general.tsx:100
-msgid "管理界面外观和语言偏好"
-msgstr "管理界面外观和语言偏好"
+#: src/routes/settings/general.tsx:101
+#~ msgid "管理界面外观和语言偏好"
+#~ msgstr "管理界面外观和语言偏好"
+
+#: src/routes/settings/devices.tsx:201
+msgid "编辑名称"
+msgstr "编辑名称"
+
+#: src/routes/settings.tsx:27
+#: src/routes/settings/network.tsx:18
+msgid "网络"
+msgstr "网络"
 
 #: src/components/layout/SyncStatusBar.tsx:30
+#: src/components/settings/WorkspaceSyncList.tsx:98
 msgid "网络未启动"
 msgstr "网络未启动"
+
+#: src/components/layout/SyncStatusBar.tsx:108
+msgid "网络设置"
+msgstr "网络设置"
+
+#: src/routes/settings/general.tsx:106
+#~ msgid "自定义应用的显示方式"
+#~ msgstr "自定义应用的显示方式"
 
 #: src/components/settings/NetworkStatusCard.tsx:67
 msgid "节点启动失败"
 msgstr "节点启动失败"
 
 #: src/routes/settings/sync.tsx:33
-msgid "节点运行状态与连接信息"
-msgstr "节点运行状态与连接信息"
+#~ msgid "节点运行状态与连接信息"
+#~ msgstr "节点运行状态与连接信息"
 
-#: src/routes/settings.tsx:19
+#: src/routes/settings.tsx:28
 msgid "设备"
 msgstr "设备"
 
@@ -682,60 +1038,69 @@ msgid "设备 ID"
 msgstr "设备 ID"
 
 #: src/routes/settings/about.tsx:147
-msgid "设备信息"
-msgstr "设备信息"
+#~ msgid "设备信息"
+#~ msgstr "设备信息"
 
 #: src/components/onboarding/CompleteStep.tsx:59
 #: src/components/onboarding/DeviceNameStep.tsx:38
-#: src/components/settings/DeviceSettings.tsx:11
-#: src/routes/settings/about.tsx:156
 msgid "设备名称"
 msgstr "设备名称"
 
-#: src/routes/settings/devices.tsx:40
+#: src/routes/settings/devices.tsx:172
+msgid "设备名称已更新，网络身份已同步"
+msgstr "设备名称已更新，网络身份已同步"
+
+#: src/routes/settings/devices.tsx:148
 msgid "设备管理"
 msgstr "设备管理"
 
-#: src/components/layout/TitleBar.tsx:99
-#: src/routes/settings.tsx:43
-#: src/routes/settings.tsx:75
+#: src/components/layout/TitleBar.tsx:124
+#: src/routes/settings.tsx:50
+#: src/routes/settings/network.tsx:34
 msgid "设置"
 msgstr "设置"
 
-#: src/components/settings/GeneralSettings.tsx:39
+#: src/routes/settings/general.tsx:46
 msgid "语言"
 msgstr "语言"
 
-#: src/components/onboarding/PairingStep.tsx:126
-#: src/components/pairing/CodePairingCard.tsx:78
+#: src/components/onboarding/PairingStep.tsx:133
 msgid "请输入6位配对码"
 msgstr "请输入6位配对码"
 
-#: src/components/settings/GeneralSettings.tsx:32
+#: src/components/layout/Sidebar.tsx:187
+msgid "调整侧边栏宽度 (当前 {sidebarWidth} 像素)"
+msgstr "调整侧边栏宽度 (当前 {sidebarWidth} 像素)"
+
+#: src/routes/settings/general.tsx:70
 msgid "跟随系统"
 msgstr "跟随系统"
 
 #: src/components/pairing/CodePairingCard.tsx:113
 #: src/components/pairing/CodePairingCard.tsx:172
-msgid "跨网络配对"
-msgstr "跨网络配对"
+#~ msgid "跨网络配对"
+#~ msgstr "跨网络配对"
 
-#: src/components/onboarding/PairingStep.tsx:175
-#: src/components/onboarding/PairingStep.tsx:311
+#: src/components/onboarding/PairingStep.tsx:182
+#: src/components/onboarding/PairingStep.tsx:318
 msgid "跳过，稍后设置"
 msgstr "跳过，稍后设置"
 
-#: src/components/layout/CommandPalette.tsx:41
+#: src/components/layout/CommandPalette.tsx:38
 msgid "输入命令..."
 msgstr "输入命令..."
 
-#: src/components/onboarding/PairingStep.tsx:245
-#: src/components/pairing/CodePairingCard.tsx:142
+#: src/components/pairing/InputCodeDialog.tsx:62
+msgid "输入对方设备上显示的 6 位数字"
+msgstr "输入对方设备上显示的 6 位数字"
+
+#: src/components/onboarding/PairingStep.tsx:252
 msgid "输入对方设备生成的6位配对码"
 msgstr "输入对方设备生成的6位配对码"
 
-#: src/components/onboarding/PairingStep.tsx:236
-#: src/components/pairing/CodePairingCard.tsx:139
+#: src/components/onboarding/PairingStep.tsx:243
+#: src/components/pairing/InputCodeDialog.tsx:59
+#: src/routes/settings/devices.tsx:151
 msgid "输入配对码"
 msgstr "输入配对码"
 
@@ -743,11 +1108,14 @@ msgstr "输入配对码"
 msgid "运行中"
 msgstr "运行中"
 
-#: src/components/workspace/WorkspacePicker.tsx:142
+#: src/routes/workspace-manager.tsx:229
+msgid "还没有工作区"
+msgstr "还没有工作区"
+
+#: src/components/workspace/WorkspacePicker.tsx:105
 msgid "还没有工作区，创建一个开始使用吧。"
 msgstr "还没有工作区，创建一个开始使用吧。"
 
-#: src/components/filetree/EmptyTreeState.tsx:9
 #: src/components/layout/EmptyState.tsx:17
 msgid "还没有笔记"
 msgstr "还没有笔记"
@@ -760,60 +1128,94 @@ msgstr "这是我的第一台 SwarmNote 设备"
 msgid "进入 SwarmNote"
 msgstr "进入 SwarmNote"
 
-#: src/components/onboarding/PairingStep.tsx:257
-#: src/components/pairing/CodePairingCard.tsx:154
+#: src/components/onboarding/PairingStep.tsx:264
 msgid "连接"
 msgstr "连接"
 
-#: src/components/layout/SyncStatusBar.tsx:24
-#: src/components/onboarding/PairingStep.tsx:257
-#: src/components/pairing/CodePairingCard.tsx:154
+#: src/components/layout/SyncStatusBar.tsx:26
+#: src/components/onboarding/PairingStep.tsx:264
 msgid "连接中..."
 msgstr "连接中..."
 
-#: src/components/onboarding/PairingStep.tsx:188
+#: src/components/onboarding/PairingStep.tsx:195
 msgid "连接你的其他设备以同步笔记"
 msgstr "连接你的其他设备以同步笔记"
 
-#: src/components/layout/SyncStatusBar.tsx:27
+#: src/components/layout/SyncStatusBar.tsx:28
 msgid "连接失败"
 msgstr "连接失败"
 
-#: src/components/workspace/WorkspacePicker.tsx:92
-msgid "选择一个已有工作区，或创建新的工作区开始使用。"
-msgstr "选择一个已有工作区，或创建新的工作区开始使用。"
+#: src/components/workspace/WorkspacePicker.tsx:90
+#~ msgid "选择一个已有工作区，或创建新的工作区开始使用。"
+#~ msgstr "选择一个已有工作区，或创建新的工作区开始使用。"
 
 #: src/components/onboarding/PathChoiceStep.tsx:21
 msgid "选择最适合你当前情况的选项"
 msgstr "选择最适合你当前情况的选项"
 
-#: src/components/workspace/WorkspacePicker.tsx:89
-msgid "选择工作区"
-msgstr "选择工作区"
+#: src/components/workspace/WorkspaceSyncDialog.tsx:206
+msgid "选择同步目标目录"
+msgstr "选择同步目标目录"
 
-#: src/routes/settings.tsx:17
-#: src/routes/settings/general.tsx:97
+#: src/components/workspace/WorkspacePicker.tsx:87
+#~ msgid "选择工作区"
+#~ msgstr "选择工作区"
+
+#: src/components/workspace/WorkspacePicker.tsx:53
+#: src/routes/workspace-manager.tsx:257
+msgid "选择新工作区目录"
+msgstr "选择新工作区目录"
+
+#: src/routes/settings/general.tsx:59
+msgid "选择明亮或暗色主题"
+msgstr "选择明亮或暗色主题"
+
+#: src/routes/settings/general.tsx:46
+msgid "选择界面显示语言"
+msgstr "选择界面显示语言"
+
+#: src/routes/settings.tsx:26
+#: src/routes/settings/general.tsx:34
 msgid "通用"
 msgstr "通用"
 
 #: src/routes/settings/devices.tsx:97
-msgid "通过配对码连接其他设备"
-msgstr "通过配对码连接其他设备"
+#~ msgid "通过配对码连接其他设备"
+#~ msgstr "通过配对码连接其他设备"
+
+#: src/components/pairing/NearbyDeviceCard.tsx:59
+msgid "配对"
+msgstr "配对"
+
+#: src/components/pairing/FoundDeviceDialog.tsx:76
+#: src/components/pairing/NearbyDeviceCard.tsx:59
+msgid "配对中..."
+msgstr "配对中..."
 
 #: src/components/onboarding/CompleteStep.tsx:32
 msgid "配对成功！"
 msgstr "配对成功！"
 
-#: src/routes/settings/devices.tsx:133
-msgid "配对码连接"
-msgstr "配对码连接"
+#: src/components/pairing/CodePairingCard.tsx:80
+#: src/components/pairing/CodePairingCard.tsx:116
+msgid "配对码"
+msgstr "配对码"
 
-#: src/components/onboarding/PairingStep.tsx:137
-#: src/components/pairing/CodePairingCard.tsx:92
+#: src/components/pairing/CodePairingCard.tsx:62
+msgid "配对码已复制"
+msgstr "配对码已复制"
+
+#: src/routes/settings/devices.tsx:133
+#~ msgid "配对码连接"
+#~ msgstr "配对码连接"
+
+#: src/components/onboarding/PairingStep.tsx:144
+#: src/components/pairing/FoundDeviceDialog.tsx:43
+#: src/components/pairing/NearbyDeviceCard.tsx:38
 msgid "配对被拒绝"
 msgstr "配对被拒绝"
 
-#: src/components/onboarding/PairingStep.tsx:185
+#: src/components/onboarding/PairingStep.tsx:192
 msgid "配对设备"
 msgstr "配对设备"
 
@@ -821,9 +1223,9 @@ msgstr "配对设备"
 msgid "重命名"
 msgstr "重命名"
 
-#: src/components/onboarding/PairingStep.tsx:168
-#: src/components/workspace/WorkspaceSyncDialog.tsx:251
-#: src/components/workspace/WorkspaceSyncDialog.tsx:260
+#: src/components/onboarding/PairingStep.tsx:175
+#: src/components/workspace/WorkspaceSyncDialog.tsx:307
+#: src/components/workspace/WorkspaceSyncDialog.tsx:316
 msgid "重试"
 msgstr "重试"
 
@@ -831,13 +1233,17 @@ msgstr "重试"
 msgid "错误"
 msgstr "错误"
 
-#: src/routes/settings/devices.tsx:107
+#: src/routes/settings/devices.tsx:245
 msgid "附近设备"
 msgstr "附近设备"
 
+#: src/routes/settings/general.tsx:78
+msgid "限制编辑器内容宽度以提升阅读体验"
+msgstr "限制编辑器内容宽度以提升阅读体验"
+
 #: src/routes/settings/about.tsx:208
-msgid "需要强制更新"
-msgstr "需要强制更新"
+#~ msgid "需要强制更新"
+#~ msgstr "需要强制更新"
 
 #: src/components/upgrade/ForceUpdateDialog.tsx:48
 msgid "需要更新"

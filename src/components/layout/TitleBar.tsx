@@ -2,6 +2,8 @@ import { useLingui } from "@lingui/react/macro";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   ChevronsUpDown,
+  FolderTree,
+  List,
   Minus,
   PanelLeft,
   PenLine,
@@ -12,10 +14,12 @@ import {
 } from "lucide-react";
 import { openSettingsWindow } from "@/commands/workspace";
 import { OPEN_COMMAND_PALETTE } from "@/components/layout/CommandPalette";
+import { Button } from "@/components/ui/button";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspacePopover } from "@/components/workspace/WorkspacePopover";
 import { isMac, modKey } from "@/lib/utils";
-import { useUIStore } from "@/stores/uiStore";
+import { type SidebarTab, useUIStore } from "@/stores/uiStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 export function TitleBar() {
@@ -23,46 +27,33 @@ export function TitleBar() {
   const appWindow = getCurrentWindow();
   const sidebarOpen = useUIStore((s) => s.sidebarOpen);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const sidebarTab = useUIStore((s) => s.sidebarTab);
+  const setSidebarTab = useUIStore((s) => s.setSidebarTab);
   const workspace = useWorkspaceStore((s) => s.workspace);
 
-  // When sidebar is collapsed on macOS, add left padding to avoid traffic light overlap
-  const needsTrafficLightPadding = isMac && !sidebarOpen;
+  const needsTrafficLightPadding = isMac;
 
   return (
     <header
       data-tauri-drag-region
       className="flex h-10 shrink-0 items-center justify-between border-b border-border bg-card px-3"
     >
-      {/* Left: Logo + Nav */}
+      {/* Left: Logo + Workspace + Sidebar Controls */}
       <div
-        className={`flex items-center gap-3 ${needsTrafficLightPadding ? "pl-17.5" : ""}`}
+        className={`flex items-center gap-2 ${needsTrafficLightPadding ? "pl-17.5" : ""}`}
         data-tauri-drag-region
       >
-        <div className="group/logo flex items-center gap-1.5">
-          {sidebarOpen ? (
-            <div className="flex h-5.5 w-5.5 items-center justify-center rounded bg-primary">
-              <PenLine className="h-3.5 w-3.5 text-white" />
-            </div>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  type="button"
-                  onClick={toggleSidebar}
-                  className="relative flex h-5.5 w-5.5 items-center justify-center rounded bg-primary"
-                >
-                  <PenLine className="h-3.5 w-3.5 text-white transition-opacity duration-150 group-hover/logo:opacity-0" />
-                  <PanelLeft className="absolute h-3.5 w-3.5 text-white opacity-0 transition-opacity duration-150 group-hover/logo:opacity-100" />
-                </button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {t`展开侧边栏`} ({modKey}B)
-              </TooltipContent>
-            </Tooltip>
-          )}
+        {/* Logo */}
+        <div className="flex items-center gap-1.5">
+          <div className="flex h-5.5 w-5.5 items-center justify-center rounded bg-primary">
+            <PenLine className="h-3.5 w-3.5 text-white" />
+          </div>
           <span className="text-sm font-semibold text-foreground">SwarmNote</span>
         </div>
+
         <div className="h-4 w-px bg-border" />
+
+        {/* Workspace switcher */}
         <WorkspacePopover side="bottom">
           <button
             type="button"
@@ -72,29 +63,63 @@ export function TitleBar() {
             <ChevronsUpDown className="h-3 w-3 shrink-0 text-muted-foreground" />
           </button>
         </WorkspacePopover>
+
+        <div className="h-4 w-px bg-border" />
+
+        {/* Sidebar toggle + view switch + actions */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" size="icon-xs" onClick={toggleSidebar}>
+              <PanelLeft className="h-3.5 w-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {sidebarOpen ? t`收起侧边栏` : t`展开侧边栏`} ({modKey}B)
+          </TooltipContent>
+        </Tooltip>
+
+        {sidebarOpen && (
+          <ToggleGroup
+            type="single"
+            size="sm"
+            variant="outline"
+            value={sidebarTab}
+            onValueChange={(v) => {
+              if (v) setSidebarTab(v as SidebarTab);
+            }}
+          >
+            <ToggleGroupItem value="filetree" aria-label={t`文件树`}>
+              <FolderTree className="h-3.5 w-3.5" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="outline" aria-label={t`大纲`}>
+              <List className="h-3.5 w-3.5" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+        )}
       </div>
 
-      {/* Right: Search + Settings + Window Controls */}
+      {/* Right: Command Palette + Settings + Window Controls */}
       <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => document.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE))}
-          className="flex items-center gap-1.5 rounded-md bg-secondary px-2.5 py-1.25 text-muted-foreground hover:bg-secondary/80"
-        >
-          <Search className="h-3.5 w-3.5" />
-          <span className="text-xs">{t`搜索...`}</span>
-          <span className="text-[10px] font-medium">{modKey}P</span>
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => document.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE))}
+            >
+              <Search className="h-3.5 w-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {t`命令面板`} ({modKey}P)
+          </TooltipContent>
+        </Tooltip>
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
-              type="button"
-              onClick={() => openSettingsWindow("general")}
-              className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted"
-            >
+            <Button variant="ghost" size="icon-xs" onClick={() => openSettingsWindow("general")}>
               <Settings className="h-3.5 w-3.5" />
-            </button>
+            </Button>
           </TooltipTrigger>
           <TooltipContent>{t`设置`}</TooltipContent>
         </Tooltip>
@@ -102,8 +127,6 @@ export function TitleBar() {
         {!isMac && (
           <>
             <div className="h-4 w-px bg-border" />
-
-            {/* Window Controls */}
             <button
               type="button"
               onClick={() => appWindow.minimize()}

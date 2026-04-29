@@ -1,8 +1,8 @@
 import { Trans } from "@lingui/react/macro";
-import { useNavigate } from "@tanstack/react-router";
 import { CheckCircle, Fingerprint, Monitor } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getDeviceInfo } from "@/commands/identity";
+import { finishOnboarding } from "@/commands/workspace";
 import { Button } from "@/components/ui/button";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 
@@ -10,7 +10,6 @@ export function CompleteStep() {
   const complete = useOnboardingStore((s) => s.complete);
   const userPath = useOnboardingStore((s) => s.userPath);
   const pairedInOnboarding = useOnboardingStore((s) => s.pairedInOnboarding);
-  const navigate = useNavigate();
   const [deviceName, setDeviceName] = useState("");
   const [peerId, setPeerId] = useState("");
 
@@ -21,9 +20,10 @@ export function CompleteStep() {
     });
   }, []);
 
-  function handleFinish() {
+  async function handleFinish() {
+    // 先持久化 onboarding 完成状态，再由 Rust 端处理窗口切换
     complete();
-    navigate({ to: "/" });
+    await finishOnboarding();
   }
 
   const isAddDevice = userPath === "add-device";
@@ -33,7 +33,7 @@ export function CompleteStep() {
 
   const subtitle =
     isAddDevice && pairedInOnboarding ? (
-      <Trans>你可以在 Workspace Picker 中选择要同步的工作区</Trans>
+      <Trans>你可以在工作区管理窗口中选择要同步的工作区</Trans>
     ) : isAddDevice && !pairedInOnboarding ? (
       <Trans>你可以稍后在设置 → 设备中配对设备</Trans>
     ) : (

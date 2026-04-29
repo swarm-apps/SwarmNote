@@ -3,6 +3,7 @@ import { create } from "zustand";
 import {
   deleteDocumentByRelPath,
   deleteDocumentsByPrefix,
+  moveDocument,
   renameDocument,
   upsertDocument,
 } from "@/commands/document";
@@ -33,6 +34,8 @@ interface FileTreeActions {
   deleteFile: (relPath: string) => Promise<void>;
   deleteDir: (relPath: string) => Promise<void>;
   rename: (relPath: string, newName: string) => Promise<string>;
+  /** Move a file or folder; `toRelPath` is the full target path, not a parent dir. */
+  move: (fromRelPath: string, toRelPath: string) => Promise<string>;
   clear: () => void;
 }
 
@@ -113,6 +116,31 @@ export const useFileTreeStore = create<FileTreeState & FileTreeActions>()((set, 
     }
     await get().rescan();
     return newRelPath;
+  },
+
+  move: async (fromRelPath, toRelPath) => {
+    const result = await moveDocument(fromRelPath, toRelPath);
+    // Rebase any path that was equal to `from` or (for a moved folder) a
+    // descendant of `from`. Returns `null` when the path is unaffected.
+    const rebase = (path: string | null): string | null => {
+      if (path === fromRelPath) return result.new_rel_path;
+      if (result.is_dir && path?.startsWith(`${fromRelPath}/`)) {
+        return `${result.new_rel_path}/${path.slice(fromRelPath.length + 1)}`;
+      }
+      return null;
+    };
+
+    const nextSelected = rebase(get().selectedId);
+    if (nextSelected !== null) set({ selectedId: nextSelected });
+
+    const editor = useEditorStore.getState();
+    const nextEditorPath = rebase(editor.currentDocId);
+    if (nextEditorPath !== null) {
+      editor.updateRelPath(nextEditorPath, nextEditorPath.split("/").pop() ?? "");
+    }
+
+    await get().rescan();
+    return result.new_rel_path;
   },
 
   clear: () => set(initialState),

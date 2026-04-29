@@ -32,6 +32,9 @@ dist-ssr
 
 !.claude/skills/project/
 !.claude/skills/project-*/
+!.claude/skills/uniffi-bindgen-rn/
+!.claude/skills/dev-workflow/
+!.claude/settings.json
 .agent
 .agent/skills/*
 .agents/

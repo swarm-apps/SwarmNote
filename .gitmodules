@@ -1,3 +1,6 @@
 [submodule "libs"]
 	path = libs
 	url = https://github.com/yexiyue/swarm-p2p.git
+[submodule "packages/editor"]
+	path = packages/editor
+	url = https://github.com/yexiyue/swarmnote-editor.git

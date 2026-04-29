@@ -1,5 +1,5 @@
 {
-  "version": "2.9",
+  "version": "2.11",
   "children": [
     {
       "type": "frame",
@@ -10112,7 +10112,7 @@
                       "fill": {
                         "type": "image",
                         "enabled": true,
-                        "url": "./images/generated-1773990187787.png",
+                        "url": "images/generated-1773990187787.png",
                         "mode": "fill"
                       },
                       "cornerRadius": 8
@@ -16394,7 +16394,7 @@
                       "fill": {
                         "type": "image",
                         "enabled": true,
-                        "url": "./images/generated-1773990187787.png",
+                        "url": "images/generated-1773990187787.png",
                         "mode": "fill"
                       },
                       "cornerRadius": 8
@@ -18102,6 +18102,679 @@
                       ]
                     }
                   ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "uTPKl",
+      "x": 5252,
+      "y": 0,
+      "name": "App Icon Redesign",
+      "width": 2400,
+      "fill": "#0F0F12",
+      "cornerRadius": 24,
+      "layout": "vertical",
+      "gap": 48,
+      "padding": 80,
+      "children": [
+        {
+          "type": "text",
+          "id": "j82w0g",
+          "name": "title",
+          "fill": "#FFFFFF",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "App Icon Redesign — Simplified",
+          "fontFamily": "Inter",
+          "fontSize": 36,
+          "fontWeight": "700",
+          "letterSpacing": -0.5
+        },
+        {
+          "type": "text",
+          "id": "yfEr8",
+          "name": "subtitle",
+          "fill": "#A1A1AA",
+          "textGrowth": "fixed-width",
+          "width": "fill_container",
+          "content": "4 directions, designed for clarity at 32px taskbar size. Honey amber kept as brand accent.",
+          "fontFamily": "Inter",
+          "fontSize": 16,
+          "fontWeight": "normal"
+        },
+        {
+          "type": "frame",
+          "id": "xeQQ7",
+          "name": "Variants Row",
+          "width": "fill_container",
+          "gap": 48,
+          "children": [
+            {
+              "type": "frame",
+              "id": "saZIh",
+              "name": "V1 - Hex Solid",
+              "width": 512,
+              "fill": "#00000000",
+              "layout": "vertical",
+              "gap": 24,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "GjzZ6",
+                  "name": "label1",
+                  "fill": "#FACC15",
+                  "content": "01 — Hex Solid",
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600",
+                  "letterSpacing": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "mCYrF",
+                  "name": "Large Preview",
+                  "width": 512,
+                  "height": 512,
+                  "fill": "#FFFFFF",
+                  "cornerRadius": 32,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "polygon",
+                      "polygonCount": 6,
+                      "id": "aCdHr",
+                      "x": 56,
+                      "y": 56,
+                      "name": "hex1",
+                      "fill": {
+                        "type": "gradient",
+                        "gradientType": "linear",
+                        "enabled": true,
+                        "rotation": 135,
+                        "size": {
+                          "height": 1
+                        },
+                        "colors": [
+                          {
+                            "color": "#F4C66A",
+                            "position": 0
+                          },
+                          {
+                            "color": "#D8901A",
+                            "position": 1
+                          }
+                        ]
+                      },
+                      "width": 400,
+                      "height": 400
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "W1ReLc",
+                  "name": "caption1",
+                  "fill": "#71717A",
+                  "content": "Single hex • bold honey gradient",
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "daceO",
+                  "name": "Test Row",
+                  "gap": 24,
+                  "padding": [
+                    16,
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "end",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "VqIXy",
+                      "name": "test96_1",
+                      "width": 96,
+                      "height": 96,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 6,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "polygon",
+                          "polygonCount": 6,
+                          "id": "yxwck",
+                          "x": 10,
+                          "y": 10,
+                          "name": "hex96_1",
+                          "fill": {
+                            "type": "gradient",
+                            "gradientType": "linear",
+                            "enabled": true,
+                            "rotation": 135,
+                            "size": {
+                              "height": 1
+                            },
+                            "colors": [
+                              {
+                                "color": "#F4C66A",
+                                "position": 0
+                              },
+                              {
+                                "color": "#D8901A",
+                                "position": 1
+                              }
+                            ]
+                          },
+                          "width": 76,
+                          "height": 76
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "uzeMR",
+                      "name": "test32_1",
+                      "width": 32,
+                      "height": 32,
+                      "fill": "#FFFFFF",
+                      "cornerRadius": 2,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "polygon",
+                          "polygonCount": 6,
+                          "id": "hiip8",
+                          "x": 3,
+                          "y": 3,
+                          "name": "hex32_1",
+                          "fill": {
+                            "type": "gradient",
+                            "gradientType": "linear",
+                            "enabled": true,
+                            "rotation": 135,
+                            "size": {
+                              "height": 1
+                            },
+                            "colors": [
+                              {
+                                "color": "#F4C66A",
+                                "position": 0
+                              },
+                              {
+                                "color": "#D8901A",
+                                "position": 1
+                              }
+                            ]
+                          },
+                          "width": 26,
+                          "height": 26
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "OIKWp",
+                  "name": "sizeLabel1",
+                  "fill": "#52525B",
+                  "content": "96px        32px (taskbar)",
+                  "textAlign": "center",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "FG8Ek",
+              "name": "V2 - Hex Cluster",
+              "width": 512,
+              "fill": "#00000000",
+              "layout": "vertical",
+              "gap": 24,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "INU4V",
+                  "name": "label2",
+                  "fill": "#FACC15",
+                  "content": "02 — Hex Cluster",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600",
+                  "letterSpacing": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "DODAc",
+                  "name": "Large Preview",
+                  "width": 512,
+                  "height": 512,
+                  "fill": "#1A1814",
+                  "cornerRadius": 96,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "polygon",
+                      "polygonCount": 6,
+                      "id": "JqVoT",
+                      "x": 166,
+                      "y": 80,
+                      "name": "hexA",
+                      "fill": "#E8A923",
+                      "width": 180,
+                      "height": 180
+                    },
+                    {
+                      "type": "polygon",
+                      "polygonCount": 6,
+                      "id": "sacgl",
+                      "x": 36,
+                      "y": 236,
+                      "name": "hexB",
+                      "fill": "#E8A923",
+                      "width": 180,
+                      "height": 180
+                    },
+                    {
+                      "type": "polygon",
+                      "polygonCount": 6,
+                      "id": "dNqlM",
+                      "x": 296,
+                      "y": 236,
+                      "name": "hexC",
+                      "fill": "#E8A923",
+                      "width": 180,
+                      "height": 180
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "A94rcB",
+                  "name": "caption2",
+                  "fill": "#71717A",
+                  "content": "Honeycomb cluster • 3 connected cells",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "AnpK9",
+                  "name": "Test Row",
+                  "gap": 24,
+                  "padding": [
+                    16,
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "end",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "pfJqC",
+                      "name": "test96_2",
+                      "width": 96,
+                      "height": 96,
+                      "fill": "#1A1814",
+                      "cornerRadius": 18,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "polygon",
+                          "polygonCount": 6,
+                          "id": "GPd4Q",
+                          "x": 31,
+                          "y": 15,
+                          "name": "hexA96",
+                          "fill": "#E8A923",
+                          "width": 34,
+                          "height": 34
+                        },
+                        {
+                          "type": "polygon",
+                          "polygonCount": 6,
+                          "id": "SBt6Q",
+                          "x": 7,
+                          "y": 44,
+                          "name": "hexB96",
+                          "fill": "#E8A923",
+                          "width": 34,
+                          "height": 34
+                        },
+                        {
+                          "type": "polygon",
+                          "polygonCount": 6,
+                          "id": "f0ZbMO",
+                          "x": 55,
+                          "y": 44,
+                          "name": "hexC96",
+                          "fill": "#E8A923",
+                          "width": 34,
+                          "height": 34
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "iphtR",
+                      "name": "test32_2",
+                      "width": 32,
+                      "height": 32,
+                      "fill": "#1A1814",
+                      "cornerRadius": 6,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "polygon",
+                          "polygonCount": 6,
+                          "id": "O9PkX",
+                          "x": 10,
+                          "y": 5,
+                          "name": "hexA32",
+                          "fill": "#E8A923",
+                          "width": 12,
+                          "height": 12
+                        },
+                        {
+                          "type": "polygon",
+                          "polygonCount": 6,
+                          "id": "eWbKU",
+                          "x": 2,
+                          "y": 15,
+                          "name": "hexB32",
+                          "fill": "#E8A923",
+                          "width": 12,
+                          "height": 12
+                        },
+                        {
+                          "type": "polygon",
+                          "polygonCount": 6,
+                          "id": "Niq0B",
+                          "x": 18,
+                          "y": 15,
+                          "name": "hexC32",
+                          "fill": "#E8A923",
+                          "width": 12,
+                          "height": 12
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "b8DZqI",
+                  "name": "sizeLabel2",
+                  "fill": "#52525B",
+                  "content": "96px        32px (taskbar)",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "F85Ug",
+              "name": "V3 - Hive Glyph",
+              "width": 512,
+              "fill": "#00000000",
+              "layout": "vertical",
+              "gap": 24,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "hJfAW",
+                  "name": "label3",
+                  "fill": "#FACC15",
+                  "content": "03 — Hive Glyph",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600",
+                  "letterSpacing": 1
+                },
+                {
+                  "type": "frame",
+                  "id": "pzCbt",
+                  "name": "Large Preview",
+                  "width": 512,
+                  "height": 512,
+                  "fill": "#E8A923",
+                  "cornerRadius": 96,
+                  "layout": "none",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "TFNK7",
+                      "x": 96,
+                      "y": 96,
+                      "name": "hive3",
+                      "enabled": false,
+                      "width": 320,
+                      "height": 320,
+                      "iconFontName": "hexagon",
+                      "iconFontFamily": "lucide",
+                      "weight": 500,
+                      "fill": "#FFFFFF"
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "HK352",
+                      "x": 238,
+                      "y": 206,
+                      "name": "dotA",
+                      "fill": "#FFFFFF",
+                      "width": 36,
+                      "height": 36
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "iET4S",
+                      "x": 198,
+                      "y": 286,
+                      "name": "dotB",
+                      "fill": "#FFFFFF",
+                      "width": 36,
+                      "height": 36
+                    },
+                    {
+                      "type": "ellipse",
+                      "id": "kcuqm",
+                      "x": 278,
+                      "y": 286,
+                      "name": "dotC",
+                      "fill": "#FFFFFF",
+                      "width": 36,
+                      "height": 36
+                    },
+                    {
+                      "type": "polygon",
+                      "polygonCount": 6,
+                      "id": "iIBaY",
+                      "x": 96,
+                      "y": 96,
+                      "name": "hexOutline",
+                      "fill": "#00000000",
+                      "width": 320,
+                      "height": 320,
+                      "stroke": {
+                        "align": "inside",
+                        "thickness": 32,
+                        "join": "round",
+                        "fill": "#FFFFFF"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "IoHNB",
+                  "name": "caption3",
+                  "fill": "#71717A",
+                  "content": "Material Symbols 'hive' on amber",
+                  "fontFamily": "Inter",
+                  "fontSize": 13,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "frame",
+                  "id": "MvKI2",
+                  "name": "Test Row",
+                  "gap": 24,
+                  "padding": [
+                    16,
+                    0,
+                    0,
+                    0
+                  ],
+                  "alignItems": "end",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "dEIBZ",
+                      "name": "test96_3",
+                      "width": 96,
+                      "height": 96,
+                      "fill": "#E8A923",
+                      "cornerRadius": 18,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "NSqGV",
+                          "x": 18,
+                          "y": 18,
+                          "name": "hive96_3",
+                          "enabled": false,
+                          "width": 60,
+                          "height": 60,
+                          "iconFontName": "hexagon",
+                          "iconFontFamily": "lucide",
+                          "weight": 500,
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "ellipse",
+                          "id": "rdHz4",
+                          "x": 44,
+                          "y": 36,
+                          "name": "dotA96",
+                          "fill": "#FFFFFF",
+                          "width": 8,
+                          "height": 8
+                        },
+                        {
+                          "type": "ellipse",
+                          "id": "AgPOJ",
+                          "x": 36,
+                          "y": 54,
+                          "name": "dotB96",
+                          "fill": "#FFFFFF",
+                          "width": 8,
+                          "height": 8
+                        },
+                        {
+                          "type": "ellipse",
+                          "id": "HQUrk",
+                          "x": 52,
+                          "y": 54,
+                          "name": "dotC96",
+                          "fill": "#FFFFFF",
+                          "width": 8,
+                          "height": 8
+                        },
+                        {
+                          "type": "polygon",
+                          "polygonCount": 6,
+                          "id": "SbRSV",
+                          "x": 18,
+                          "y": 18,
+                          "name": "hexOutline96",
+                          "fill": "#00000000",
+                          "width": 60,
+                          "height": 60,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 6,
+                            "join": "round",
+                            "fill": "#FFFFFF"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "QaEpm",
+                      "name": "test32_3",
+                      "width": 32,
+                      "height": 32,
+                      "fill": "#E8A923",
+                      "cornerRadius": 6,
+                      "layout": "none",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "KcVdx",
+                          "x": 6,
+                          "y": 6,
+                          "name": "hive32_3",
+                          "enabled": false,
+                          "width": 20,
+                          "height": 20,
+                          "iconFontName": "hexagon",
+                          "iconFontFamily": "lucide",
+                          "weight": 600,
+                          "fill": "#FFFFFF"
+                        },
+                        {
+                          "type": "polygon",
+                          "polygonCount": 6,
+                          "id": "oC1wi",
+                          "x": 6,
+                          "y": 6,
+                          "name": "hexOutline32",
+                          "fill": "#00000000",
+                          "width": 20,
+                          "height": 20,
+                          "stroke": {
+                            "align": "inside",
+                            "thickness": 2,
+                            "join": "round",
+                            "fill": "#FFFFFF"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "PY4z3",
+                  "name": "sizeLabel3",
+                  "fill": "#52525B",
+                  "content": "96px        32px (taskbar)",
+                  "fontFamily": "Inter",
+                  "fontSize": 11,
+                  "fontWeight": "normal"
                 }
               ]
             }

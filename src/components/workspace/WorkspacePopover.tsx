@@ -1,14 +1,15 @@
+import { Trans } from "@lingui/react/macro";
 import { ArrowUpRight, Check, Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import {
   getRecentWorkspaces,
+  openWorkspaceManagerWindow,
   openWorkspaceWindow,
   type RecentWorkspace,
 } from "@/commands/workspace";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { useUIStore } from "@/stores/uiStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 interface WorkspacePopoverProps {
@@ -20,8 +21,6 @@ export function WorkspacePopover({ children, side = "bottom" }: WorkspacePopover
   const [open, setOpen] = useState(false);
   const [recents, setRecents] = useState<RecentWorkspace[]>([]);
   const workspace = useWorkspaceStore((s) => s.workspace);
-  const setWorkspacePickerOpen = useUIStore((s) => s.setWorkspacePickerOpen);
-
   useEffect(() => {
     if (open) {
       getRecentWorkspaces().then(setRecents);
@@ -33,9 +32,9 @@ export function WorkspacePopover({ children, side = "bottom" }: WorkspacePopover
     setOpen(false);
   }
 
-  function handleManage() {
+  async function handleManage() {
     setOpen(false);
-    setWorkspacePickerOpen(true);
+    await openWorkspaceManagerWindow();
   }
 
   return (
@@ -49,8 +48,13 @@ export function WorkspacePopover({ children, side = "bottom" }: WorkspacePopover
               <button
                 key={ws.path}
                 type="button"
-                onClick={() => !isCurrent && handleSelect(ws.path)}
-                className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+                disabled={isCurrent}
+                onClick={isCurrent ? undefined : () => handleSelect(ws.path)}
+                className={
+                  isCurrent
+                    ? "flex cursor-not-allowed items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm opacity-70"
+                    : "flex items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
+                }
               >
                 {isCurrent ? (
                   <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
@@ -70,7 +74,9 @@ export function WorkspacePopover({ children, side = "bottom" }: WorkspacePopover
             className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent"
           >
             <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="text-foreground">工作区管理...</span>
+            <span className="text-foreground">
+              <Trans>工作区管理...</Trans>
+            </span>
           </button>
         </div>
       </PopoverContent>

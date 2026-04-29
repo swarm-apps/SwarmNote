@@ -37,6 +37,7 @@ export type ConnectionType = "lan" | "dcutr" | "relay";
 
 export interface Device {
   peerId: string;
+  name?: string;
   hostname: string;
   os: string;
   platform: string;
@@ -46,6 +47,7 @@ export interface Device {
   latency?: number;
   isPaired: boolean;
   pairedAt?: string;
+  lastSeen?: string;
 }
 
 export interface DeviceListResult {
@@ -78,6 +80,7 @@ export async function listDevices(filter?: DeviceFilter): Promise<DeviceListResu
 export interface ShareCodeDeviceInfo {
   peerId: string;
   osInfo: {
+    name?: string;
     hostname: string;
     os: string;
     platform: string;
@@ -103,7 +106,7 @@ export async function getDeviceByCode(code: string): Promise<ShareCodeDeviceInfo
 export async function requestPairing(
   peerId: string,
   method: PairingMethod,
-  remoteOsInfo?: { hostname: string; os: string; platform: string; arch: string },
+  remoteOsInfo?: { name?: string; hostname: string; os: string; platform: string; arch: string },
 ): Promise<PairingResponse> {
   return invoke("request_pairing", { peerId, method, remoteOsInfo });
 }

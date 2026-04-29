@@ -1,22 +1,21 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { Copy, RefreshCw } from "lucide-react";
+import { Copy, KeyRound, Timer, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import type { PairingCodeInfo } from "@/commands/pairing";
-import { generatePairingCode, getDeviceByCode, requestPairing } from "@/commands/pairing";
+import { generatePairingCode } from "@/commands/pairing";
 import { Button } from "@/components/ui/button";
-import { ErrorMessage } from "@/components/ui/error-message";
-import { Input } from "@/components/ui/input";
-import { useAsyncAction } from "@/hooks/useAsyncAction";
 
-type CardMode = "idle" | "generate" | "input";
+function formatSeconds(secs: number): string {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
 
 export function CodePairingCard() {
   const { t } = useLingui();
-  const [mode, setMode] = useState<CardMode>("idle");
   const [codeInfo, setCodeInfo] = useState<PairingCodeInfo | null>(null);
   const [remaining, setRemaining] = useState(0);
-  const [inputCode, setInputCode] = useState("");
-  const { loading, error, run, setError, clearError } = useAsyncAction();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const clearTimer = useCallback(() => {
@@ -26,18 +25,14 @@ export function CodePairingCard() {
     }
   }, []);
 
-  const resetToIdle = useCallback(() => {
+  const reset = useCallback(() => {
     clearTimer();
-    setMode("idle");
     setCodeInfo(null);
     setRemaining(0);
-    setInputCode("");
-    clearError();
-  }, [clearTimer, clearError]);
+  }, [clearTimer]);
 
-  // Countdown timer
   useEffect(() => {
-    if (mode !== "generate" || !codeInfo) return;
+    if (!codeInfo) return;
 
     const updateRemaining = () => {
       const left = Math.max(
@@ -45,163 +40,89 @@ export function CodePairingCard() {
         Math.floor((new Date(codeInfo.expiresAt).getTime() - Date.now()) / 1000),
       );
       setRemaining(left);
-      if (left <= 0) {
-        resetToIdle();
-      }
+      if (left <= 0) reset();
     };
 
     updateRemaining();
     intervalRef.current = setInterval(updateRemaining, 1000);
-
     return clearTimer;
-  }, [mode, codeInfo, clearTimer, resetToIdle]);
+  }, [codeInfo, clearTimer, reset]);
 
   async function handleGenerate() {
-    clearError();
     try {
-      const info = await generatePairingCode(300);
-      setCodeInfo(info);
-      setMode("generate");
-    } catch (e) {
-      console.error("Failed to generate pairing code:", e);
-      setError(t`生成配对码失败`);
+      setCodeInfo(await generatePairingCode(300));
+    } catch {
+      toast.error(t`生成配对码失败`);
     }
   }
 
-  async function handleRefresh() {
-    clearTimer();
-    await handleGenerate();
+  function handleCopy() {
+    if (!codeInfo) return;
+    navigator.clipboard.writeText(codeInfo.code).catch(console.error);
+    toast.success(t`配对码已复制`);
   }
 
-  async function handleInputConnect() {
-    if (inputCode.length !== 6) {
-      setError(t`请输入6位配对码`);
-      return;
-    }
-
-    await run(async () => {
-      const deviceInfo = await getDeviceByCode(inputCode);
-      const resp = await requestPairing(
-        deviceInfo.peerId,
-        { type: "Code", code: inputCode },
-        deviceInfo.osInfo,
-      );
-      if (resp.status === "Success") {
-        resetToIdle();
-      } else {
-        setError(resp.reason ?? t`配对被拒绝`);
-      }
-    });
-  }
-
-  function handleCopyCode() {
-    if (codeInfo) {
-      navigator.clipboard.writeText(codeInfo.code).catch(console.error);
-    }
-  }
-
-  function formatSeconds(secs: number): string {
-    const m = Math.floor(secs / 60);
-    const s = secs % 60;
-    return `${m}:${s.toString().padStart(2, "0")}`;
-  }
-
-  if (mode === "idle") {
+  if (codeInfo) {
     return (
-      <div className="rounded-lg border p-4">
-        <div className="mb-2 text-sm font-medium">
-          <Trans>跨网络配对</Trans>
-        </div>
-        <p className="mb-4 text-xs text-muted-foreground">
-          <Trans>在不同网络环境下，使用配对码连接设备</Trans>
-        </p>
-        <ErrorMessage error={error} className="mb-3" />
-        <div className="flex items-center gap-3">
-          <Button size="sm" onClick={handleGenerate}>
-            <Trans>生成配对码</Trans>
-          </Button>
-          <button
-            type="button"
-            className="text-xs text-muted-foreground underline hover:text-foreground"
-            onClick={() => setMode("input")}
-          >
-            <Trans>或 输入配对码连接</Trans>
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (mode === "input") {
-    return (
-      <div className="rounded-lg border p-4">
-        <div className="mb-2 text-sm font-medium">
-          <Trans>输入配对码</Trans>
-        </div>
-        <p className="mb-4 text-xs text-muted-foreground">
-          <Trans>输入对方设备生成的6位配对码</Trans>
-        </p>
-        <ErrorMessage error={error} className="mb-3" />
-        <div className="flex items-center gap-2">
-          <Input
-            value={inputCode}
-            onChange={(e) => setInputCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            placeholder="000000"
-            className="w-32 text-center font-mono tracking-widest"
-            maxLength={6}
-          />
-          <Button size="sm" onClick={handleInputConnect} loading={loading}>
-            {loading ? <Trans>连接中...</Trans> : <Trans>连接</Trans>}
-          </Button>
-          <button
-            type="button"
-            className="text-xs text-muted-foreground underline hover:text-foreground"
-            onClick={resetToIdle}
-          >
-            <Trans>取消</Trans>
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // mode === "generate"
-  return (
-    <div className="rounded-lg border p-4">
-      <div className="mb-2 text-sm font-medium">
-        <Trans>跨网络配对</Trans>
-      </div>
-      <p className="mb-4 text-xs text-muted-foreground">
-        <Trans>将此配对码告知对方设备，配对码将在 {formatSeconds(remaining)} 后过期</Trans>
-      </p>
-
-      <div className="mb-4 flex items-center gap-3">
-        <div className="flex items-center gap-1 rounded-lg bg-muted px-4 py-2 font-mono text-2xl tracking-[0.3em]">
-          {codeInfo?.code.split("").map((digit, _i, arr) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: fixed-length code digits, order never changes
-            <span key={`${arr.length}-${_i}`}>{digit}</span>
-          ))}
-        </div>
-        <Button variant="ghost" size="icon-sm" onClick={handleCopyCode} title={t`复制配对码`}>
-          <Copy className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon-sm" onClick={handleRefresh} title={t`刷新码`}>
-          <RefreshCw className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <span className="text-xs text-muted-foreground">
-          <Trans>等待对方连接...</Trans>
-        </span>
+      <div className="group/code relative flex min-h-15 items-center justify-between rounded-lg border border-primary bg-primary/5 px-3.5 py-2.5">
         <button
           type="button"
-          className="text-xs text-muted-foreground underline hover:text-foreground"
-          onClick={resetToIdle}
+          onClick={reset}
+          className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-muted text-muted-foreground/70 opacity-0 shadow-sm transition-all hover:bg-destructive/15 hover:text-destructive group-hover/code:opacity-100"
+          title={t`关闭`}
         >
-          <Trans>取消</Trans>
+          <X className="h-3 w-3" />
+        </button>
+        <div className="space-y-1">
+          <div className="flex h-4 items-center gap-1.5">
+            <KeyRound className="h-3.5 w-3.5 text-primary" />
+            <span className="text-xs font-semibold leading-none text-primary">
+              <Trans>配对码</Trans>
+            </span>
+            <span className="font-mono text-sm font-bold leading-none tracking-[0.15em]">
+              {codeInfo.code}
+            </span>
+          </div>
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <Timer className="h-3 w-3" />
+            <span>
+              <Trans>{formatSeconds(remaining)} 后过期</Trans>
+            </span>
+            <span>·</span>
+            <span>
+              <Trans>在另一台设备输入此码</Trans>
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="flex shrink-0 items-center gap-1 rounded border px-2 py-1 text-[11px] text-muted-foreground hover:bg-muted"
+          title={t`复制`}
+        >
+          <Copy className="h-3 w-3" />
+          <Trans>复制</Trans>
         </button>
       </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-15 items-center justify-between rounded-lg border bg-muted/50 px-3.5 py-2.5">
+      <div className="space-y-1">
+        <div className="flex h-4 items-center gap-1.5">
+          <KeyRound className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="text-xs font-semibold leading-none">
+            <Trans>配对码</Trans>
+          </span>
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          <Trans>生成 6 位配对码，在另一台设备输入即可配对</Trans>
+        </p>
+      </div>
+      <Button size="sm" onClick={handleGenerate}>
+        <Trans>生成</Trans>
+      </Button>
     </div>
   );
 }

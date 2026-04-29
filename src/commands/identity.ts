@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 export interface DeviceInfo {
   peer_id: string;
   device_name: string;
+  hostname: string;
   os: string;
   platform: string;
   arch: string;

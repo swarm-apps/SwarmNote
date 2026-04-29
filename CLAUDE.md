@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 开发工作流
+
+**IMPORTANT**：执行任何开发任务（编写代码、修改配置、添加依赖）前，必须先调用 `/dev-workflow` skill。它会加载项目知识库（`dev-notes/knowledge/`）中的最佳实践和踩坑记录，并在开发完成后引导更新知识库。
+
+知识库主题：
+
+- `dev-notes/knowledge/theme-and-styling.md` — shadcn/ui、主题变量、窗口装饰
+- `dev-notes/knowledge/editor.md` — CM6、Y.Doc、y-codemirror.next、@swarmnote/editor submodule
+- `dev-notes/knowledge/rust-backend.md` — Tauri command、SeaORM、YDocManager、P2P
+- `dev-notes/knowledge/toolchain.md` — Biome、Lefthook、Lingui、Cargo workspace、Vite
+
 ## Project Overview
 
 SwarmNote is a decentralized, local-first, peer-to-peer note-taking app built with Tauri v2 + React 19 + Rust. Notes sync between devices via P2P networking (libp2p) without a central server. Targets desktop (Windows/macOS/Linux) and Android.
@@ -111,13 +122,13 @@ SwarmNote 通过 path 依赖引用：`yrs-blocknote = { path = "../crates/yrs-bl
 
 | 模块 | 职责 |
 |------|------|
-| `identity/` | 设备身份（PeerId）、OS keychain 持久化、设备名管理 |
+| `identity/` | 设备身份（PeerId）、OS keychain 持久化、设备名管理（device_name 通过 agent_version 传播到 P2P 网络） |
 | `workspace/` | 多窗口工作区管理、per-window DB 绑定（RwLock<HashMap>）、最近工作区 |
 | `document/` | 文档 & 文件夹 CRUD（通过 SeaORM 操作 workspace DB） |
 | `fs/` | 文件系统 I/O、workspace 目录扫描、文件监听（notify debounce）、媒体保存 |
 | `network/` | P2P 节点生命周期（NetManager）、事件循环分发、DHT 在线宣告 |
 | `pairing/` | 设备配对码生成/验证、配对请求/响应流程（PairingManager） |
-| `protocol/` | 自定义 P2P 协议定义（AppRequest/AppResponse） |
+| `protocol/` | 自定义 P2P 协议定义（AppRequest/AppResponse）、OsInfo（设备信息通过 agent_version 编解码，含 name/hostname） |
 | `device/` | DeviceManager——追踪在线设备信息 |
 | `yjs/` | YDocManager——per-doc Y.Doc 生命周期、yrs ↔ DB 持久化、debounce 自动保存、外部 .md 变更检测与重载 |
 | `config/` | 全局配置持久化（最近工作区列表等） |
@@ -136,7 +147,7 @@ SwarmNote 通过 path 依赖引用：`yrs-blocknote = { path = "../crates/yrs-bl
 
 **路由**（TanStack Router，文件路由自动生成 `routeTree.gen.ts`）：
 - `/` — 主页面：Onboarding → WorkspacePicker → AppLayout（Sidebar + EditorPane）
-- `/settings/*` — 设置窗口（独立窗口打开）：general / network / devices / about
+- `/settings/*` — 设置窗口（独立窗口打开）：general / sync / devices / about
 
 **状态管理**（9 个 Zustand stores）：
 - 持久化到 tauriStore（plugin-store）：`onboardingStore`、`preferencesStore`、`uiStore`
@@ -146,7 +157,7 @@ SwarmNote 通过 path 依赖引用：`yrs-blocknote = { path = "../crates/yrs-bl
 
 **i18n**：Lingui（zh 为源语言，en 异步加载），BlockNote 编辑器有独立的字典映射。
 
-**UI 组件**：shadcn/ui（Radix + Tailwind CSS 4 + cva）。平台感知布局——macOS 全高侧边栏，Windows/Linux 自定义标题栏 + 侧边栏在标题栏下方。
+**UI 组件**：shadcn/ui（Radix + Tailwind CSS 4 + cva）+ sonner toast。平台感知布局——macOS Overlay 标题栏（hidden_title + traffic_light_position），Windows/Linux 自定义标题栏。动态创建窗口统一使用 `with_platform_decorations()` 辅助函数。
 
 ### Frontend-Backend Bridge
 
@@ -170,6 +181,8 @@ The Rust lib is named `swarmnote_lib` (not `swarmnote`) to avoid a Windows namin
 
 - **TypeScript**: strict mode, `noUnusedLocals`/`noUnusedParameters` enforced, ESNext modules, `react-jsx` transform, path alias `@/` → `src/`
 - **React**: functional components with hooks, PascalCase filenames
+- **UI 组件优先使用 shadcn/ui**：能用 shadcn 组件就用（Button、Dialog、AlertDialog、Select、Switch、InputOTP 等），避免自定义原生元素
+- **颜色统一使用主题变量**：`text-primary`、`bg-muted`、`border-destructive` 等 CSS 变量，不硬编码颜色值（如 `text-indigo-600`、`bg-green-500`），后续换主题时自动适配
 - **Rust**: standard rustfmt, `#[tauri::command]` pattern, snake_case, tracing（非 log）记录日志
 - **Error handling**: Rust 端统一使用 `AppResult<T>` / `AppError`，序列化为 `{ kind, message }` JSON
 - **Package manager**: pnpm (not npm/yarn)

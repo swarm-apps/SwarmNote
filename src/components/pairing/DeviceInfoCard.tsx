@@ -3,6 +3,7 @@ import type * as React from "react";
 import { cn } from "@/lib/utils";
 
 interface DeviceInfoCardProps {
+  name?: string;
   hostname: string;
   os: string;
   platform?: string;
@@ -11,12 +12,14 @@ interface DeviceInfoCardProps {
 }
 
 export function DeviceInfoCard({
+  name,
   hostname,
   os,
   platform,
   children,
   className,
 }: DeviceInfoCardProps) {
+  const displayName = name ?? hostname;
   const osText = platform ? `${os} · ${platform}` : os;
 
   return (
@@ -25,8 +28,10 @@ export function DeviceInfoCard({
         <Monitor className="h-5 w-5 text-muted-foreground" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-medium">{hostname}</div>
-        <div className="text-xs text-muted-foreground">{osText}</div>
+        <div className="text-sm font-medium">{displayName}</div>
+        <div className="text-xs text-muted-foreground">
+          {name ? `${hostname} · ${osText}` : osText}
+        </div>
         {children}
       </div>
     </div>

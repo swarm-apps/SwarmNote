@@ -1,17 +1,21 @@
-mod config;
-mod device;
-mod document;
+mod commands;
 pub mod error;
-mod fs;
-mod identity;
-mod network;
-mod pairing;
-mod protocol;
-mod sync;
+mod platform;
 #[cfg(desktop)]
 pub mod tray;
-mod workspace;
-mod yjs;
+
+use std::path::PathBuf;
+use std::sync::Arc;
+
+use swarmnote_core::{AppCore, AppCoreBuilder};
+use tauri::Manager;
+
+/// Desktop config directory: `~/.swarmnote/`. Used both to bootstrap
+/// [`AppCore`] and by the `config::*` helpers inside the commands module.
+fn swarmnote_global_dir() -> Result<PathBuf, swarmnote_core::AppError> {
+    let home = directories::BaseDirs::new().ok_or(swarmnote_core::AppError::NoAppDataDir)?;
+    Ok(home.home_dir().join(".swarmnote"))
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -38,80 +42,82 @@ pub fn run() {
     builder
         .invoke_handler(tauri::generate_handler![
             // 设备身份
-            identity::commands::get_device_info,
-            identity::commands::set_device_name,
+            commands::identity::get_device_info,
+            commands::identity::set_device_name,
             // 工作区管理
-            workspace::commands::open_workspace,
-            workspace::commands::get_workspace_info,
-            workspace::commands::get_recent_workspaces,
-            workspace::commands::open_workspace_window,
+            commands::workspace::open_workspace,
+            commands::workspace::get_workspace_info,
+            commands::workspace::get_recent_workspaces,
+            commands::workspace::open_workspace_window,
+            commands::workspace::finish_onboarding,
+            commands::workspace::remove_recent_workspace,
+            commands::workspace::open_workspace_manager_window,
+            commands::workspace::open_settings_window,
+            commands::workspace::create_workspace_for_sync,
             // 文档 & 文件夹
-            document::commands::db_get_documents,
-            document::commands::db_upsert_document,
-            document::commands::delete_document_by_rel_path,
-            document::commands::delete_documents_by_prefix,
-            document::commands::rename_document,
-            document::commands::db_get_folders,
-            document::commands::db_create_folder,
-            document::commands::db_delete_folder,
+            commands::document::db_get_documents,
+            commands::document::db_upsert_document,
+            commands::document::delete_document_by_rel_path,
+            commands::document::delete_documents_by_prefix,
+            commands::document::rename_document,
+            commands::document::move_document,
+            commands::document::db_get_folders,
+            commands::document::db_create_folder,
+            commands::document::db_delete_folder,
             // 文件系统
-            fs::commands::scan_workspace_tree,
-            fs::commands::fs_create_file,
-            fs::commands::fs_create_dir,
-            fs::commands::fs_delete_file,
-            fs::commands::fs_delete_dir,
-            fs::commands::fs_rename,
-            fs::commands::load_document,
-            fs::commands::save_document,
-            fs::commands::save_media,
+            commands::fs::scan_workspace_tree,
+            commands::fs::fs_create_file,
+            commands::fs::fs_create_dir,
+            commands::fs::fs_delete_file,
+            commands::fs::fs_delete_dir,
+            commands::fs::fs_rename,
+            commands::fs::load_document,
+            commands::fs::save_document,
+            commands::fs::save_media,
             // P2P 网络
-            network::commands::start_p2p_node,
-            network::commands::stop_p2p_node,
-            network::commands::get_network_status,
-            network::commands::get_connected_peers,
+            commands::network::start_p2p_node,
+            commands::network::stop_p2p_node,
+            commands::network::get_network_status,
+            commands::network::get_connected_peers,
             // 配对管理
-            pairing::commands::generate_pairing_code,
-            pairing::commands::get_device_by_code,
-            pairing::commands::request_pairing,
-            pairing::commands::respond_pairing_request,
-            pairing::commands::get_paired_devices,
-            pairing::commands::unpair_device,
-            pairing::commands::get_nearby_devices,
-            pairing::commands::list_devices,
-            pairing::commands::get_remote_workspaces,
-            workspace::commands::open_settings_window,
+            commands::pairing::generate_pairing_code,
+            commands::pairing::get_device_by_code,
+            commands::pairing::request_pairing,
+            commands::pairing::respond_pairing_request,
+            commands::pairing::get_paired_devices,
+            commands::pairing::unpair_device,
+            commands::pairing::get_nearby_devices,
+            commands::pairing::list_devices,
+            commands::pairing::get_remote_workspaces,
             // Y.Doc 管理
-            yjs::commands::open_ydoc,
-            yjs::commands::apply_ydoc_update,
-            yjs::commands::close_ydoc,
-            yjs::commands::rename_ydoc,
-            yjs::commands::reload_ydoc_confirmed,
+            commands::yjs::open_ydoc,
+            commands::yjs::apply_ydoc_update,
+            commands::yjs::close_ydoc,
+            commands::yjs::rename_ydoc,
+            commands::yjs::reload_ydoc_confirmed,
+            commands::yjs::hydrate_workspace,
             // 同步
-            sync::commands::trigger_workspace_sync,
-            workspace::commands::create_workspace_for_sync,
+            commands::sync::trigger_workspace_sync,
         ])
         .on_window_event(|window, event| {
             #[cfg(desktop)]
             {
                 if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                     let label = window.label();
-                    let is_workspace = label == "main" || label.starts_with("ws-");
+                    let is_workspace = label.starts_with("ws-");
 
                     if is_workspace {
-                        // 统计当前可见的工作区窗口数量
-                        use tauri::Manager;
                         let visible_ws_count = window
                             .app_handle()
                             .webview_windows()
                             .iter()
                             .filter(|(l, w)| {
-                                (*l == "main" || l.starts_with("ws-"))
-                                    && w.is_visible().unwrap_or(false)
+                                l.starts_with("ws-") && w.is_visible().unwrap_or(false)
                             })
                             .count();
 
                         if visible_ws_count <= 1 {
-                            // 最后一个工作区窗口：隐藏到托盘，记录 label
+                            // Last workspace window: hide to tray, remember label.
                             api.prevent_close();
                             let _ = window.hide();
                             if let Some(state) =
@@ -122,49 +128,67 @@ pub fn run() {
                                 }
                             }
                         }
-                        // 否则：还有其他工作区窗口，正常关闭
                     }
-                    // 非工作区窗口（settings 等）：正常关闭销毁
                 }
             }
         })
         .setup(|app| {
-            use tauri::Manager;
+            // Bootstrap the platform-independent core.
+            let app_data_dir = swarmnote_global_dir()?;
+            let keychain = Arc::new(platform::DesktopKeychain::new());
+            let event_bus = Arc::new(platform::TauriEventBus::new(app.handle().clone()));
+            let app_core = tauri::async_runtime::block_on(
+                AppCoreBuilder::new(keychain, event_bus, app_data_dir)
+                    .with_watcher_factory(|p| Arc::new(platform::NotifyFileWatcher::new(p)))
+                    .build(),
+            )?;
+            app.manage(app_core.clone());
+            app.manage(platform::WorkspaceMap::new());
 
-            identity::init(app.handle())?;
-            app.manage(fs::watcher::FsWatcherState::new());
-            workspace::init(app.handle())?;
-
-            // 如果主窗口自动恢复了工作区，启动对应的 fs watcher
-            {
-                let ws_state = app.state::<workspace::state::WorkspaceState>();
-                let watcher_state = app.state::<fs::watcher::FsWatcherState>();
-                if let Some(info) = tauri::async_runtime::block_on(ws_state.get_by_label("main")) {
-                    let ws_path = std::path::PathBuf::from(&info.path);
-                    if let Err(e) =
-                        fs::watcher::start_watching(app.handle(), "main", &ws_path, &watcher_state)
-                    {
-                        log::warn!("Failed to start fs watcher for auto-restored workspace: {e}");
-                    }
-                }
-            }
-
-            // Y.Doc 管理器
-            app.manage(yjs::manager::YDocManager::new());
-
-            // P2P 网络状态（初始为 None，由前端根据偏好触发启动）
-            app.manage(network::NetManagerState::new());
-
-            // 创建系统托盘（仅桌面端）
+            // System tray (desktop only).
             #[cfg(desktop)]
             {
                 tray::TrayManager::init(app.handle())?;
             }
 
-            #[cfg(not(target_os = "macos"))]
-            {
-                if let Some(window) = app.get_webview_window("main") {
-                    window.set_decorations(false)?;
+            // Launch the appropriate startup window.
+            let handle = app.handle().clone();
+            match commands::workspace::determine_startup_window(&handle, &app_core) {
+                commands::workspace::StartupWindow::Onboarding => {
+                    commands::workspace::create_onboarding_window(&handle)?;
+                }
+                commands::workspace::StartupWindow::WorkspaceManager => {
+                    tauri::async_runtime::block_on(async {
+                        if let Err(e) =
+                            commands::workspace::open_workspace_manager_window(handle.clone()).await
+                        {
+                            log::error!("Failed to create workspace manager window: {e}");
+                        }
+                    });
+                }
+                commands::workspace::StartupWindow::RestoreWorkspace(path) => {
+                    let handle2 = handle.clone();
+                    tauri::async_runtime::block_on(async {
+                        let core = handle2.state::<Arc<AppCore>>();
+                        let ws_map = handle2.state::<platform::WorkspaceMap>();
+                        if let Err(e) = commands::workspace::open_workspace_window(
+                            handle2.clone(),
+                            path,
+                            None,
+                            None,
+                            core,
+                            ws_map,
+                        )
+                        .await
+                        {
+                            log::error!("Failed to restore workspace: {e}");
+                            if let Err(e2) =
+                                commands::workspace::open_workspace_manager_window(handle2).await
+                            {
+                                log::error!("Failed to create workspace manager window: {e2}");
+                            }
+                        }
+                    });
                 }
             }
 

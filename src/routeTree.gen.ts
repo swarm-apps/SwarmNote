@@ -9,15 +9,20 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WorkspaceManagerRouteImport } from './routes/workspace-manager'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SettingsSyncRouteImport } from './routes/settings/sync'
 import { Route as SettingsNetworkRouteImport } from './routes/settings/network'
 import { Route as SettingsGeneralRouteImport } from './routes/settings/general'
 import { Route as SettingsDevicesRouteImport } from './routes/settings/devices'
 import { Route as SettingsAboutRouteImport } from './routes/settings/about'
 
+const WorkspaceManagerRoute = WorkspaceManagerRouteImport.update({
+  id: '/workspace-manager',
+  path: '/workspace-manager',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -32,11 +37,6 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsSyncRoute = SettingsSyncRouteImport.update({
-  id: '/sync',
-  path: '/sync',
-  getParentRoute: () => SettingsRoute,
 } as any)
 const SettingsNetworkRoute = SettingsNetworkRouteImport.update({
   id: '/network',
@@ -63,32 +63,32 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/onboarding': typeof OnboardingRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/workspace-manager': typeof WorkspaceManagerRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/devices': typeof SettingsDevicesRoute
   '/settings/general': typeof SettingsGeneralRoute
   '/settings/network': typeof SettingsNetworkRoute
-  '/settings/sync': typeof SettingsSyncRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/onboarding': typeof OnboardingRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/workspace-manager': typeof WorkspaceManagerRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/devices': typeof SettingsDevicesRoute
   '/settings/general': typeof SettingsGeneralRoute
   '/settings/network': typeof SettingsNetworkRoute
-  '/settings/sync': typeof SettingsSyncRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/onboarding': typeof OnboardingRoute
   '/settings': typeof SettingsRouteWithChildren
+  '/workspace-manager': typeof WorkspaceManagerRoute
   '/settings/about': typeof SettingsAboutRoute
   '/settings/devices': typeof SettingsDevicesRoute
   '/settings/general': typeof SettingsGeneralRoute
   '/settings/network': typeof SettingsNetworkRoute
-  '/settings/sync': typeof SettingsSyncRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -96,41 +96,49 @@ export interface FileRouteTypes {
     | '/'
     | '/onboarding'
     | '/settings'
+    | '/workspace-manager'
     | '/settings/about'
     | '/settings/devices'
     | '/settings/general'
     | '/settings/network'
-    | '/settings/sync'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/onboarding'
     | '/settings'
+    | '/workspace-manager'
     | '/settings/about'
     | '/settings/devices'
     | '/settings/general'
     | '/settings/network'
-    | '/settings/sync'
   id:
     | '__root__'
     | '/'
     | '/onboarding'
     | '/settings'
+    | '/workspace-manager'
     | '/settings/about'
     | '/settings/devices'
     | '/settings/general'
     | '/settings/network'
-    | '/settings/sync'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   OnboardingRoute: typeof OnboardingRoute
   SettingsRoute: typeof SettingsRouteWithChildren
+  WorkspaceManagerRoute: typeof WorkspaceManagerRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/workspace-manager': {
+      id: '/workspace-manager'
+      path: '/workspace-manager'
+      fullPath: '/workspace-manager'
+      preLoaderRoute: typeof WorkspaceManagerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -151,13 +159,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/settings/sync': {
-      id: '/settings/sync'
-      path: '/sync'
-      fullPath: '/settings/sync'
-      preLoaderRoute: typeof SettingsSyncRouteImport
-      parentRoute: typeof SettingsRoute
     }
     '/settings/network': {
       id: '/settings/network'
@@ -195,7 +196,6 @@ interface SettingsRouteChildren {
   SettingsDevicesRoute: typeof SettingsDevicesRoute
   SettingsGeneralRoute: typeof SettingsGeneralRoute
   SettingsNetworkRoute: typeof SettingsNetworkRoute
-  SettingsSyncRoute: typeof SettingsSyncRoute
 }
 
 const SettingsRouteChildren: SettingsRouteChildren = {
@@ -203,7 +203,6 @@ const SettingsRouteChildren: SettingsRouteChildren = {
   SettingsDevicesRoute: SettingsDevicesRoute,
   SettingsGeneralRoute: SettingsGeneralRoute,
   SettingsNetworkRoute: SettingsNetworkRoute,
-  SettingsSyncRoute: SettingsSyncRoute,
 }
 
 const SettingsRouteWithChildren = SettingsRoute._addFileChildren(
@@ -214,6 +213,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   OnboardingRoute: OnboardingRoute,
   SettingsRoute: SettingsRouteWithChildren,
+  WorkspaceManagerRoute: WorkspaceManagerRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

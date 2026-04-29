@@ -58,7 +58,7 @@ interface OnboardingLayoutProps {
 
 export function OnboardingLayout({ children }: OnboardingLayoutProps) {
   return (
-    <div className="flex h-screen flex-col items-center justify-center bg-background">
+    <div className="relative flex h-full flex-col items-center justify-center bg-background">
       {children}
       <div className="absolute bottom-8">
         <StepIndicator />

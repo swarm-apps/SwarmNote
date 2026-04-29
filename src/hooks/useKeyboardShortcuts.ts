@@ -1,3 +1,4 @@
+import { i18n } from "@lingui/core";
 import { useEffect } from "react";
 import { openSettingsWindow } from "@/commands/workspace";
 import { OPEN_COMMAND_PALETTE } from "@/components/layout/CommandPalette";
@@ -8,6 +9,11 @@ import { useUIStore } from "@/stores/uiStore";
 export function useKeyboardShortcuts() {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
+      // Let editor-owned shortcuts (e.g. CM6's Ctrl+B = bold) win when they've
+      // already claimed the event — CM6 calls preventDefault() before the event
+      // bubbles up here.
+      if (e.defaultPrevented) return;
+
       const mod = isMac ? e.metaKey : e.ctrlKey;
       if (!mod) return;
 
@@ -26,7 +32,7 @@ export function useKeyboardShortcuts() {
           break;
         case "n":
           e.preventDefault();
-          useFileTreeStore.getState().createAndOpenFile("", "新建笔记");
+          useFileTreeStore.getState().createAndOpenFile("", i18n._("新建笔记"));
           break;
         case "p":
           e.preventDefault();

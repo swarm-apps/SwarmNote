@@ -1,0 +1,57 @@
+[workspace]
+members = [
+    "crates/core",
+    "crates/entity",
+    "crates/migration",
+    "src-tauri",
+]
+# libs/core and libs/bootstrap are a separate workspace (git submodule under
+# libs/ with its own [workspace] in libs/Cargo.toml). Referenced via path
+# dependencies instead of as members.
+exclude = ["libs"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+
+[workspace.dependencies]
+# Database / ORM
+sea-orm = { version = "~2.0.0-rc", features = [
+    "sqlx-sqlite",
+    "runtime-tokio",
+    "macros",
+    "with-uuid",
+    "with-chrono",
+] }
+sea-orm-migration = { version = "~2.0.0-rc", features = [] }
+
+# Async runtime
+tokio = { version = "1", features = ["sync", "time", "macros", "fs", "rt-multi-thread"] }
+tokio-util = "0.7"
+
+# Identifiers / dates
+uuid = { version = "1", features = ["v7", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Errors
+thiserror = "2"
+
+# Concurrency primitives
+dashmap = "6"
+
+# Hashing
+blake3 = "1"
+sha2 = "0.10"
+
+# Logging / tracing
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+log = "0.4"
+
+# Async utils
+async-trait = "0.1"
+futures = "0.3"

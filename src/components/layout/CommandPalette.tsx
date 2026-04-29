@@ -1,7 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { FileText, Plus, Settings, ToggleLeft } from "lucide-react";
 import { useEffect, useState } from "react";
-import { openSettingsWindow } from "@/commands/workspace";
 import {
   Command,
   CommandDialog,
@@ -12,15 +10,14 @@ import {
   CommandList,
   CommandShortcut,
 } from "@/components/ui/command";
-import { modKey } from "@/lib/utils";
-import { useUIStore } from "@/stores/uiStore";
+import { useCommands } from "@/lib/commands";
 
 export const OPEN_COMMAND_PALETTE = "open-command-palette";
 
 export function CommandPalette() {
   const { t } = useLingui();
   const [open, setOpen] = useState(false);
-  const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const { actions, recents } = useCommands();
 
   useEffect(() => {
     function handleOpen() {
@@ -30,9 +27,9 @@ export function CommandPalette() {
     return () => document.removeEventListener(OPEN_COMMAND_PALETTE, handleOpen);
   }, []);
 
-  function runCommand(fn: () => void) {
+  async function runCommand(run: () => void | Promise<void>) {
     setOpen(false);
-    fn();
+    await run();
   }
 
   return (
@@ -44,32 +41,30 @@ export function CommandPalette() {
             <Trans>没有找到匹配的命令</Trans>
           </CommandEmpty>
           <CommandGroup heading={t`操作`}>
-            <CommandItem onSelect={() => runCommand(() => {})}>
-              <Plus className="h-4 w-4" />
-              <Trans>新建笔记</Trans>
-              <CommandShortcut>{modKey}N</CommandShortcut>
-            </CommandItem>
-            <CommandItem onSelect={() => runCommand(toggleSidebar)}>
-              <ToggleLeft className="h-4 w-4" />
-              <Trans>切换侧边栏</Trans>
-              <CommandShortcut>{modKey}B</CommandShortcut>
-            </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => openSettingsWindow("general"))}>
-              <Settings className="h-4 w-4" />
-              <Trans>打开设置</Trans>
-              <CommandShortcut>{modKey},</CommandShortcut>
-            </CommandItem>
+            {actions.map((cmd) => {
+              const Icon = cmd.icon;
+              return (
+                <CommandItem key={cmd.id} onSelect={() => runCommand(cmd.run)}>
+                  <Icon className="h-4 w-4" />
+                  {cmd.label}
+                  {cmd.shortcut && <CommandShortcut>{cmd.shortcut}</CommandShortcut>}
+                </CommandItem>
+              );
+            })}
           </CommandGroup>
-          <CommandGroup heading={t`最近文件`}>
-            <CommandItem onSelect={() => runCommand(() => {})}>
-              <FileText className="h-4 w-4" />
-              2026-03-21
-            </CommandItem>
-            <CommandItem onSelect={() => runCommand(() => {})}>
-              <FileText className="h-4 w-4" />
-              2026-03-19
-            </CommandItem>
-          </CommandGroup>
+          {recents.length > 0 && (
+            <CommandGroup heading={t`最近文件`}>
+              {recents.map((cmd) => {
+                const Icon = cmd.icon;
+                return (
+                  <CommandItem key={cmd.id} onSelect={() => runCommand(cmd.run)}>
+                    <Icon className="h-4 w-4" />
+                    {cmd.label}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          )}
         </CommandList>
       </Command>
     </CommandDialog>

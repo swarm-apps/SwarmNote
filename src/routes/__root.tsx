@@ -6,11 +6,13 @@ import { listen } from "@tauri-apps/api/event";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { getRecentWorkspaces } from "@/commands/workspace";
 import { CommandPalette } from "@/components/layout/CommandPalette";
 import { GlobalActionDialogs } from "@/components/pairing/GlobalActionDialogs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ForceUpdateDialog, PromptUpdateDialog } from "@/components/upgrade";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { useEditorStore, waitForEditorHydration } from "@/stores/editorStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { waitForOnboardingHydration } from "@/stores/onboardingStore";
 import { useUpgradeStore } from "@/stores/upgradeStore";
@@ -31,7 +33,17 @@ function RootComponent() {
   const prevStatusRef = useRef<string>("idle");
 
   useEffect(() => {
-    Promise.all([waitForOnboardingHydration(), initFromBackend()])
+    Promise.all([waitForOnboardingHydration(), waitForEditorHydration(), initFromBackend()])
+      .then(async () => {
+        // Prune recentDocs for workspaces that no longer exist in the recent list.
+        try {
+          const recents = await getRecentWorkspaces();
+          const validIds = new Set(recents.map((w) => w.uuid).filter((id): id is string => !!id));
+          useEditorStore.getState().pruneRecentDocs(validIds);
+        } catch (err) {
+          console.warn("Failed to prune recent docs:", err);
+        }
+      })
       .catch((err) => console.error("Hydration failed:", err))
       .finally(() => setHydrated(true));
   }, [initFromBackend]);

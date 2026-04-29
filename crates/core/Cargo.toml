@@ -1,0 +1,63 @@
+[package]
+name = "swarmnote-core"
+version = "0.1.0"
+description = "Platform-independent core for SwarmNote (desktop + mobile)"
+edition.workspace = true
+
+[dependencies]
+# Sibling crates
+entity = { path = "../entity" }
+migration = { path = "../migration" }
+
+# Network
+swarm-p2p-core = { path = "../../libs/core" }
+
+# Async
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+
+# Database
+sea-orm = { workspace = true }
+
+# Identifiers / dates
+uuid = { workspace = true }
+chrono = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_bytes = "0.11"
+
+# Concurrency
+dashmap = { workspace = true }
+
+# Hashing
+blake3 = { workspace = true }
+sha2 = { workspace = true }
+
+# Random (pairing code)
+rand = "0.9"
+
+# Errors
+thiserror = { workspace = true }
+
+# Tracing
+tracing = { workspace = true }
+
+# Host info (OsInfo::default)
+hostname = "0.4"
+
+# libp2p keypair handling (Ed25519 protobuf encoding) — re-exports through swarm-p2p-core
+# (no separate libp2p dep; access via swarm_p2p_core::libp2p::*)
+
+# CRDT
+yrs = { version = "0.25", features = ["sync"] }
+
+# Text diff (external .md sync)
+similar = "2"
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "test-util"] }

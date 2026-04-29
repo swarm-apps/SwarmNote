@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { toast } from "sonner";
 import { respondPairingRequest } from "@/commands/pairing";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { PairingRequestDialog } from "./PairingRequestDialog";
@@ -16,9 +17,8 @@ export function GlobalActionDialogs() {
   const handlePairingRespond = useCallback(
     (pendingId: number, accept: boolean) => {
       setResponding(true);
-      // fire-and-forget: 关闭弹窗不等后端结果
-      respondPairingRequest(pendingId, accept).catch((e) => {
-        console.error(`Failed to ${accept ? "accept" : "reject"} pairing:`, e);
+      respondPairingRequest(pendingId, accept).catch(() => {
+        toast.error(accept ? "接受配对失败" : "拒绝配对失败");
       });
       dismiss();
     },

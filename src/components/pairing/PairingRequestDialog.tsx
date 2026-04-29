@@ -13,7 +13,7 @@ import { DeviceInfoCard } from "./DeviceInfoCard";
 interface PairingRequestPayload {
   pendingId: number;
   peerId: string;
-  osInfo: { hostname: string; os: string; platform: string; arch: string };
+  osInfo: { name?: string; hostname: string; os: string; platform: string; arch: string };
   method: { type: "Direct" } | { type: "Code"; code: string };
   expiresAt: string;
 }
@@ -59,6 +59,7 @@ export function PairingRequestDialog({
         </DialogHeader>
 
         <DeviceInfoCard
+          name={data.osInfo.name}
           hostname={data.osInfo.hostname}
           os={data.osInfo.os}
           platform={data.osInfo.platform}

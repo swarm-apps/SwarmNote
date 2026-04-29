@@ -32,6 +32,20 @@ export function createTauriStorage(filename: string) {
 }
 
 /**
+ * Listen for cross-window changes on a specific key in a Tauri store file.
+ * When another window writes to the same key, the callback fires with the new value.
+ */
+export function onTauriStoreKeyChange<T>(
+  filename: string,
+  key: string,
+  cb: (value: T | undefined) => void,
+) {
+  const store = getOrCreateStore(filename);
+  // Returns a promise that resolves to an unlisten function
+  return store.onKeyChange<T>(key, cb);
+}
+
+/**
  * Generic hydration guard for any Zustand persist store.
  * Resolves when the store has finished loading from persistent storage.
  */
