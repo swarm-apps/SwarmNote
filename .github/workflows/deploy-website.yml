@@ -19,7 +19,7 @@ concurrency:
 
 # GitHub Pages 默认权限要求
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -27,9 +27,6 @@ jobs:
   build:
     name: Build (Astro)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: docs
     steps:
       - uses: actions/checkout@v4
         # docs 不需要 swarm-p2p-core submodule（Rust 才需要）
@@ -44,12 +41,13 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
-          cache-dependency-path: docs/pnpm-lock.yaml
 
-      - name: Install dependencies
+      # docs 通过根 pnpm-lock.yaml 作为 workspace importer 安装依赖
+      - name: Install dependencies (workspace root)
         run: pnpm install --frozen-lockfile
 
       - name: Build site
+        working-directory: docs
         env:
           # 提升 GitHub API 速率限制（5000 req/h vs 60 req/h）
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,6 +57,7 @@ jobs:
       # 仅在 push to main / release.published / repository_dispatch 触发时尝试
       - name: Commit refreshed releases cache (if changed)
         if: github.event_name != 'workflow_dispatch'
+        working-directory: docs
         run: |
           if [ -n "$(git status --porcelain src/data/releases.cache.json)" ]; then
             git config user.name "github-actions[bot]"
