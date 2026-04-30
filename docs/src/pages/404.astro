@@ -1,0 +1,27 @@
+---
+import PageLayout from "../layouts/PageLayout.astro";
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+<PageLayout title="404">
+  <section class="max-w-2xl mx-auto px-6 py-32 md:py-40 text-center">
+    <p class="text-7xl md:text-8xl font-mono font-bold text-primary/30 mb-6 tabular-nums">404</p>
+    <h1 class="text-2xl md:text-3xl font-semibold tracking-tight text-foreground mb-4">
+      {t("common.404")}
+    </h1>
+    <p class="text-sm md:text-base text-muted-foreground mb-10">
+      {Astro.url.pathname}
+    </p>
+    <a
+      href={lang === "zh" ? "/" : "/en/"}
+      class="inline-flex items-center gap-2 px-5 h-10 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4" aria-hidden="true">
+        <path d="M19 12H5 M11 18l-6-6 6-6" />
+      </svg>
+      {t("common.back")}
+    </a>
+  </section>
+</PageLayout>

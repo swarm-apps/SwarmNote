@@ -1,0 +1,391 @@
+---
+/*
+  Section 05 — 6 位配对码加入 swarm
+  - 左：4 步图解
+  - 右：笔电 ↔ 手机 配对码动画（OTP 逐位填入 + 连线脉冲）
+*/
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const steps = (t as unknown as (k: string) => unknown)("pairing.steps") as string[];
+const PAIR_CODE = ["4", "8", "2", "1", "5", "9"];
+---
+<section
+  id="pairing"
+  data-section="pairing"
+  class="relative overflow-hidden py-32 md:py-40 bg-card/40"
+>
+  <div class="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+    {/* 左：标题 + 4 步骤 */}
+    <div class="lg:col-span-5">
+      <p
+        data-pairing-eyebrow
+        class="text-xs font-mono uppercase tracking-[0.25em] text-primary mb-4"
+      >
+        Onboarding
+      </p>
+      <h2
+        data-pairing-h2
+        class="text-4xl md:text-5xl font-semibold tracking-tight text-foreground mb-5"
+      >
+        {t("pairing.h1")}
+      </h2>
+      <p
+        data-pairing-lede
+        class="text-base md:text-lg text-muted-foreground leading-relaxed mb-10"
+      >
+        {t("pairing.lede")}
+      </p>
+
+      <ol class="space-y-5">
+        {steps.map((step, i) => (
+          <li
+            data-pairing-step
+            data-step-index={i}
+            class="flex gap-4 items-start"
+          >
+            <span
+              class="flex-none mt-0.5 w-7 h-7 rounded-full bg-primary/10 text-primary text-xs font-mono font-semibold tabular-nums flex items-center justify-center"
+              aria-hidden="true"
+            >
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <p class="text-sm md:text-base text-foreground/90 leading-relaxed pt-0.5">
+              {step}
+            </p>
+          </li>
+        ))}
+      </ol>
+
+      <p
+        data-pairing-sidenote
+        class="mt-8 text-xs md:text-sm text-muted-foreground italic"
+      >
+        {t("pairing.sidenote")}
+      </p>
+    </div>
+
+    {/* 右：配对动画舞台 */}
+    <div class="lg:col-span-7 relative">
+      <div
+        data-pairing-stage
+        class="relative aspect-[5/4] w-full max-w-2xl mx-auto"
+      >
+        <svg viewBox="0 0 600 480" class="w-full h-full" aria-hidden="true">
+          <defs>
+            <linearGradient id="connBeam" x1="0%" x2="100%" y1="50%" y2="50%">
+              <stop offset="0%" stopColor="var(--color-primary)" stopOpacity="0" />
+              <stop offset="50%" stopColor="var(--color-glow)" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
+          {/* 左：笔电 frame */}
+          <g data-device-laptop transform="translate(40 60)">
+            <rect
+              x="0"
+              y="0"
+              width="240"
+              height="160"
+              rx="10"
+              fill="var(--color-card)"
+              stroke="var(--color-border)"
+              stroke-width="1.5"
+            />
+            <rect
+              x="-20"
+              y="160"
+              width="280"
+              height="8"
+              rx="2"
+              fill="var(--color-muted)"
+            />
+            <text
+              x="120"
+              y="32"
+              text-anchor="middle"
+              fill="var(--color-muted-foreground)"
+              font-size="10"
+              font-family="ui-monospace, monospace"
+              letter-spacing="0.15em"
+            >
+              ADD DEVICE
+            </text>
+            {/* OTP 6 格 */}
+            {PAIR_CODE.map((digit, i) => (
+              <g
+                data-otp-cell
+                data-cell-side="laptop"
+                data-cell-index={i}
+                transform={`translate(${20 + i * 33} 64)`}
+              >
+                <rect
+                  width="26"
+                  height="40"
+                  rx="5"
+                  fill="var(--color-background)"
+                  stroke="var(--color-border)"
+                  stroke-width="1"
+                />
+                <text
+                  data-otp-digit
+                  x="13"
+                  y="27"
+                  text-anchor="middle"
+                  fill="var(--color-primary)"
+                  font-size="20"
+                  font-family="ui-monospace, monospace"
+                  font-weight="600"
+                  opacity="0"
+                >
+                  {digit}
+                </text>
+              </g>
+            ))}
+            <text
+              x="120"
+              y="138"
+              text-anchor="middle"
+              fill="var(--color-muted-foreground)"
+              font-size="9"
+              font-family="ui-monospace, monospace"
+            >
+              waiting for join…
+            </text>
+          </g>
+
+          {/* 右：手机 frame */}
+          <g data-device-phone transform="translate(420 100)">
+            <rect
+              x="0"
+              y="0"
+              width="120"
+              height="220"
+              rx="14"
+              fill="var(--color-card)"
+              stroke="var(--color-border)"
+              stroke-width="1.5"
+            />
+            <rect
+              x="40"
+              y="6"
+              width="40"
+              height="6"
+              rx="3"
+              fill="var(--color-muted)"
+            />
+            <text
+              x="60"
+              y="40"
+              text-anchor="middle"
+              fill="var(--color-muted-foreground)"
+              font-size="9"
+              font-family="ui-monospace, monospace"
+              letter-spacing="0.15em"
+            >
+              JOIN SWARM
+            </text>
+            {/* OTP 6 格（垂直紧凑：分两行 3+3） */}
+            {PAIR_CODE.map((digit, i) => {
+              const row = Math.floor(i / 3);
+              const col = i % 3;
+              return (
+                <g
+                  data-otp-cell
+                  data-cell-side="phone"
+                  data-cell-index={i}
+                  transform={`translate(${14 + col * 31} ${64 + row * 44})`}
+                >
+                  <rect
+                    width="24"
+                    height="36"
+                    rx="5"
+                    fill="var(--color-background)"
+                    stroke="var(--color-border)"
+                    stroke-width="1"
+                  />
+                  <text
+                    data-otp-digit
+                    x="12"
+                    y="24"
+                    text-anchor="middle"
+                    fill="var(--color-primary)"
+                    font-size="18"
+                    font-family="ui-monospace, monospace"
+                    font-weight="600"
+                    opacity="0"
+                  >
+                    {digit}
+                  </text>
+                </g>
+              );
+            })}
+            {/* 状态指示 */}
+            <circle
+              data-phone-status
+              cx="60"
+              cy="180"
+              r="6"
+              fill="var(--color-muted)"
+            />
+            <text
+              data-phone-status-text
+              x="60"
+              y="200"
+              text-anchor="middle"
+              fill="var(--color-muted-foreground)"
+              font-size="9"
+              font-family="ui-monospace, monospace"
+            >
+              connecting…
+            </text>
+          </g>
+
+          {/* 连接光束（笔电 → 手机） */}
+          <line
+            data-pairing-beam
+            x1="280"
+            y1="140"
+            x2="420"
+            y2="210"
+            stroke="url(#connBeam)"
+            stroke-width="3"
+            stroke-linecap="round"
+            opacity="0"
+          />
+
+          {/* 飞行粒子 */}
+          {[0, 1, 2].map((i) => (
+            <circle
+              key={`pp-${i}`}
+              data-pairing-particle
+              cx="280"
+              cy="140"
+              r="3"
+              fill="var(--color-glow)"
+              opacity="0"
+            />
+          ))}
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from "gsap";
+  import { ensureScrollTrigger, prefersReducedMotion } from "../lib/scroll-utils";
+
+  const ScrollTrigger = ensureScrollTrigger();
+  const reduced = prefersReducedMotion();
+
+  const root = document.querySelector<HTMLElement>('[data-section="pairing"]');
+  if (root) {
+    const eyebrow = root.querySelector("[data-pairing-eyebrow]");
+    const h2 = root.querySelector("[data-pairing-h2]");
+    const lede = root.querySelector("[data-pairing-lede]");
+    const sidenote = root.querySelector("[data-pairing-sidenote]");
+    const stepsEls = Array.from(root.querySelectorAll<HTMLElement>("[data-pairing-step]"));
+    const stage = root.querySelector("[data-pairing-stage]");
+    const laptopDigits = Array.from(
+      root.querySelectorAll<SVGTextElement>('[data-cell-side="laptop"] [data-otp-digit]'),
+    );
+    const phoneDigits = Array.from(
+      root.querySelectorAll<SVGTextElement>('[data-cell-side="phone"] [data-otp-digit]'),
+    );
+    const beam = root.querySelector("[data-pairing-beam]");
+    const particles = Array.from(root.querySelectorAll<SVGCircleElement>("[data-pairing-particle]"));
+    const statusDot = root.querySelector("[data-phone-status]");
+    const statusText = root.querySelector("[data-phone-status-text]");
+
+    if (reduced) {
+      [...laptopDigits, ...phoneDigits].forEach((d) => d.setAttribute("opacity", "1"));
+    } else {
+      gsap.set([eyebrow, h2, lede, sidenote], { y: 24, autoAlpha: 0 });
+      gsap.set(stepsEls, { x: -16, autoAlpha: 0 });
+      gsap.set(stage, { autoAlpha: 0, scale: 0.96, transformOrigin: "center" });
+
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: root,
+            start: "top 70%",
+            end: "top 10%",
+            toggleActions: "play none none reverse",
+          },
+        })
+        .to(eyebrow, { y: 0, autoAlpha: 1, duration: 0.5, ease: "power2.out" })
+        .to(h2, { y: 0, autoAlpha: 1, duration: 0.6, ease: "power2.out" }, "-=0.3")
+        .to(lede, { y: 0, autoAlpha: 1, duration: 0.5, ease: "power2.out" }, "-=0.4")
+        .to(stage, { autoAlpha: 1, scale: 1, duration: 0.7, ease: "power2.out" }, "-=0.4")
+        .to(stepsEls, {
+          x: 0,
+          autoAlpha: 1,
+          duration: 0.5,
+          stagger: 0.15,
+          ease: "power2.out",
+        }, "-=0.5")
+        .to(sidenote, { y: 0, autoAlpha: 1, duration: 0.4 }, "-=0.2");
+
+      // 配对循环动画（loop）
+      const pairLoop = gsap.timeline({ repeat: -1, repeatDelay: 1.2, paused: true });
+      // 1) 笔电先逐位生成
+      pairLoop
+        .set([...laptopDigits, ...phoneDigits], { opacity: 0 })
+        .set(beam, { autoAlpha: 0 })
+        .set(statusDot, { fill: "var(--color-muted)" })
+        .set(statusText, { textContent: "connecting…" })
+        .to(laptopDigits, {
+          opacity: 1,
+          duration: 0.18,
+          stagger: 0.16,
+          ease: "power2.out",
+        }, 0.2)
+        // 2) 手机再逐位输入
+        .to(phoneDigits, {
+          opacity: 1,
+          duration: 0.16,
+          stagger: 0.18,
+          ease: "power2.out",
+        }, "+=0.4")
+        // 3) 光束亮起
+        .to(beam, { autoAlpha: 1, duration: 0.5, ease: "power2.out" }, "+=0.2")
+        // 4) 粒子飞行
+        .add(() => {
+          particles.forEach((p, i) => {
+            gsap.fromTo(
+              p,
+              { attr: { cx: 280, cy: 140 }, opacity: 0 },
+              {
+                attr: { cx: 420, cy: 210 },
+                opacity: 0.95,
+                duration: 0.7,
+                ease: "power1.in",
+                delay: i * 0.18,
+                onComplete: () => gsap.to(p, { opacity: 0, duration: 0.2 }),
+              },
+            );
+          });
+        }, ">-0.3")
+        // 5) 状态变绿 connected
+        .to(statusDot, { fill: "var(--color-primary)", duration: 0.3 }, "+=0.4")
+        .add(() => {
+          if (statusText) statusText.textContent = "connected";
+        });
+
+      ScrollTrigger.create({
+        trigger: root,
+        start: "top 80%",
+        end: "bottom 20%",
+        onEnter: () => pairLoop.play(),
+        onEnterBack: () => pairLoop.play(),
+        onLeave: () => pairLoop.pause(),
+        onLeaveBack: () => pairLoop.pause(),
+      });
+    }
+  }
+
+  requestAnimationFrame(() => ScrollTrigger.refresh());
+</script>

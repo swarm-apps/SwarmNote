@@ -45,9 +45,7 @@ function AboutPage() {
       <div className="flex flex-col items-center gap-5">
         {/* App Icon + Name + Version */}
         <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-            <span className="text-xl font-bold text-primary">SN</span>
-          </div>
+          <img src="/logo-64.png" alt="SwarmNote" width={56} height={56} className="h-14 w-14" />
           <div>
             <h1 className="text-lg font-semibold tracking-tight">SwarmNote</h1>
             <div className="flex items-center gap-2">

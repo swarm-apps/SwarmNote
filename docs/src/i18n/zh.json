@@ -1,0 +1,213 @@
+{
+  "site": {
+    "title": "SwarmNote",
+    "tagline": "让笔记在你的设备群里自由流动",
+    "description": "本地优先、设备间 P2P 同步的笔记工具。无服务器、无账号、无订阅——你的笔记躺在本地的 Markdown 文件夹里，通过 libp2p 在你自己的设备之间直接同步。"
+  },
+  "nav": {
+    "features": "特性",
+    "download": "下载",
+    "ecosystem": "生态",
+    "github": "GitHub",
+    "changelog": "更新日志"
+  },
+  "hero": {
+    "h1": "让笔记在你的设备群里自由流动",
+    "subtitle": "本地优先 · P2P 同步 · CRDT 自动合并 · 桌面 + 移动同源",
+    "subtitleShort": "你的笔记，蜂群里的花蜜",
+    "ctaPrimary": "免费下载",
+    "ctaSecondary": "在 GitHub 上查看",
+    "microcopy": "开源 · 无需账号 · 无需服务器"
+  },
+  "metaphor": {
+    "h1": "为什么是 swarm？",
+    "lede": "把「属于你自己的多台设备」想象成一个蜂群——每台设备是一只蜜蜂，工作区是蜂巢，笔记像花蜜一样在蜂群间自由流动。",
+    "items": [
+      { "title": "设备 = 蜜蜂", "desc": "你的笔记本、手机、台式机各是蜂群里的一员" },
+      { "title": "工作区 = 蜂巢", "desc": "所有设备共享同一片「地盘」" },
+      { "title": "笔记 = 花蜜", "desc": "在 swarm 内部 P2P 流动，不经过任何中心服务器" }
+    ]
+  },
+  "pillars": {
+    "h1": "为什么选 SwarmNote",
+    "items": [
+      {
+        "title": "本地优先",
+        "desc": "笔记 = 普通 .md 文件夹，删了应用笔记还在",
+        "icon": "folder"
+      },
+      {
+        "title": "P2P 同步",
+        "desc": "libp2p 直连设备，无服务器、无订阅",
+        "icon": "network"
+      },
+      {
+        "title": "CRDT 自动合并",
+        "desc": "基于 Yjs，离线编辑零冲突",
+        "icon": "merge"
+      },
+      {
+        "title": "全平台",
+        "desc": "Windows · macOS · Linux · Android · iOS",
+        "icon": "monitor-smartphone"
+      }
+    ]
+  },
+  "coreShared": {
+    "h1": "一份 Rust 核心，桌面与移动同源",
+    "lede": "桌面端 (Tauri) 和移动端 (Expo) 通过 swarmnote-core Rust crate 共享同一份业务逻辑、CRDT 状态机和 P2P 网络栈。",
+    "leftLabel": "Desktop",
+    "leftStack": "Tauri 2 + React 19",
+    "leftCall": "invoke('cmd', args)",
+    "centerLabel": "swarmnote-core",
+    "centerStack": "Rust crate",
+    "rightLabel": "Mobile",
+    "rightStack": "Expo + React Native",
+    "rightCall": "uniffi.call() (JSI)",
+    "footnote": "@swarmnote/editor git submodule 同时被两端 import，CodeMirror 6 编辑体验完全一致"
+  },
+  "pairing": {
+    "h1": "6 位配对码加入 swarm",
+    "lede": "在一台设备上生成 6 位数字，在另一台输入即配对。跨网络可用，零云端中转。",
+    "steps": [
+      "在主设备打开「添加设备」",
+      "一段 6 位数字配对码出现",
+      "新设备输入这串数字",
+      "swarm 完成扩展，笔记自动同步"
+    ],
+    "sidenote": "局域网内设备由 mDNS 自动发现（开发中）"
+  },
+  "folder": {
+    "h1": "你的笔记，永远在你手里",
+    "lede": "工作区就是任意本地文件夹。打开 VS Code、Obsidian、nvim 直接编辑 .md 文件，SwarmNote 监听变更并自动 reflow 进 Yjs，不丢历史不冲突。",
+    "sidenote": "能放进 Dropbox / OneDrive / Git 等任意现有文件同步方案做额外备份"
+  },
+  "compare": {
+    "h1": "选择 SwarmNote 的理由",
+    "lede": "唯有 SwarmNote 同时具备「本地 Markdown + 内置 P2P + CRDT 字符级合并 + 完全开源 (MIT)」",
+    "headers": {
+      "feature": "维度",
+      "obsidian": "Obsidian",
+      "notion": "Notion",
+      "logseq": "Logseq",
+      "swarmnote": "SwarmNote"
+    },
+    "rows": [
+      { "feature": "数据存储", "obsidian": "本地 Markdown", "notion": "云端数据库", "logseq": "本地 Markdown", "swarmnote": "本地 Markdown" },
+      { "feature": "多设备同步", "obsidian": "付费 Sync", "notion": "内置（云）", "logseq": "Git / 第三方云", "swarmnote": "内置 P2P 同步" },
+      { "feature": "服务器依赖", "obsidian": "同步要", "notion": "强依赖", "logseq": "同步要", "swarmnote": "无" },
+      { "feature": "离线协作合并", "obsidian": "不支持", "notion": "不支持", "logseq": "文件级冲突", "swarmnote": "CRDT 自动合并" },
+      { "feature": "外部工具协同", "obsidian": "兼容", "notion": "不兼容", "logseq": "兼容", "swarmnote": "兼容（含自动 reflow）" },
+      { "feature": "开源", "obsidian": "否", "notion": "否", "logseq": "是", "swarmnote": "是 (MIT)" }
+    ]
+  },
+  "download": {
+    "h1": "选择你的平台",
+    "subtitleTemplate": "当前最新版本：{version}（{publishedAt}）",
+    "platforms": {
+      "windows": "Windows",
+      "macos": "macOS",
+      "linux": "Linux",
+      "android": "Android",
+      "ios": "iOS"
+    },
+    "android": {
+      "placeholder": "Android APK 已发布",
+      "linkLabel": "下载 SwarmNote-RN APK"
+    },
+    "ios": {
+      "placeholder": "开发完成 · 等待签名上架",
+      "linkLabel": "查看 SwarmNote-RN 仓库"
+    },
+    "viewAll": "查看完整下载选项"
+  },
+  "ecosystem": {
+    "h1": "Swarm 系列开源项目",
+    "lede": "所有项目共享 swarm-p2p-core 网络层",
+    "items": [
+      {
+        "name": "SwarmDrop",
+        "desc": "去中心化文件传输（「跨网络版 LocalSend」）",
+        "status": "v0.4.4"
+      },
+      {
+        "name": "SwarmNote",
+        "desc": "P2P 笔记同步（你正在看的这个）",
+        "status": "当前"
+      },
+      {
+        "name": "SwarmNote-RN",
+        "desc": "SwarmNote 移动端",
+        "status": "开发中"
+      },
+      {
+        "name": "swarm-p2p-core",
+        "desc": "P2P 网络 SDK（libp2p 封装）",
+        "status": "已完成"
+      }
+    ]
+  },
+  "footer": {
+    "brand": "Built with Tauri · libp2p · CodeMirror 6 · Yjs",
+    "columns": {
+      "product": {
+        "title": "产品",
+        "items": [
+          { "label": "下载", "href": "/download" },
+          { "label": "更新日志", "href": "https://github.com/yexiyue/SwarmNote/releases" }
+        ]
+      },
+      "develop": {
+        "title": "开发",
+        "items": [
+          { "label": "GitHub", "href": "https://github.com/yexiyue/SwarmNote" },
+          { "label": "提交 Issue", "href": "https://github.com/yexiyue/SwarmNote/issues" },
+          { "label": "贡献指南", "href": "https://github.com/yexiyue/SwarmNote/blob/main/README.md" }
+        ]
+      },
+      "legal": {
+        "title": "法律",
+        "items": [
+          { "label": "隐私", "href": "/legal/privacy" },
+          { "label": "许可证 (MIT)", "href": "https://github.com/yexiyue/SwarmNote/blob/main/LICENSE" }
+        ]
+      },
+      "ecosystem": {
+        "title": "生态",
+        "items": [
+          { "label": "SwarmDrop", "href": "https://github.com/yexiyue/swarmdrop" },
+          { "label": "swarm-p2p-core", "href": "https://github.com/yexiyue/swarm-p2p" }
+        ]
+      }
+    },
+    "copyright": "© 2025 SwarmNote Contributors · MIT License",
+    "noTracking": "本网站不收集任何用户数据 · No tracking · No telemetry"
+  },
+  "language": {
+    "switchLabel": "切换语言",
+    "zh": "中文",
+    "en": "English"
+  },
+  "downloadPage": {
+    "h1": "下载 SwarmNote",
+    "checksum": "校验和",
+    "size": "大小",
+    "updated": "更新于",
+    "fallbackNote": "数据来自最近一次成功构建（暂未连接 GitHub）"
+  },
+  "changelogPage": {
+    "h1": "更新日志",
+    "viewMore": "查看完整历史 →"
+  },
+  "privacyPage": {
+    "h1": "隐私声明",
+    "lastUpdated": "最近更新"
+  },
+  "common": {
+    "recommended": "推荐你的平台",
+    "loading": "加载中…",
+    "404": "这只蜜蜂飞错了方向",
+    "back": "返回首页",
+    "skipNav": "跳过导航"
+  }
+}

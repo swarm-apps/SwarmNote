@@ -1,0 +1,27 @@
+---
+import { getLangFromUrl, switchLocale, useTranslations, locales, type Locale } from "../i18n/utils";
+
+const currentLang = getLangFromUrl(Astro.url);
+const t = useTranslations(currentLang);
+const currentPath = Astro.url.pathname;
+---
+<nav aria-label={t("language.switchLabel")} class="flex items-center gap-1 text-sm">
+  {locales.map((loc: Locale, i) => (
+    <>
+      {i > 0 && <span class="text-muted-foreground" aria-hidden="true">/</span>}
+      {loc === currentLang ? (
+        <span class="font-medium text-foreground" aria-current="true">
+          {t(`language.${loc}`)}
+        </span>
+      ) : (
+        <a
+          href={switchLocale(currentPath, loc)}
+          class="text-muted-foreground hover:text-primary transition-colors"
+          hreflang={loc}
+        >
+          {t(`language.${loc}`)}
+        </a>
+      )}
+    </>
+  ))}
+</nav>

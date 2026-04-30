@@ -1,0 +1,83 @@
+---
+import "../styles/theme.css";
+import { getLangFromUrl, getLocaleAlternates, useTranslations, type Locale } from "../i18n/utils";
+import SmoothScroll from "../components/SmoothScroll";
+
+export interface Props {
+  /** Page title — concatenated as `{title} — SwarmNote` (omit suffix if title === SwarmNote) */
+  title: string;
+  /** Meta description (≤ 160 chars). Falls back to site default. */
+  description?: string;
+  /** OG image absolute path under public/. Defaults to /og/home-{lang}.png */
+  ogImage?: string;
+  /** Force a specific lang (rare; usually inferred from URL) */
+  lang?: Locale;
+}
+
+const lang: Locale = Astro.props.lang ?? getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const siteTitle = t("site.title");
+const siteDescription = Astro.props.description ?? t("site.description");
+const fullTitle = Astro.props.title === siteTitle
+  ? siteTitle
+  : `${Astro.props.title} — ${siteTitle}`;
+
+const siteOrigin = Astro.site?.toString().replace(/\/$/, "") ?? "https://swarmnote.app";
+const canonical = new URL(Astro.url.pathname, siteOrigin).toString();
+const alternates = getLocaleAlternates(Astro.url.pathname, siteOrigin);
+const ogImage = new URL(Astro.props.ogImage ?? `/og/home-${lang}.png`, siteOrigin).toString();
+---
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{fullTitle}</title>
+    <meta name="description" content={siteDescription} />
+    <link rel="canonical" href={canonical} />
+
+    {alternates.map((alt) => (
+      <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />
+    ))}
+
+    {/* Open Graph */}
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={siteDescription} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content={lang === "zh" ? "zh_CN" : "en_US"} />
+    <meta property="og:site_name" content={siteTitle} />
+
+    {/* Twitter Card */}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={siteDescription} />
+    <meta name="twitter:image" content={ogImage} />
+
+    {/* Favicon */}
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="any" href="/logo.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+
+    {/* Theme color (browser chrome on iOS / Android) */}
+    <meta name="theme-color" content="#FDFCFA" />
+
+    {/* Sitemap discovery hint */}
+    <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
+
+    {/* Fonts: 占位 — Phase 10 用 @fontsource/* 自托管 + preload。当前先依赖系统字体 fallback。 */}
+  </head>
+  <body class="min-h-screen bg-background text-foreground font-sans">
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-primary focus:text-primary-foreground focus:px-3 focus:py-1 focus:rounded">
+      {t("common.skipNav")}
+    </a>
+    <main id="main">
+      <slot />
+    </main>
+
+    <SmoothScroll client:idle />
+  </body>
+</html>

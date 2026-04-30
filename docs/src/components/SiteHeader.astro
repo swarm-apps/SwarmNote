@@ -1,0 +1,126 @@
+---
+/*
+  Sticky 顶部导航。滚动后增加背景模糊。
+*/
+import { getLangFromUrl, useTranslations, switchLocale, locales, type Locale } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const currentPath = Astro.url.pathname;
+
+const homeHref = lang === "zh" ? "/" : "/en/";
+
+const navItems: Array<{ label: string; href: string; external?: boolean }> = [
+  { label: t("nav.features"), href: "#pillars" },
+  { label: t("nav.download"), href: "#download" },
+  { label: t("nav.ecosystem"), href: "#ecosystem" },
+  {
+    label: t("nav.changelog"),
+    href: "https://github.com/yexiyue/SwarmNote/releases",
+    external: true,
+  },
+  {
+    label: t("nav.github"),
+    href: "https://github.com/yexiyue/SwarmNote",
+    external: true,
+  },
+];
+---
+<header
+  data-site-header
+  class="fixed top-0 inset-x-0 z-40 transition-all duration-300"
+>
+  <div
+    data-site-header-bg
+    class="absolute inset-0 -z-10 bg-background/0 backdrop-blur-0 border-b border-border/0 transition-all duration-300"
+  ></div>
+  <div class="max-w-6xl mx-auto px-6">
+    <nav class="flex items-center justify-between h-16">
+      {/* Logo */}
+      <a href={homeHref} class="flex items-center gap-2.5 group">
+        <img
+          src="/logo.png"
+          alt={t("site.title")}
+          width="36"
+          height="36"
+          class="w-9 h-9 transition-transform duration-500 group-hover:rotate-12"
+          loading="eager"
+          decoding="async"
+        />
+        <span class="text-sm md:text-base font-semibold tracking-tight text-foreground">
+          {t("site.title")}
+        </span>
+      </a>
+
+      {/* Nav 桌面 */}
+      <ul class="hidden md:flex items-center gap-8">
+        {navItems.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              class="text-sm font-medium text-foreground/75 hover:text-primary transition-colors"
+              {...(item.external
+                ? { target: "_blank", rel: "noopener noreferrer" }
+                : {})}
+            >
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+
+      {/* 右侧：lang + CTA */}
+      <div class="flex items-center gap-4">
+        <nav aria-label={t("language.switchLabel")} class="hidden sm:flex items-center gap-1 text-xs">
+          {locales.map((loc: Locale, i) => (
+            <>
+              {i > 0 && <span class="text-muted-foreground/50" aria-hidden="true">/</span>}
+              {loc === lang ? (
+                <span class="font-medium text-foreground" aria-current="true">
+                  {t(`language.${loc}`)}
+                </span>
+              ) : (
+                <a
+                  href={switchLocale(currentPath, loc)}
+                  class="text-muted-foreground hover:text-primary transition-colors"
+                  hreflang={loc}
+                >
+                  {t(`language.${loc}`)}
+                </a>
+              )}
+            </>
+          ))}
+        </nav>
+        <a
+          href="#download"
+          class="hidden sm:inline-flex items-center gap-1.5 px-4 h-9 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors shadow-sm"
+        >
+          {t("hero.ctaPrimary")}
+        </a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const header = document.querySelector<HTMLElement>("[data-site-header]");
+  const bg = document.querySelector<HTMLElement>("[data-site-header-bg]");
+  if (header && bg) {
+    let pinned = false;
+    const update = () => {
+      const shouldPin = window.scrollY > 12;
+      if (shouldPin !== pinned) {
+        pinned = shouldPin;
+        if (pinned) {
+          bg.classList.remove("bg-background/0", "backdrop-blur-0", "border-border/0");
+          bg.classList.add("bg-background/85", "backdrop-blur-xl", "border-border");
+        } else {
+          bg.classList.remove("bg-background/85", "backdrop-blur-xl", "border-border");
+          bg.classList.add("bg-background/0", "backdrop-blur-0", "border-border/0");
+        }
+      }
+    };
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+  }
+</script>

@@ -6,7 +6,6 @@ import {
   List,
   Minus,
   PanelLeft,
-  PenLine,
   Search,
   Settings,
   Square,
@@ -45,9 +44,7 @@ export function TitleBar() {
       >
         {/* Logo */}
         <div className="flex items-center gap-1.5">
-          <div className="flex h-5.5 w-5.5 items-center justify-center rounded bg-primary">
-            <PenLine className="h-3.5 w-3.5 text-white" />
-          </div>
+          <img src="/logo-32.png" alt="SwarmNote" width={22} height={22} className="h-5.5 w-5.5" />
           <span className="text-sm font-semibold text-foreground">SwarmNote</span>
         </div>
 

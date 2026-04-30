@@ -1,0 +1,11 @@
+---
+import PageLayout from "../../layouts/PageLayout.astro";
+import PrivacyContent from "../../sections/PrivacyContent.astro";
+import { getLangFromUrl, useTranslations } from "../../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+<PageLayout title={t("privacyPage.h1")}>
+  <PrivacyContent />
+</PageLayout>

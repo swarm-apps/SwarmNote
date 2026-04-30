@@ -1,0 +1,113 @@
+---
+/*
+  下载页：单平台卡片，列出所有 arch/格式的资产 + 大小 + 下载按钮。
+*/
+import { formatBytes, type ReleaseAsset, type Platform } from "../lib/releases";
+
+export interface Props {
+  platformLabel: string;
+  iconPath: string;
+  assets: ReleaseAsset[];
+  /** 不可用时的 placeholder 信息 */
+  pendingMsg?: string;
+  pendingLink?: string;
+  pendingLinkLabel?: string;
+  /** 翻译过的列标题 */
+  sizeLabel: string;
+  archLabel: string;
+  downloadLabel: string;
+}
+
+const {
+  platformLabel,
+  iconPath,
+  assets,
+  pendingMsg,
+  pendingLink,
+  pendingLinkLabel,
+  sizeLabel,
+  archLabel,
+  downloadLabel,
+} = Astro.props;
+
+const archDisplay = (arch: string) => {
+  if (arch === "x64") return "Intel · x64";
+  if (arch === "arm64") return "Apple Silicon · arm64";
+  if (arch === "universal") return "Universal";
+  return arch;
+};
+---
+<article class="rounded-2xl border border-border bg-card p-6 md:p-8">
+  <header class="flex items-center gap-4 mb-6">
+    <div class="relative w-12 h-12 flex-none">
+      <svg viewBox="-26 -26 52 52" class="absolute inset-0 w-full h-full text-primary" aria-hidden="true">
+        <polygon
+          points="22,0 11,19.05 -11,19.05 -22,0 -11,-19.05 11,-19.05"
+          fill="currentColor"
+          fill-opacity="0.1"
+          stroke="currentColor"
+          stroke-opacity="0.4"
+          stroke-width="1.2"
+        />
+      </svg>
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="absolute inset-0 m-auto w-5 h-5 text-foreground"
+        aria-hidden="true"
+      >
+        <path d={iconPath} />
+      </svg>
+    </div>
+    <h2 class="text-xl md:text-2xl font-semibold tracking-tight">{platformLabel}</h2>
+  </header>
+
+  {assets.length > 0 ? (
+    <ul class="divide-y divide-border/70">
+      {assets.map((a) => (
+        <li class="flex flex-wrap md:flex-nowrap items-center gap-3 md:gap-5 py-3.5">
+          <div class="flex-1 min-w-0">
+            <p class="font-mono text-sm text-foreground truncate">{a.name}</p>
+            <p class="text-[11px] font-mono text-muted-foreground tabular-nums mt-0.5">
+              <span>{archLabel}: {archDisplay(a.arch)}</span>
+              <span class="mx-2 opacity-40">·</span>
+              <span>{sizeLabel}: {formatBytes(a.size)}</span>
+            </p>
+          </div>
+          <a
+            href={a.downloadUrl}
+            class="inline-flex items-center gap-1.5 px-4 h-9 rounded-full bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {downloadLabel}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3" aria-hidden="true">
+              <path d="M12 3v14 M5 10l7 7 7-7 M5 21h14" />
+            </svg>
+          </a>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <div class="rounded-lg bg-muted/40 p-5">
+      <p class="text-sm text-muted-foreground mb-3">{pendingMsg}</p>
+      {pendingLink && (
+        <a
+          href={pendingLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-4"
+        >
+          {pendingLinkLabel}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-3 h-3" aria-hidden="true">
+            <path d="M7 17 17 7 M7 7h10v10" />
+          </svg>
+        </a>
+      )}
+    </div>
+  )}
+</article>

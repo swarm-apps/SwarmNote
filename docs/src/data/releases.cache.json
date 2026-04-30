@@ -1,0 +1,848 @@
+{
+  "desktop": {
+    "latest": {
+      "version": "0.3.1",
+      "tagName": "v0.3.1",
+      "name": "SwarmNote v0.3.1",
+      "publishedAt": "2026-04-30T02:45:47Z",
+      "body": "## [0.3.1](https://github.com/yexiyue/SwarmNote/releases/tag/v0.3.1) - 2026-04-30\n\n### Bug Fixes\n\n- **ci:** unbreak develop CI after v0.3.0\n- **workspace-manager:** clip root overflow and let inner scroll area expand\n### Features\n\n- **theme:** unify desktop theme with mobile honey-paper palette",
+      "url": "https://github.com/yexiyue/SwarmNote/releases/tag/v0.3.1",
+      "assets": [
+        {
+          "name": "latest.json",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/latest.json",
+          "size": 6753,
+          "contentType": "application/zip",
+          "platform": "other",
+          "arch": "unknown"
+        },
+        {
+          "name": "swarmnote-0.3.1-1.x86_64.rpm",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote-0.3.1-1.x86_64.rpm",
+          "size": 18869834,
+          "contentType": "application/zip",
+          "platform": "linux",
+          "arch": "x64"
+        },
+        {
+          "name": "swarmnote-0.3.1-1.x86_64.rpm.sig",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote-0.3.1-1.x86_64.rpm.sig",
+          "size": 420,
+          "contentType": "application/zip",
+          "platform": "other",
+          "arch": "unknown"
+        },
+        {
+          "name": "swarmnote_0.3.1_aarch64.dmg",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_aarch64.dmg",
+          "size": 17497725,
+          "contentType": "application/zip",
+          "platform": "macos",
+          "arch": "arm64"
+        },
+        {
+          "name": "swarmnote_0.3.1_amd64.AppImage",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_amd64.AppImage",
+          "size": 94857720,
+          "contentType": "application/zip",
+          "platform": "linux",
+          "arch": "x64"
+        },
+        {
+          "name": "swarmnote_0.3.1_amd64.AppImage.sig",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_amd64.AppImage.sig",
+          "size": 420,
+          "contentType": "application/zip",
+          "platform": "other",
+          "arch": "unknown"
+        },
+        {
+          "name": "swarmnote_0.3.1_amd64.deb",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_amd64.deb",
+          "size": 18870180,
+          "contentType": "application/zip",
+          "platform": "linux",
+          "arch": "x64"
+        },
+        {
+          "name": "swarmnote_0.3.1_amd64.deb.sig",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_amd64.deb.sig",
+          "size": 416,
+          "contentType": "application/zip",
+          "platform": "other",
+          "arch": "unknown"
+        },
+        {
+          "name": "swarmnote_0.3.1_x64-setup.exe",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_x64-setup.exe",
+          "size": 10692651,
+          "contentType": "application/zip",
+          "platform": "windows",
+          "arch": "x64"
+        },
+        {
+          "name": "swarmnote_0.3.1_x64-setup.exe.sig",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_x64-setup.exe.sig",
+          "size": 420,
+          "contentType": "application/zip",
+          "platform": "windows",
+          "arch": "x64"
+        },
+        {
+          "name": "swarmnote_0.3.1_x64.dmg",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_x64.dmg",
+          "size": 17939613,
+          "contentType": "application/zip",
+          "platform": "macos",
+          "arch": "x64"
+        },
+        {
+          "name": "swarmnote_0.3.1_x64_en-US.msi",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_x64_en-US.msi",
+          "size": 14929920,
+          "contentType": "application/zip",
+          "platform": "windows",
+          "arch": "x64"
+        },
+        {
+          "name": "swarmnote_0.3.1_x64_en-US.msi.sig",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_x64_en-US.msi.sig",
+          "size": 420,
+          "contentType": "application/zip",
+          "platform": "other",
+          "arch": "unknown"
+        },
+        {
+          "name": "swarmnote_aarch64.app.tar.gz",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_aarch64.app.tar.gz",
+          "size": 16812633,
+          "contentType": "application/zip",
+          "platform": "other",
+          "arch": "unknown"
+        },
+        {
+          "name": "swarmnote_aarch64.app.tar.gz.sig",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_aarch64.app.tar.gz.sig",
+          "size": 408,
+          "contentType": "application/zip",
+          "platform": "other",
+          "arch": "unknown"
+        },
+        {
+          "name": "swarmnote_x64.app.tar.gz",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_x64.app.tar.gz",
+          "size": 17123025,
+          "contentType": "application/zip",
+          "platform": "other",
+          "arch": "unknown"
+        },
+        {
+          "name": "swarmnote_x64.app.tar.gz.sig",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_x64.app.tar.gz.sig",
+          "size": 408,
+          "contentType": "application/zip",
+          "platform": "other",
+          "arch": "unknown"
+        }
+      ]
+    },
+    "history": [
+      {
+        "version": "0.3.1",
+        "tagName": "v0.3.1",
+        "name": "SwarmNote v0.3.1",
+        "publishedAt": "2026-04-30T02:45:47Z",
+        "body": "## [0.3.1](https://github.com/yexiyue/SwarmNote/releases/tag/v0.3.1) - 2026-04-30\n\n### Bug Fixes\n\n- **ci:** unbreak develop CI after v0.3.0\n- **workspace-manager:** clip root overflow and let inner scroll area expand\n### Features\n\n- **theme:** unify desktop theme with mobile honey-paper palette",
+        "url": "https://github.com/yexiyue/SwarmNote/releases/tag/v0.3.1",
+        "assets": [
+          {
+            "name": "latest.json",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/latest.json",
+            "size": 6753,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote-0.3.1-1.x86_64.rpm",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote-0.3.1-1.x86_64.rpm",
+            "size": 18869834,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote-0.3.1-1.x86_64.rpm.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote-0.3.1-1.x86_64.rpm.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.3.1_aarch64.dmg",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_aarch64.dmg",
+            "size": 17497725,
+            "contentType": "application/zip",
+            "platform": "macos",
+            "arch": "arm64"
+          },
+          {
+            "name": "swarmnote_0.3.1_amd64.AppImage",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_amd64.AppImage",
+            "size": 94857720,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.3.1_amd64.AppImage.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_amd64.AppImage.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.3.1_amd64.deb",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_amd64.deb",
+            "size": 18870180,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.3.1_amd64.deb.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_amd64.deb.sig",
+            "size": 416,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.3.1_x64-setup.exe",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_x64-setup.exe",
+            "size": 10692651,
+            "contentType": "application/zip",
+            "platform": "windows",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.3.1_x64-setup.exe.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_x64-setup.exe.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "windows",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.3.1_x64.dmg",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_x64.dmg",
+            "size": 17939613,
+            "contentType": "application/zip",
+            "platform": "macos",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.3.1_x64_en-US.msi",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_x64_en-US.msi",
+            "size": 14929920,
+            "contentType": "application/zip",
+            "platform": "windows",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.3.1_x64_en-US.msi.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_0.3.1_x64_en-US.msi.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_aarch64.app.tar.gz",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_aarch64.app.tar.gz",
+            "size": 16812633,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_aarch64.app.tar.gz.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_aarch64.app.tar.gz.sig",
+            "size": 408,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_x64.app.tar.gz",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_x64.app.tar.gz",
+            "size": 17123025,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_x64.app.tar.gz.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.1/swarmnote_x64.app.tar.gz.sig",
+            "size": 408,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          }
+        ]
+      },
+      {
+        "version": "0.3.0",
+        "tagName": "v0.3.0",
+        "name": "SwarmNote v0.3.0",
+        "publishedAt": "2026-04-29T09:49:57Z",
+        "body": "## [0.3.0](https://github.com/yexiyue/SwarmNote/releases/tag/v0.3.0) - 2026-04-29\n\n### Documentation\n\n- rewrite README with bee-swarm theme and accurate stack\n- add CM6 migration tradeoffs analysis blog post\n- add uniffi-bindgen-react-native skill and blog guide\n### Features\n\n- **branding:** replace app icon and tray icons with new bee-and-S logo\n- **core:** expose doc_count on WorkspaceInfo\n- **core:** expose recent_workspaces CRUD on AppCore + auto-touch on open\n- **core:** re-export libp2p from swarm-p2p-core at crate root\n- **core:** re-export PeerId at crate root for wrap-layer consumers\n- **core:** complete swarmnote-core extraction via commands cut-over (phase 2 PR #3)\n- **core:** add WorkspaceCore + YDocManager + fs/document business layers (phase 2 PR #2)\n- add swarmnote-core crate for cross-platform extraction (phase 2 PR #1)\n- migrate desktop editor from BlockNote to CodeMirror 6\n### Miscellaneous\n\n- **libs:** bump swarm-p2p-core submodule (cargo fmt)\n- update editor submodule to c012e5f\n- integrate dev-workflow skill with project knowledge base\n- add @swarmnote/editor as git submodule\n### Refactor\n\n- **core:** flatten api/internal re-exports to single pub surface\n- **core:** harden swarmnote-core API for FFI wrapping\n- **sync:** split SyncManager into AppSyncCoordinator + WorkspaceSync\n- **yjs:** single-loop writeback driven by Notify + CancellationToken",
+        "url": "https://github.com/yexiyue/SwarmNote/releases/tag/v0.3.0",
+        "assets": [
+          {
+            "name": "latest.json",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/latest.json",
+            "size": 7867,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote-0.3.0-1.x86_64.rpm",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote-0.3.0-1.x86_64.rpm",
+            "size": 17927666,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote-0.3.0-1.x86_64.rpm.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote-0.3.0-1.x86_64.rpm.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.3.0_aarch64.dmg",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote_0.3.0_aarch64.dmg",
+            "size": 16541532,
+            "contentType": "application/zip",
+            "platform": "macos",
+            "arch": "arm64"
+          },
+          {
+            "name": "swarmnote_0.3.0_amd64.AppImage",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote_0.3.0_amd64.AppImage",
+            "size": 93891064,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.3.0_amd64.AppImage.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote_0.3.0_amd64.AppImage.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.3.0_amd64.deb",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote_0.3.0_amd64.deb",
+            "size": 17927608,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.3.0_amd64.deb.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote_0.3.0_amd64.deb.sig",
+            "size": 416,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.3.0_x64-setup.exe",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote_0.3.0_x64-setup.exe",
+            "size": 9754260,
+            "contentType": "application/zip",
+            "platform": "windows",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.3.0_x64-setup.exe.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote_0.3.0_x64-setup.exe.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "windows",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.3.0_x64.dmg",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote_0.3.0_x64.dmg",
+            "size": 16989224,
+            "contentType": "application/zip",
+            "platform": "macos",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.3.0_x64_en-US.msi",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote_0.3.0_x64_en-US.msi",
+            "size": 13987840,
+            "contentType": "application/zip",
+            "platform": "windows",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.3.0_x64_en-US.msi.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote_0.3.0_x64_en-US.msi.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_aarch64.app.tar.gz",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote_aarch64.app.tar.gz",
+            "size": 15858748,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_aarch64.app.tar.gz.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote_aarch64.app.tar.gz.sig",
+            "size": 408,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_x64.app.tar.gz",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote_x64.app.tar.gz",
+            "size": 16188848,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_x64.app.tar.gz.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.3.0/swarmnote_x64.app.tar.gz.sig",
+            "size": 408,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          }
+        ]
+      },
+      {
+        "version": "0.2.3",
+        "tagName": "v0.2.3",
+        "name": "SwarmNote v0.2.3",
+        "publishedAt": "2026-04-08T06:46:35Z",
+        "body": "## [0.2.3](https://github.com/yexiyue/SwarmNote/releases/tag/v0.2.3) - 2026-04-08\n\n### Bug Fixes\n\n- resolve TS2322 in Button asChild Slot.Root disabled prop\n- unify AppLayout and fix macOS editor scroll\n- sync dialog opens workspace in new window instead of binding to manager\n- subscribe already-open workspaces when P2P node starts\n- move GossipSub subscribe into bind_workspace_to_window\n- eliminate virtual window label in sync-only workspace registration\n- resolve clippy field_reassign_with_default in PairingManager\n- include device name in all pairing and share code flows\n- unify paired device data source and fix macOS window titlebar\n### Features\n\n- **pairing:** add toast feedback and OTP input for pairing flow\n- **sync:** hydrate yjs_state for all docs on workspace open\n- **sync:** add GossipSub ctrl topic for workspace open notifications\n- **ui:** add PeerListPopover to SyncStatusBar\n- refactor window architecture with Obsidian-style workspace manager\n- persist device name in DB and display in all pairing dialogs\n- propagate custom device name via P2P Identify protocol\n### Miscellaneous\n\n- update CSS theme to shadcn Nova defaults, sync Cargo.lock version\n### Refactor\n\n- **settings:** flatten general and sync pages to section-based layout\n- **settings:** replace custom UI with shadcn components, reset to default theme\n- **settings/about:** redesign about page to match design spec\n- **settings/devices:** redesign device management page per design spec",
+        "url": "https://github.com/yexiyue/SwarmNote/releases/tag/v0.2.3",
+        "assets": [
+          {
+            "name": "latest.json",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/latest.json",
+            "size": 7958,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote-0.2.3-1.x86_64.rpm",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote-0.2.3-1.x86_64.rpm",
+            "size": 18680605,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote-0.2.3-1.x86_64.rpm.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote-0.2.3-1.x86_64.rpm.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.2.3_aarch64.dmg",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote_0.2.3_aarch64.dmg",
+            "size": 15250894,
+            "contentType": "application/zip",
+            "platform": "macos",
+            "arch": "arm64"
+          },
+          {
+            "name": "swarmnote_0.2.3_amd64.AppImage",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote_0.2.3_amd64.AppImage",
+            "size": 94620152,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.2.3_amd64.AppImage.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote_0.2.3_amd64.AppImage.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.2.3_amd64.deb",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote_0.2.3_amd64.deb",
+            "size": 18680816,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.2.3_amd64.deb.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote_0.2.3_amd64.deb.sig",
+            "size": 416,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.2.3_x64-setup.exe",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote_0.2.3_x64-setup.exe",
+            "size": 10413897,
+            "contentType": "application/zip",
+            "platform": "windows",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.2.3_x64-setup.exe.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote_0.2.3_x64-setup.exe.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "windows",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.2.3_x64.dmg",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote_0.2.3_x64.dmg",
+            "size": 15773886,
+            "contentType": "application/zip",
+            "platform": "macos",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.2.3_x64_en-US.msi",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote_0.2.3_x64_en-US.msi",
+            "size": 14630912,
+            "contentType": "application/zip",
+            "platform": "windows",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.2.3_x64_en-US.msi.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote_0.2.3_x64_en-US.msi.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_aarch64.app.tar.gz",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote_aarch64.app.tar.gz",
+            "size": 15618256,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_aarch64.app.tar.gz.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote_aarch64.app.tar.gz.sig",
+            "size": 408,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_x64.app.tar.gz",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote_x64.app.tar.gz",
+            "size": 16016400,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_x64.app.tar.gz.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.3/swarmnote_x64.app.tar.gz.sig",
+            "size": 408,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          }
+        ]
+      },
+      {
+        "version": "0.2.2",
+        "tagName": "v0.2.2",
+        "name": "SwarmNote v0.2.2",
+        "publishedAt": "2026-04-06T04:03:53Z",
+        "body": "## [0.2.2](https://github.com/yexiyue/SwarmNote/releases/tag/v0.2.2) - 2026-04-06\n\n### Bug Fixes\n\n- **filetree:** restore single-click to open files\n### Features\n\n- **editor:** revamp editor layout, add sidebar outline\n- fix UI/UX audit issues\n### Refactor\n\n- **ui:** move sidebar controls to TitleBar, add file search and thin scrollbar",
+        "url": "https://github.com/yexiyue/SwarmNote/releases/tag/v0.2.2",
+        "assets": [
+          {
+            "name": "latest.json",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.2/latest.json",
+            "size": 3906,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote-0.2.2-1.x86_64.rpm",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.2/swarmnote-0.2.2-1.x86_64.rpm",
+            "size": 18372736,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote-0.2.2-1.x86_64.rpm.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.2/swarmnote-0.2.2-1.x86_64.rpm.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.2.2_amd64.AppImage",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.2/swarmnote_0.2.2_amd64.AppImage",
+            "size": 94370296,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.2.2_amd64.AppImage.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.2/swarmnote_0.2.2_amd64.AppImage.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.2.2_amd64.deb",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.2/swarmnote_0.2.2_amd64.deb",
+            "size": 18374274,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.2.2_amd64.deb.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.2/swarmnote_0.2.2_amd64.deb.sig",
+            "size": 416,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.2.2_x64.dmg",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.2/swarmnote_0.2.2_x64.dmg",
+            "size": 15493036,
+            "contentType": "application/zip",
+            "platform": "macos",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_x64.app.tar.gz",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.2/swarmnote_x64.app.tar.gz",
+            "size": 15725126,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_x64.app.tar.gz.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.2/swarmnote_x64.app.tar.gz.sig",
+            "size": 408,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          }
+        ]
+      },
+      {
+        "version": "0.2.1",
+        "tagName": "v0.2.1",
+        "name": "SwarmNote v0.2.1",
+        "publishedAt": "2026-04-05T03:43:25Z",
+        "body": "## [0.2.1](https://github.com/yexiyue/SwarmNote/releases/tag/v0.2.1) - 2026-04-05\n\n### Bug Fixes\n\n- **build:** correct App.css import casing for case-sensitive filesystems\n- **db:** invoke before_save manually for Entity::insert() upsert paths\n- **db:** enforce UUID integrity with UNIQUE constraint and lifecycle fixes\n- **editor:** fix title isDirty not clearing and case-sensitive .md check\n- **frontend:** simplify code and fix placeholder issues\n- **i18n:** 补全前端各组件的国际化覆盖\n- **i18n:** remove compiled catalogs and fix setLocale race condition\n- **identity:** suppress dead_code warning for keypair field\n- **network:** activate event listeners and unify node status architecture\n- **pairing:** multiple pairing logic bugs\n- **pairing:** pass remote osInfo in code pairing to store correct device info\n- **pairing:** pass notificationId as prop to prevent dialog close failure\n- **pairing:** update CommandPalette to use openSettingsWindow\n- **release:** bump version to 0.2.1 and align plugin-updater versions\n- **sync:** ensure workspace topic subscription and asset sync for closed docs\n- **sync:** use tuple variant directly to satisfy clippy::redundant_closure\n- **sync:** use sort_by_key to fix clippy::unnecessary_sort_by\n- **updater:** add missing plugin deps and remove unused version prop\n- **workspace:** suppress unused variable warning for settings_window on non-macOS\n- **workspace:** 修复工作区打开流程及编辑器块类型\n- **yrs-blocknote:** preserve list spread state through markdown round-trip\n### CI/CD\n\n- add submodule checkout and libdbus for keyring\n### Documentation\n\n- **design:** complete settings page redesign with all 4 tabs\n- **design:** add v0.2.0 pairing and sync UI designs\n- **milestone:** add v0.2.1 remaining issues todo list\n- **milestone:** add design decisions for workspace-ignore-filter\n- **milestone:** update v0.2.0 with device pairing, UI design, and full network support\n- **sync:** add CRDT sync architecture and asset sync design documents\n- resolve blog post conflict after amend (keep updated version)\n- add yrs-blocknote deep-dive blog post\n- add yrs-blocknote deep-dive blog post\n- backfill v0.2.1 issue numbers and milestone link\n- add device connection type feature for v0.2.1\n- add v0.2.1 milestone - sync UX polish & auto-update\n- add P2P sync deep-dive and update CLAUDE.md\n- add sidebar layout and settings window UI optimization spec\n- add TauriYjsProvider blog post and external-file-sync feature spec\n- add v0.2.0 milestone planning and commit conventions\n- add device identity technical design\n- update v0.1.0 docs to reflect new UI design decisions\n- redesign v0.1.0 UI with indigo theme and desktop-only layout\n- add UI design draft\n- use Project Iteration for Sprint, not Milestone\n- use Tasklist format for issue dependency tracking\n- integrate GitHub Projects into project skills\n- backfill GitHub Issue numbers to v0.1.0 README\n- add next-step hint to project-explore skill\n- add v0.1.0 milestone docs and enhance project skills\n- add UI design requirements, remove comment system from design docs\n- add system design docs, simplify to 3-level permissions\n- replace CodeMirror with BlockNote, remove yrs dependency\n- add BlockNote research, update editor choice from CodeMirror to BlockNote\n- rewrite README in Chinese with project overview\n- simplify dev-notes, extract E2E encryption design\n- redesign product vision, add swarm-p2p submodule, reorganize dev-notes\n### Features\n\n- **ci:** add release workflow with auto-update signing config\n- **db:** implement SQLite storage layer with sea-orm 2.0-rc\n- **device:** add connection type identification (LAN/DCUtR/Relay)\n- **editor:** add media loading retry with skeleton UI for P2P asset sync\n- **editor:** integrate BlockNote rich-text editor with markdown persistence\n- **filetree:** implement filesystem-driven file tree with CRUD and live watching\n- **i18n:** complete i18n for settings nav, network status, and device components\n- **i18n:** add Lingui internationalization with zh/en support\n- **i18n:** add Lingui internationalization with zh/en support\n- **identity:** implement device identity with system keychain\n- **p2p:** system tray, P2P lifecycle control, and Rust code quality refactor\n- **p2p:** auto-start P2P node on app launch\n- **p2p:** integrate swarm-p2p-core into Tauri backend (#24)\n- **pairing:** implement device discovery and pairing (#26)\n- **settings:** reorganize settings tabs - add sync tab, remove network tab\n- **skill:** add project-issue skill for quick issue creation\n- **storage:** implement markdown persistence with media support\n- **store:** add Zustand stores with tauri-plugin-store persistence\n- **sync:** switch GossipSub from per-doc to workspace-level topics\n- **sync:** implement CRDT sync engine with full/incremental sync and asset transfer\n- **sync:** detect external .md changes and reload Y.Doc automatically\n- **sync-ui:** improve sync dialog with progress bar, re-sync support, and clickable results\n- **ui:** implement UI framework with shadcn/ui + Tailwind v4 + TanStack Router\n- **ui:** implement UI framework with shadcn/ui + Tailwind v4 + TanStack Router\n- **updater:** integrate tauri-plugin-updater for desktop auto-update\n- **workspace:** workspace list exchange API and UUID-first state (#46)\n- **workspace:** implement workspace lifecycle management\n- **yjs:** integrate BlockNote collaboration mode with Rust YDocManager\n- **yrs-blocknote:** align Block data model with BlockNote format\n- **yrs-blocknote:** add independent crate for BlockNote ↔ Markdown ↔ Y.Doc conversion\n- v0.2.1 sync UI — sidebar status, workspace picker sync, onboarding P2P flow (#45, #50, #49)\n- add mdast-util-to-markdown crate (Rust port of JS library)\n- integrate BlockNote editor and redesign settings UI (#39)\n- add onboarding flow, workspace picker, and per-window state management\n- remove android\n- add GitHub project management skills and guide\n- init\n### Miscellaneous\n\n- **i18n:** merge auto-update and workspace-sync i18n entries\n- **i18n:** sync zh catalog after lingui extract\n- add **/target/** to .gitignore for workspace crates\n- update swarm-p2p submodule to develop (gossipsub integration)\n- integrate dev toolchain (biome, lefthook, commitlint, git-cliff, CI)\n### Refactor\n\n- **backend:** restructure Rust modules by business domain\n- **db:** stabilize document and workspace UUIDs for sync readiness\n- **entity:** migrate time fields from i64 to chrono::DateTime<Utc>\n- **entity:** use Uuid type instead of String for primary keys and foreign keys\n- **rust:** split event_loop and encapsulate GlobalConfigState\n- **sync:** reduce SV compensation frequency and add publish-failure trigger\n- **ui:** 将工作区切换和快捷操作移至标题栏\n- **ui:** extract shared components and hooks to reduce duplication\n- **ui:** 将设置页面从独立路由改为弹窗 (#20)\n- **yrs-blocknote:** replace comrak with markdown + mdast-util-to-markdown\n### Testing\n\n- **yrs-blocknote:** add BlockNote compat tests and batch real doc tests",
+        "url": "https://github.com/yexiyue/SwarmNote/releases/tag/v0.2.1",
+        "assets": [
+          {
+            "name": "latest.json",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/latest.json",
+            "size": 13633,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote-0.2.1-1.x86_64.rpm",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote-0.2.1-1.x86_64.rpm",
+            "size": 18347054,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote-0.2.1-1.x86_64.rpm.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote-0.2.1-1.x86_64.rpm.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.2.1_aarch64.dmg",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote_0.2.1_aarch64.dmg",
+            "size": 14963337,
+            "contentType": "application/zip",
+            "platform": "macos",
+            "arch": "arm64"
+          },
+          {
+            "name": "swarmnote_0.2.1_amd64.AppImage",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote_0.2.1_amd64.AppImage",
+            "size": 94325240,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.2.1_amd64.AppImage.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote_0.2.1_amd64.AppImage.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.2.1_amd64.deb",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote_0.2.1_amd64.deb",
+            "size": 18347128,
+            "contentType": "application/zip",
+            "platform": "linux",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.2.1_amd64.deb.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote_0.2.1_amd64.deb.sig",
+            "size": 416,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_0.2.1_x64-setup.exe",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote_0.2.1_x64-setup.exe",
+            "size": 10161832,
+            "contentType": "application/zip",
+            "platform": "windows",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.2.1_x64-setup.exe.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote_0.2.1_x64-setup.exe.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "windows",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.2.1_x64.dmg",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote_0.2.1_x64.dmg",
+            "size": 15463021,
+            "contentType": "application/zip",
+            "platform": "macos",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.2.1_x64_en-US.msi",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote_0.2.1_x64_en-US.msi",
+            "size": 14286848,
+            "contentType": "application/zip",
+            "platform": "windows",
+            "arch": "x64"
+          },
+          {
+            "name": "swarmnote_0.2.1_x64_en-US.msi.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote_0.2.1_x64_en-US.msi.sig",
+            "size": 420,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_aarch64.app.tar.gz",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote_aarch64.app.tar.gz",
+            "size": 15318753,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_aarch64.app.tar.gz.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote_aarch64.app.tar.gz.sig",
+            "size": 408,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_x64.app.tar.gz",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote_x64.app.tar.gz",
+            "size": 15694696,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          },
+          {
+            "name": "swarmnote_x64.app.tar.gz.sig",
+            "downloadUrl": "https://github.com/yexiyue/SwarmNote/releases/download/v0.2.1/swarmnote_x64.app.tar.gz.sig",
+            "size": 408,
+            "contentType": "application/zip",
+            "platform": "other",
+            "arch": "unknown"
+          }
+        ]
+      }
+    ]
+  },
+  "mobile": {
+    "latest": {
+      "version": "0.3.3",
+      "tagName": "v0.3.3",
+      "name": "SwarmNote Mobile v0.3.3",
+      "publishedAt": "2026-04-30T08:34:14Z",
+      "body": "## [0.3.3](https://github.com/yexiyue/SwarmNote-RN/releases/tag/v0.3.3) - 2026-04-30\n\n### Bug Fixes\n\n- **toast:** drop translucentStatusBar to stop double-padding on Android\n### Features\n\n- **toast:** switch to react-native-notifier with iOS-style capsule\n",
+      "url": "https://github.com/yexiyue/SwarmNote-RN/releases/tag/v0.3.3",
+      "assets": [
+        {
+          "name": "mobile-v0.3.3-app-release.apk",
+          "downloadUrl": "https://github.com/yexiyue/SwarmNote-RN/releases/download/v0.3.3/mobile-v0.3.3-app-release.apk",
+          "size": 55082281,
+          "contentType": "application/vnd.android.package-archive",
+          "platform": "android",
+          "arch": "universal"
+        }
+      ]
+    }
+  },
+  "fetchedAt": "2026-04-30T10:28:17.355Z",
+  "source": "live"
+}

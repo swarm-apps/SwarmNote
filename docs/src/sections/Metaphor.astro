@@ -1,0 +1,261 @@
+---
+/*
+  Section 02 — 蜂群隐喻 / Why swarm?
+  - 背景：蜂巢六边形 SVG 网格，ScrollTrigger 顺序点亮
+  - 前景：三张概念卡（设备=蜜蜂 · 工作区=蜂巢 · 笔记=花蜜）
+*/
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+type Item = { title: string; desc: string };
+const items = (t as unknown as (k: string) => unknown)("metaphor.items") as Item[];
+
+// === 蜂巢网格几何 ===
+// flat-top 六边形，size = 边长 r
+const HEX_R = 32;
+const SQRT3 = Math.sqrt(3);
+const COL_STEP = 1.5 * HEX_R;
+const ROW_STEP = SQRT3 * HEX_R;
+const COLS = 13;
+const ROWS = 7;
+
+const VB_W = (COLS - 1) * COL_STEP + 2 * HEX_R;
+const VB_H = ROWS * ROW_STEP + ROW_STEP / 2;
+
+function hexPath(r: number): string {
+  const points = [
+    [r, 0],
+    [r / 2, (r * SQRT3) / 2],
+    [-r / 2, (r * SQRT3) / 2],
+    [-r, 0],
+    [-r / 2, (-r * SQRT3) / 2],
+    [r / 2, (-r * SQRT3) / 2],
+  ];
+  return points.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(" ");
+}
+
+const HEX_POINTS = hexPath(HEX_R - 2);
+
+type Cell = { cx: number; cy: number; col: number; row: number; rank: number };
+const cells: Cell[] = [];
+for (let row = 0; row < ROWS; row++) {
+  for (let col = 0; col < COLS; col++) {
+    const cx = HEX_R + col * COL_STEP;
+    const cy = ROW_STEP + row * ROW_STEP + (col % 2 ? ROW_STEP / 2 : 0);
+    // 中心扩散排序：按到中心的距离作 rank（先点亮中心 → 外圈）
+    const dx = cx - VB_W / 2;
+    const dy = cy - VB_H / 2;
+    const dist = Math.hypot(dx, dy);
+    cells.push({ cx, cy, col, row, rank: dist });
+  }
+}
+cells.sort((a, b) => a.rank - b.rank);
+const totalCells = cells.length;
+
+const ICON_PATHS = [
+  // 设备 = 蜜蜂（cpu icon）
+  "M4 4h16v16H4z M9 1v3 M15 1v3 M9 20v3 M15 20v3 M20 9h3 M20 15h3 M1 9h3 M1 15h3 M9 9h6v6H9z",
+  // 工作区 = 蜂巢（hexagon icon）
+  "M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z",
+  // 笔记 = 花蜜（droplet icon）
+  "M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z",
+];
+---
+<section
+  id="metaphor"
+  data-section="metaphor"
+  class="relative overflow-hidden py-32 md:py-40"
+>
+  {/* 背景：六边形蜂巢网格 */}
+  <div class="absolute inset-0 flex items-center justify-center pointer-events-none -z-10">
+    <svg
+      viewBox={`0 0 ${VB_W} ${VB_H}`}
+      preserveAspectRatio="xMidYMid slice"
+      class="w-[140%] max-w-none h-full opacity-90"
+      aria-hidden="true"
+    >
+      <g data-honeycomb>
+        {cells.map((c, i) => (
+          <polygon
+            data-cell-index={i}
+            data-cell-rank={i / totalCells}
+            points={HEX_POINTS}
+            transform={`translate(${c.cx} ${c.cy})`}
+            fill="var(--color-primary)"
+            fill-opacity="0.04"
+            stroke="var(--color-primary)"
+            stroke-opacity="0.08"
+            stroke-width="0.6"
+          />
+        ))}
+      </g>
+    </svg>
+  </div>
+
+  {/* 前景内容 */}
+  <div class="relative z-10 max-w-5xl mx-auto px-6 text-center">
+    <h2
+      data-metaphor-h2
+      class="text-4xl md:text-6xl font-semibold tracking-tight text-foreground mb-6"
+    >
+      {t("metaphor.h1")}
+    </h2>
+    <p
+      data-metaphor-lede
+      class="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed mb-16 md:mb-24"
+    >
+      {t("metaphor.lede")}
+    </p>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+      {items.map((item, i) => (
+        <article
+          data-metaphor-card
+          data-card-index={i}
+          class="group relative rounded-xl border border-border/60 bg-card/70 backdrop-blur-sm p-7 md:p-8 text-left transition-all hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5"
+        >
+          {/* 图标六边形 */}
+          <div class="relative w-14 h-14 mb-5">
+            <svg
+              viewBox="-26 -26 52 52"
+              class="absolute inset-0 w-full h-full text-primary"
+              aria-hidden="true"
+            >
+              <polygon
+                points="22,0 11,19.05 -11,19.05 -22,0 -11,-19.05 11,-19.05"
+                fill="currentColor"
+                fill-opacity="0.1"
+                stroke="currentColor"
+                stroke-opacity="0.4"
+                stroke-width="1.2"
+              />
+            </svg>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="absolute inset-0 m-auto w-6 h-6 text-primary"
+              aria-hidden="true"
+            >
+              <path d={ICON_PATHS[i] ?? ICON_PATHS[0]} />
+            </svg>
+          </div>
+
+          <h3 class="text-lg md:text-xl font-semibold text-foreground mb-2">
+            {item.title}
+          </h3>
+          <p class="text-sm md:text-base text-muted-foreground leading-relaxed">
+            {item.desc}
+          </p>
+
+          {/* 序号 */}
+          <span
+            class="absolute top-5 right-5 text-xs font-mono text-muted-foreground/60 tabular-nums"
+            aria-hidden="true"
+          >
+            0{i + 1}
+          </span>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from "gsap";
+  import { ensureScrollTrigger, prefersReducedMotion } from "../lib/scroll-utils";
+
+  const ScrollTrigger = ensureScrollTrigger();
+  const reduced = prefersReducedMotion();
+
+  const root = document.querySelector<HTMLElement>('[data-section="metaphor"]');
+  if (root) {
+    const cells = Array.from(
+      root.querySelectorAll<SVGPolygonElement>("[data-cell-index]"),
+    );
+    const cards = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-metaphor-card]"),
+    );
+    const h2 = root.querySelector<HTMLElement>("[data-metaphor-h2]");
+    const lede = root.querySelector<HTMLElement>("[data-metaphor-lede]");
+
+    if (reduced) {
+      // 降级：直接终态
+      cells.forEach((c) => c.setAttribute("fill-opacity", "0.18"));
+    } else {
+      // 标题 / 正文 / 卡片入场
+      gsap.set([h2, lede], { y: 24, autoAlpha: 0 });
+      gsap.set(cards, { y: 32, autoAlpha: 0 });
+
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: root,
+            start: "top 70%",
+            end: "top 20%",
+            toggleActions: "play none none reverse",
+          },
+        })
+        .to(h2, { y: 0, autoAlpha: 1, duration: 0.7, ease: "power2.out" })
+        .to(lede, { y: 0, autoAlpha: 1, duration: 0.6, ease: "power2.out" }, "-=0.4")
+        .to(
+          cards,
+          {
+            y: 0,
+            autoAlpha: 1,
+            duration: 0.6,
+            stagger: 0.15,
+            ease: "power2.out",
+          },
+          "-=0.3",
+        );
+
+      // 蜂巢网格中心扩散点亮（scrub 跟滚动条）
+      gsap.to(cells, {
+        attr: { "fill-opacity": 0.22 },
+        stagger: { each: 0.012, from: "start" },
+        ease: "none",
+        scrollTrigger: {
+          trigger: root,
+          start: "top 80%",
+          end: "bottom 30%",
+          scrub: 0.6,
+        },
+      });
+    }
+
+    // 卡片悬停时让附近网格泛起暖光
+    cards.forEach((card) => {
+      card.addEventListener("mouseenter", () => {
+        if (reduced) return;
+        const idx = Number(card.dataset.cardIndex ?? 0);
+        const targets = cells.filter(
+          (_, i) => i % cards.length === idx % cards.length,
+        );
+        gsap.to(targets, {
+          attr: { "fill-opacity": 0.36 },
+          duration: 0.4,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
+      });
+      card.addEventListener("mouseleave", () => {
+        if (reduced) return;
+        gsap.to(cells, {
+          attr: { "fill-opacity": 0.22 },
+          duration: 0.6,
+          ease: "power2.out",
+          overwrite: "auto",
+        });
+      });
+    });
+  }
+
+  // refresh ScrollTrigger after layout
+  requestAnimationFrame(() => ScrollTrigger.refresh());
+</script>

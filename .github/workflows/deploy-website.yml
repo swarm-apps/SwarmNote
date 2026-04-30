@@ -1,0 +1,88 @@
+name: Deploy Website
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - ".github/workflows/deploy-website.yml"
+  release:
+    types: [published]
+  repository_dispatch:
+    types: [release-published, mobile-release-published]
+  workflow_dispatch:
+
+# 单实例部署：覆盖式 deploy，避免并发互踩
+concurrency:
+  group: deploy-website
+  cancel-in-progress: true
+
+# GitHub Pages 默认权限要求
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build (Astro)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs
+    steps:
+      - uses: actions/checkout@v4
+        # docs 不需要 swarm-p2p-core submodule（Rust 才需要）
+        with:
+          submodules: false
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: docs/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build site
+        env:
+          # 提升 GitHub API 速率限制（5000 req/h vs 60 req/h）
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm build
+
+      # 如果 build 成功更新了 releases.cache.json，回写到仓库 main 分支
+      # 仅在 push to main / release.published / repository_dispatch 触发时尝试
+      - name: Commit refreshed releases cache (if changed)
+        if: github.event_name != 'workflow_dispatch'
+        run: |
+          if [ -n "$(git status --porcelain src/data/releases.cache.json)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add src/data/releases.cache.json
+            git commit -m "chore(website): refresh releases cache [skip ci]"
+            git push origin HEAD:main
+          else
+            echo "releases.cache.json unchanged"
+          fi
+        continue-on-error: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

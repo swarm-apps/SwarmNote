@@ -1,0 +1,99 @@
+/*
+ * SwarmNote Website — 蜂巢纸笺 (Warm Paper) 主题
+ *
+ * 设计 token 同步自 swarmnote-mobile/dev-notes/design/theme-palette.md
+ * 三端（桌面 / 移动 / 官网）共享同一套 token，避免品牌漂移。
+ *
+ * 仅亮色模式（design.md D4：暂不实现 dark mode）。
+ */
+
+@import "tailwindcss";
+
+@theme {
+  /* === 核心色（亮色：Warm Paper） === */
+  --color-background: hsl(40 18% 99%);              /* #FDFCFA 极微暖白 */
+  --color-foreground: hsl(28 10% 14%);              /* #27211C 暖近黑 */
+  --color-card: hsl(36 15% 97%);                    /* #F8F6F2 略暖卡面 */
+  --color-card-foreground: hsl(28 10% 14%);
+  --color-popover: hsl(0 0% 100%);                  /* #FFFFFF 弹层纯白 */
+  --color-popover-foreground: hsl(28 10% 14%);
+
+  /* === 品牌主色 === */
+  --color-primary: hsl(40 72% 46%);                 /* #C99816 蜂蜜金 */
+  --color-primary-foreground: hsl(40 25% 10%);      /* #201A0F */
+  --color-secondary: hsl(35 12% 93%);               /* #EFECEA 次级表面 */
+  --color-secondary-foreground: hsl(28 8% 20%);
+
+  /* === 中性色 === */
+  --color-muted: hsl(33 10% 92%);                   /* #EDEBE6 静音表面 */
+  --color-muted-foreground: hsl(25 6% 46%);         /* #7C7570 次级文字 */
+  --color-accent: hsl(38 14% 94%);                  /* #F2EFEA 强调表面 */
+  --color-accent-foreground: hsl(28 10% 14%);
+
+  /* === 系统色 === */
+  --color-destructive: hsl(0 80% 60%);              /* #EB4747 */
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-border: hsl(30 10% 87%);                  /* #E2DDD8 whisper border */
+  --color-input: hsl(30 8% 89%);
+  --color-ring: hsl(40 72% 46%);                    /* 同 primary */
+
+  /* === 发光高光 (3D Hero / 同源章节中央 Rust 核心使用) === */
+  --color-glow: hsl(40 72% 52%);                    /* #DBA81E 暗色版蜂蜜金 */
+
+  /* === 图表色（暖色自然系，章节图示用） === */
+  --color-chart-1: hsl(40 72% 46%);                 /* 琥珀（同 primary）*/
+  --color-chart-2: hsl(152 45% 40%);                /* 森林绿 */
+  --color-chart-3: hsl(210 22% 38%);                /* 石板蓝灰 */
+  --color-chart-4: hsl(16 55% 55%);                 /* 陶土赤陶 */
+  --color-chart-5: hsl(140 28% 48%);                /* 鼠尾草绿 */
+
+  /* === 字体 === */
+  --font-sans: "Inter Variable", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  --font-display: "Inter Display", "Inter Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "Cascadia Code", monospace;
+
+  /* === 圆角 === */
+  --radius: 0.625rem;                               /* 10px 基准 */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* === 全局基础样式 === */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";  /* Inter stylistic alternates */
+  }
+
+  /* prefers-reduced-motion 全局兜底：动画时长归零 */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* 焦点环：键盘可达性 */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* 选区颜色：暖色调 */
+  ::selection {
+    background-color: hsl(40 72% 46% / 0.25);
+    color: var(--color-foreground);
+  }
+}

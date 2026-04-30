@@ -127,7 +127,7 @@ function SyncProgressRow({
           <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{percent}%</span>
         )}
         {canOpen && (
-          <span className="shrink-0 text-xs text-primary">
+          <span className="shrink-0 text-xs font-medium text-primary">
             <Trans>打开</Trans>
           </span>
         )}

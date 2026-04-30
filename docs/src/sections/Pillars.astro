@@ -1,0 +1,292 @@
+---
+/*
+  Section 03 — 四大支柱 / Why SwarmNote
+  - 4 个支柱以六边形 cluster 围绕中央品牌 hex
+  - ScrollTrigger 按顺序点亮 + 连接线脉冲
+*/
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+type Pillar = { title: string; desc: string; icon: string };
+const items = (t as unknown as (k: string) => unknown)("pillars.items") as Pillar[];
+
+// Lucide path data —— 与 i18n 中 icon 字段对应
+const ICONS: Record<string, string> = {
+  folder:
+    "M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2z",
+  network:
+    "M16 22V12 M8 22v-3 M12 22V8 M2 12h20 M5 6h14 M3 22h18 M9 8h6v8H9z",
+  merge:
+    "M8 6V3 M8 21v-6 M8 15a6 6 0 0 0 6-6V3 M21 9a3 3 0 1 1-6 0 3 3 0 0 1 6 0z M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z M11 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0z",
+  "monitor-smartphone":
+    "M18 8V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h6 M10 18v3 M22 18v3 M14 21h12 M14 11h8a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2z",
+};
+
+// Cluster 几何（diamond 4-hex 围绕 center hex，flat-top）
+const HEX_R = 12; // SVG viewBox 单位（16 ≈ 1 × baseline）
+const SQRT3 = Math.sqrt(3);
+// 4 角位置（flat-top neighbors of center: NW, NE, SE, SW）
+const POSITIONS = [
+  { x: -1.5 * HEX_R, y: (-SQRT3 * HEX_R) / 2, label: "NW" }, // P0
+  { x: 1.5 * HEX_R, y: (-SQRT3 * HEX_R) / 2, label: "NE" }, // P1
+  { x: -1.5 * HEX_R, y: (SQRT3 * HEX_R) / 2, label: "SW" }, // P2
+  { x: 1.5 * HEX_R, y: (SQRT3 * HEX_R) / 2, label: "SE" }, // P3
+];
+---
+<section
+  id="pillars"
+  data-section="pillars"
+  class="relative overflow-hidden py-32 md:py-40 bg-card/40"
+>
+  <div class="max-w-6xl mx-auto px-6">
+    {/* 标题 */}
+    <header class="text-center mb-16 md:mb-20">
+      <p
+        data-pillars-eyebrow
+        class="text-xs font-mono uppercase tracking-[0.25em] text-primary mb-4"
+      >
+        Why SwarmNote
+      </p>
+      <h2
+        data-pillars-h2
+        class="text-4xl md:text-6xl font-semibold tracking-tight text-foreground"
+      >
+        {t("pillars.h1")}
+      </h2>
+    </header>
+
+    {/* 中央 hex cluster 装饰（仅桌面） */}
+    <div
+      class="hidden lg:block absolute inset-x-0 top-1/2 -translate-y-1/2 pointer-events-none"
+      aria-hidden="true"
+    >
+      <svg
+        viewBox="-60 -40 120 80"
+        class="mx-auto w-[60%] max-w-3xl text-primary opacity-50"
+      >
+        {/* 中心 hex */}
+        <polygon
+          data-pillars-center
+          points={`${HEX_R},0 ${HEX_R / 2},${(HEX_R * SQRT3) / 2} ${-HEX_R / 2},${(HEX_R * SQRT3) / 2} ${-HEX_R},0 ${-HEX_R / 2},${(-HEX_R * SQRT3) / 2} ${HEX_R / 2},${(-HEX_R * SQRT3) / 2}`}
+          fill="currentColor"
+          fill-opacity="0.06"
+          stroke="currentColor"
+          stroke-opacity="0.5"
+          stroke-width="0.4"
+        />
+        <text
+          data-pillars-center-label
+          x="0"
+          y="1.6"
+          text-anchor="middle"
+          fill="currentColor"
+          font-size="3"
+          font-family="ui-monospace, monospace"
+          letter-spacing="0.2"
+          opacity="0.7"
+        >
+          SWARM
+        </text>
+        {/* 4 条连接线 */}
+        {POSITIONS.map((p, i) => (
+          <line
+            data-pillars-link
+            data-link-index={i}
+            x1="0"
+            y1="0"
+            x2={p.x}
+            y2={p.y}
+            stroke="currentColor"
+            stroke-opacity="0.25"
+            stroke-width="0.4"
+            stroke-dasharray="2 1.5"
+          />
+        ))}
+        {/* 4 角 hex 占位 */}
+        {POSITIONS.map((p) => (
+          <polygon
+            points={`${HEX_R},0 ${HEX_R / 2},${(HEX_R * SQRT3) / 2} ${-HEX_R / 2},${(HEX_R * SQRT3) / 2} ${-HEX_R},0 ${-HEX_R / 2},${(-HEX_R * SQRT3) / 2} ${HEX_R / 2},${(-HEX_R * SQRT3) / 2}`}
+            transform={`translate(${p.x} ${p.y})`}
+            fill="var(--color-background)"
+            stroke="currentColor"
+            stroke-opacity="0.35"
+            stroke-width="0.3"
+          />
+        ))}
+      </svg>
+    </div>
+
+    {/* Pillars grid —— 2×2 (lg+) / 1col (mobile) */}
+    <div
+      class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-7 max-w-5xl mx-auto"
+    >
+      {items.map((p, i) => {
+        const iconPath = ICONS[p.icon] ?? ICONS.folder;
+        const isLeft = i % 2 === 0;
+        return (
+          <article
+            data-pillar-card
+            data-pillar-index={i}
+            class:list={[
+              "relative rounded-2xl border border-border/70 bg-card backdrop-blur-sm p-7 md:p-9 transition-all hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10",
+              isLeft ? "md:translate-y-0" : "md:translate-y-12",
+            ]}
+          >
+            {/* 角标编号 */}
+            <span
+              class="absolute top-5 right-6 text-[10px] font-mono tracking-widest text-muted-foreground/60"
+              aria-hidden="true"
+            >
+              0{i + 1} / 04
+            </span>
+
+            {/* 图标 + hex 框 */}
+            <div class="relative w-16 h-16 mb-6">
+              <svg
+                viewBox="-26 -26 52 52"
+                class="absolute inset-0 w-full h-full text-primary"
+                aria-hidden="true"
+              >
+                <polygon
+                  data-pillar-hex
+                  points="22,0 11,19.05 -11,19.05 -22,0 -11,-19.05 11,-19.05"
+                  fill="currentColor"
+                  fill-opacity="0.12"
+                  stroke="currentColor"
+                  stroke-opacity="0.5"
+                  stroke-width="1.2"
+                />
+              </svg>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="absolute inset-0 m-auto w-7 h-7 text-primary"
+                aria-hidden="true"
+              >
+                <path d={iconPath} />
+              </svg>
+            </div>
+
+            <h3
+              class="text-xl md:text-2xl font-semibold text-foreground mb-3 tracking-tight"
+            >
+              {p.title}
+            </h3>
+            <p class="text-sm md:text-base text-muted-foreground leading-relaxed">
+              {p.desc}
+            </p>
+          </article>
+        );
+      })}
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from "gsap";
+  import { ensureScrollTrigger, prefersReducedMotion } from "../lib/scroll-utils";
+
+  const ScrollTrigger = ensureScrollTrigger();
+  const reduced = prefersReducedMotion();
+
+  const root = document.querySelector<HTMLElement>('[data-section="pillars"]');
+  if (!root) {
+    // noop
+  } else {
+    const eyebrow = root.querySelector("[data-pillars-eyebrow]");
+    const h2 = root.querySelector("[data-pillars-h2]");
+    const cards = Array.from(
+      root.querySelectorAll<HTMLElement>("[data-pillar-card]"),
+    );
+    const links = Array.from(
+      root.querySelectorAll<SVGLineElement>("[data-pillars-link]"),
+    );
+    const center = root.querySelector("[data-pillars-center]");
+    const centerLabel = root.querySelector("[data-pillars-center-label]");
+
+    if (reduced) {
+      // noop — CSS 默认终态
+    } else {
+      gsap.set([eyebrow, h2], { y: 24, autoAlpha: 0 });
+      gsap.set(cards, { y: 40, autoAlpha: 0 });
+      if (links.length) {
+        links.forEach((l) => {
+          const length = l.getTotalLength();
+          gsap.set(l, { strokeDasharray: `${length} ${length}`, strokeDashoffset: length });
+        });
+      }
+      gsap.set([center, centerLabel], { transformOrigin: "center", scale: 0.6, autoAlpha: 0 });
+
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: root,
+            start: "top 70%",
+            end: "top 10%",
+            toggleActions: "play none none reverse",
+          },
+        })
+        .to(eyebrow, { y: 0, autoAlpha: 1, duration: 0.5, ease: "power2.out" })
+        .to(h2, { y: 0, autoAlpha: 1, duration: 0.6, ease: "power2.out" }, "-=0.3")
+        .to([center, centerLabel], {
+          scale: 1,
+          autoAlpha: 1,
+          duration: 0.6,
+          ease: "back.out(1.6)",
+        }, "-=0.2")
+        .to(
+          links,
+          {
+            strokeDashoffset: 0,
+            duration: 0.7,
+            stagger: 0.08,
+            ease: "power2.inOut",
+          },
+          "-=0.3",
+        )
+        .to(
+          cards,
+          {
+            y: 0,
+            autoAlpha: 1,
+            duration: 0.6,
+            stagger: 0.12,
+            ease: "power2.out",
+          },
+          "-=0.5",
+        );
+    }
+
+    // Hover：高亮对应连接线
+    cards.forEach((card, i) => {
+      const link = links[i];
+      if (!link) return;
+      card.addEventListener("mouseenter", () => {
+        if (reduced) return;
+        gsap.to(link, {
+          attr: { "stroke-opacity": 0.75 },
+          strokeWidth: 0.7,
+          duration: 0.3,
+          ease: "power2.out",
+        });
+      });
+      card.addEventListener("mouseleave", () => {
+        if (reduced) return;
+        gsap.to(link, {
+          attr: { "stroke-opacity": 0.25 },
+          strokeWidth: 0.4,
+          duration: 0.4,
+          ease: "power2.out",
+        });
+      });
+    });
+  }
+
+  requestAnimationFrame(() => ScrollTrigger.refresh());
+</script>

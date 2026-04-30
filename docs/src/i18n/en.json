@@ -1,0 +1,213 @@
+{
+  "site": {
+    "title": "SwarmNote",
+    "tagline": "Your notes, swarming across your own devices",
+    "description": "A local-first, peer-to-peer note-taking app. No accounts, no servers, no subscriptions — your notes live as Markdown files on your devices, syncing directly between them via libp2p."
+  },
+  "nav": {
+    "features": "Features",
+    "download": "Download",
+    "ecosystem": "Ecosystem",
+    "github": "GitHub",
+    "changelog": "Changelog"
+  },
+  "hero": {
+    "h1": "Your notes, swarming across your own devices",
+    "subtitle": "Local-first · P2P sync · CRDT auto-merge · One Rust core for desktop and mobile",
+    "subtitleShort": "Notes that flow like nectar in your swarm",
+    "ctaPrimary": "Download free",
+    "ctaSecondary": "View on GitHub",
+    "microcopy": "Open source · No accounts · No servers"
+  },
+  "metaphor": {
+    "h1": "Why a swarm?",
+    "lede": "Think of your devices as a swarm of bees: each device is a bee, the workspace is the hive, and notes flow like nectar between them.",
+    "items": [
+      { "title": "Devices = bees", "desc": "Your laptop, phone, and desktop are members of the swarm" },
+      { "title": "Workspace = hive", "desc": "Shared territory across every device" },
+      { "title": "Notes = nectar", "desc": "Flowing peer-to-peer, never through a central server" }
+    ]
+  },
+  "pillars": {
+    "h1": "Why SwarmNote",
+    "items": [
+      {
+        "title": "Local-first",
+        "desc": "Notes are plain .md files. Uninstall the app — your notes stay.",
+        "icon": "folder"
+      },
+      {
+        "title": "P2P sync",
+        "desc": "libp2p connects devices directly. No server. No subscription.",
+        "icon": "network"
+      },
+      {
+        "title": "CRDT auto-merge",
+        "desc": "Powered by Yjs. Edit offline, no conflicts.",
+        "icon": "merge"
+      },
+      {
+        "title": "Cross-platform",
+        "desc": "Windows · macOS · Linux · Android · iOS",
+        "icon": "monitor-smartphone"
+      }
+    ]
+  },
+  "coreShared": {
+    "h1": "One Rust core, desktop and mobile",
+    "lede": "Tauri desktop and Expo mobile share the same swarmnote-core Rust crate — same business logic, same CRDT state, same P2P stack.",
+    "leftLabel": "Desktop",
+    "leftStack": "Tauri 2 + React 19",
+    "leftCall": "invoke('cmd', args)",
+    "centerLabel": "swarmnote-core",
+    "centerStack": "Rust crate",
+    "rightLabel": "Mobile",
+    "rightStack": "Expo + React Native",
+    "rightCall": "uniffi.call() (JSI)",
+    "footnote": "@swarmnote/editor git submodule is imported on both sides — CodeMirror 6 editing experience is identical"
+  },
+  "pairing": {
+    "h1": "Join with a 6-digit pairing code",
+    "lede": "Generate a 6-digit code on one device, type it on another. Works across networks. No cloud relay.",
+    "steps": [
+      "Open \"Add device\" on your primary",
+      "A 6-digit code appears",
+      "Type the code on the new device",
+      "The swarm grows; notes sync automatically"
+    ],
+    "sidenote": "Devices on the same Wi-Fi are auto-discovered via mDNS (in development)"
+  },
+  "folder": {
+    "h1": "Your notes stay yours",
+    "lede": "A workspace is just a local folder. Open .md files in VS Code, Obsidian, or nvim. SwarmNote watches and merges your edits back into Yjs — no history loss, no conflicts.",
+    "sidenote": "Drop the workspace into Dropbox, OneDrive, or Git for additional backup"
+  },
+  "compare": {
+    "h1": "Why pick SwarmNote",
+    "lede": "Only SwarmNote ships local Markdown + built-in P2P + character-level CRDT merge + fully open source (MIT)",
+    "headers": {
+      "feature": "Dimension",
+      "obsidian": "Obsidian",
+      "notion": "Notion",
+      "logseq": "Logseq",
+      "swarmnote": "SwarmNote"
+    },
+    "rows": [
+      { "feature": "Storage", "obsidian": "Local Markdown", "notion": "Cloud DB", "logseq": "Local Markdown", "swarmnote": "Local Markdown" },
+      { "feature": "Multi-device sync", "obsidian": "Paid Sync", "notion": "Built-in (cloud)", "logseq": "Git / 3rd-party cloud", "swarmnote": "Built-in P2P" },
+      { "feature": "Server dependency", "obsidian": "Required for sync", "notion": "Required", "logseq": "Required for sync", "swarmnote": "None" },
+      { "feature": "Offline collaboration merging", "obsidian": "Not supported", "notion": "Not supported", "logseq": "File-level conflicts", "swarmnote": "CRDT auto-merge" },
+      { "feature": "External tool support", "obsidian": "Compatible", "notion": "Incompatible", "logseq": "Compatible", "swarmnote": "Compatible (with auto reflow)" },
+      { "feature": "Open source", "obsidian": "No", "notion": "No", "logseq": "Yes", "swarmnote": "Yes (MIT)" }
+    ]
+  },
+  "download": {
+    "h1": "Pick your platform",
+    "subtitleTemplate": "Latest release: {version} ({publishedAt})",
+    "platforms": {
+      "windows": "Windows",
+      "macos": "macOS",
+      "linux": "Linux",
+      "android": "Android",
+      "ios": "iOS"
+    },
+    "android": {
+      "placeholder": "Android APK released",
+      "linkLabel": "Download SwarmNote-RN APK"
+    },
+    "ios": {
+      "placeholder": "Built · Awaiting Apple Developer signing",
+      "linkLabel": "View SwarmNote-RN repo"
+    },
+    "viewAll": "See all download options"
+  },
+  "ecosystem": {
+    "h1": "Swarm open-source family",
+    "lede": "All projects share the swarm-p2p-core network layer",
+    "items": [
+      {
+        "name": "SwarmDrop",
+        "desc": "Decentralized file transfer (LocalSend across networks)",
+        "status": "v0.4.4"
+      },
+      {
+        "name": "SwarmNote",
+        "desc": "P2P notes (you're here)",
+        "status": "Current"
+      },
+      {
+        "name": "SwarmNote-RN",
+        "desc": "SwarmNote mobile",
+        "status": "In progress"
+      },
+      {
+        "name": "swarm-p2p-core",
+        "desc": "P2P SDK (libp2p wrapper)",
+        "status": "Released"
+      }
+    ]
+  },
+  "footer": {
+    "brand": "Built with Tauri · libp2p · CodeMirror 6 · Yjs",
+    "columns": {
+      "product": {
+        "title": "Product",
+        "items": [
+          { "label": "Download", "href": "/en/download" },
+          { "label": "Changelog", "href": "https://github.com/yexiyue/SwarmNote/releases" }
+        ]
+      },
+      "develop": {
+        "title": "Develop",
+        "items": [
+          { "label": "GitHub", "href": "https://github.com/yexiyue/SwarmNote" },
+          { "label": "Issues", "href": "https://github.com/yexiyue/SwarmNote/issues" },
+          { "label": "Contributing", "href": "https://github.com/yexiyue/SwarmNote/blob/main/README.md" }
+        ]
+      },
+      "legal": {
+        "title": "Legal",
+        "items": [
+          { "label": "Privacy", "href": "/en/legal/privacy" },
+          { "label": "License (MIT)", "href": "https://github.com/yexiyue/SwarmNote/blob/main/LICENSE" }
+        ]
+      },
+      "ecosystem": {
+        "title": "Ecosystem",
+        "items": [
+          { "label": "SwarmDrop", "href": "https://github.com/yexiyue/swarmdrop" },
+          { "label": "swarm-p2p-core", "href": "https://github.com/yexiyue/swarm-p2p" }
+        ]
+      }
+    },
+    "copyright": "© 2025 SwarmNote Contributors · MIT License",
+    "noTracking": "This website collects no user data · No tracking · No telemetry"
+  },
+  "language": {
+    "switchLabel": "Switch language",
+    "zh": "中文",
+    "en": "English"
+  },
+  "downloadPage": {
+    "h1": "Download SwarmNote",
+    "checksum": "Checksum",
+    "size": "Size",
+    "updated": "Updated",
+    "fallbackNote": "Data from last successful build (offline from GitHub)"
+  },
+  "changelogPage": {
+    "h1": "Changelog",
+    "viewMore": "View full history →"
+  },
+  "privacyPage": {
+    "h1": "Privacy",
+    "lastUpdated": "Last updated"
+  },
+  "common": {
+    "recommended": "Recommended for your platform",
+    "loading": "Loading…",
+    "404": "This bee flew the wrong way",
+    "back": "Back home",
+    "skipNav": "Skip to content"
+  }
+}

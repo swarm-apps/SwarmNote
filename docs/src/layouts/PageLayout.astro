@@ -1,0 +1,25 @@
+---
+/*
+  子页面通用布局：BaseLayout 上加 SiteHeader / SiteFooter，预留 page hero + content slot。
+*/
+import BaseLayout from "./BaseLayout.astro";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../sections/SiteFooter.astro";
+
+export interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+---
+<BaseLayout
+  title={Astro.props.title}
+  description={Astro.props.description}
+  ogImage={Astro.props.ogImage}
+>
+  <SiteHeader />
+  <div class="pt-20">
+    <slot />
+  </div>
+  <SiteFooter />
+</BaseLayout>

@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { PenLine, RefreshCw, Shield, Wifi } from "lucide-react";
+import { RefreshCw, Shield, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 
@@ -8,9 +8,7 @@ export function WelcomeStep() {
 
   return (
     <>
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary">
-        <PenLine className="h-8 w-8 text-white" />
-      </div>
+      <img src="/logo-64.png" alt="SwarmNote" width={64} height={64} className="h-16 w-16" />
 
       <div className="flex flex-col items-center gap-2">
         <h1 className="text-2xl font-bold text-foreground">SwarmNote</h1>

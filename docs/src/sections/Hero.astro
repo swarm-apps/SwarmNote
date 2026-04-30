@@ -1,0 +1,11 @@
+---
+import HexMorph from "../components/hero/HexMorph";
+---
+{/*
+  Hero section — 滚动驱动 5 段 morph (anime.js 风) 通过 HexMorph React island。
+  整个 hero 由 HexMorph 内部 GSAP ScrollTrigger pin + scrub 控制 (pin 3 viewport)。
+  顶部 tagline / 中央 SVG 舞台 / 底部 CTA + 进度条 都在组件内布局。
+*/}
+<section id="hero" class="relative">
+  <HexMorph client:visible />
+</section>
