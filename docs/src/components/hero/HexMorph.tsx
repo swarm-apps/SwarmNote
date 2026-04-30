@@ -17,6 +17,7 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ensureScrollTrigger, prefersReducedMotion } from "../../lib/scroll-utils";
+import { withBase } from "../../lib/url";
 
 // === 几何参数 ===
 const SVG_W = 900;
@@ -497,7 +498,7 @@ export default function HexMorph(): React.ReactElement {
           {/* 品牌 logo（stage 1 visible，进入 stage 2 时淡出） */}
           <image
             data-element="center-logo"
-            href="/logo.png"
+            href={withBase("/logo.png")}
             x={CENTER_X - 44}
             y={CENTER_Y - 44}
             width="88"
@@ -552,7 +553,7 @@ export default function HexMorph(): React.ReactElement {
       <div className="absolute bottom-12 left-0 right-0 px-6" style={{ zIndex: 20 }}>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <a
-            href="/download"
+            href={withBase("/download")}
             className="px-5 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity"
           >
             免费下载
