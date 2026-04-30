@@ -1,0 +1,136 @@
+---
+/*
+  /legal/privacy 正文。SwarmNote 是本地优先 P2P，无服务器收集，
+  这份隐私声明非常短：我们没东西可以收集。
+*/
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const lastUpdated = "2026-04-30";
+
+const ZH = {
+  intro: "SwarmNote 是去中心化、本地优先的笔记工具。我们不运营任何服务器、不接收任何数据，因此实际上「没什么可以收集」。本声明只是把这一事实写得更清楚一点。",
+  sections: [
+    {
+      title: "1. 我们不收集任何用户数据",
+      bullets: [
+        "应用不内置任何分析、telemetry、错误上报、事件追踪 SDK。",
+        "无登录、无账号、无邮箱、无 IP 留存。",
+        "你的笔记永远以本地 .md 文件形式存放在你自己的硬盘里。",
+      ],
+    },
+    {
+      title: "2. P2P 同步发生在你的设备之间",
+      bullets: [
+        "笔记内容只通过 libp2p 直连在你已配对的设备之间同步，不经过任何服务器。",
+        "为完成 NAT 穿透与节点发现，App 会与公共 libp2p Bootstrap 节点 / DHT 网络通信，这些是开放协议，不属于 SwarmNote 运营方。",
+        "Relay 节点（中继）目前由 libp2p 公网默认 relay 提供。我们不收集 relay 流量内容。",
+      ],
+    },
+    {
+      title: "3. 这个网站本身",
+      bullets: [
+        "本网站为静态页面（Astro 构建产物），托管在 GitHub Pages / Cloudflare Pages。",
+        "没有 cookie、没有第三方分析、没有广告 SDK。",
+        "字体在 build 时自托管（不连 Google Fonts）；图标内联 SVG。",
+      ],
+    },
+    {
+      title: "4. 第三方依赖",
+      bullets: [
+        "下载页面的资产链接指向 github.com（GitHub Releases CDN）。点击下载会按 GitHub 自身的隐私政策处理。",
+        "Footer 中的外链（GitHub / Issues / 兄弟项目）会跳转到对应站点，受其各自的隐私政策约束。",
+      ],
+    },
+    {
+      title: "5. 联系方式",
+      bullets: [
+        "本声明如有疑问，请到 GitHub 仓库 issues 区反馈：github.com/yexiyue/SwarmNote/issues。",
+      ],
+    },
+  ],
+};
+
+const EN = {
+  intro:
+    "SwarmNote is a decentralized, local-first notes app. We don't run any server and don't receive any data — there's literally nothing for us to collect. This statement just spells that out a bit more clearly.",
+  sections: [
+    {
+      title: "1. We don't collect any user data",
+      bullets: [
+        "The app contains no analytics, telemetry, crash reporting, or event-tracking SDK.",
+        "No login, no account, no email, no IP retention.",
+        "Your notes always live as plain .md files in folders on your own disk.",
+      ],
+    },
+    {
+      title: "2. P2P sync happens between your devices",
+      bullets: [
+        "Note content is synced only between your paired devices via direct libp2p connections — never through our servers.",
+        "For NAT traversal and peer discovery, the app talks to public libp2p bootstrap / DHT nodes. Those are an open network and not operated by SwarmNote.",
+        "Relay nodes are provided by the libp2p public default relay set today. We don't collect relay traffic content.",
+      ],
+    },
+    {
+      title: "3. This website",
+      bullets: [
+        "Pure static site (Astro build output), hosted on GitHub Pages / Cloudflare Pages.",
+        "No cookies, no third-party analytics, no ad SDKs.",
+        "Fonts are self-hosted at build time (no Google Fonts call); icons are inline SVG.",
+      ],
+    },
+    {
+      title: "4. Third-party dependencies",
+      bullets: [
+        "Download page asset links point to github.com (GitHub Releases CDN). Clicking download is governed by GitHub's own privacy policy.",
+        "Outbound footer links (GitHub / Issues / sibling projects) navigate to those sites and are governed by each site's own privacy policy.",
+      ],
+    },
+    {
+      title: "5. Contact",
+      bullets: [
+        "Questions on this statement: file an issue at github.com/yexiyue/SwarmNote/issues.",
+      ],
+    },
+  ],
+};
+
+const content = lang === "zh" ? ZH : EN;
+---
+<section class="max-w-3xl mx-auto px-6 py-16 md:py-24">
+  <header class="mb-10 md:mb-14">
+    <p class="text-xs font-mono uppercase tracking-[0.25em] text-primary mb-4">
+      Legal
+    </p>
+    <h1 class="text-4xl md:text-5xl font-semibold tracking-tight text-foreground mb-3">
+      {t("privacyPage.h1")}
+    </h1>
+    <p class="text-sm text-muted-foreground tabular-nums">
+      {t("privacyPage.lastUpdated")}: {lastUpdated}
+    </p>
+  </header>
+
+  <p class="text-base md:text-lg text-foreground/85 leading-relaxed mb-12">
+    {content.intro}
+  </p>
+
+  <div class="space-y-10 md:space-y-12">
+    {content.sections.map((section) => (
+      <section>
+        <h2 class="text-xl md:text-2xl font-semibold tracking-tight text-foreground mb-4">
+          {section.title}
+        </h2>
+        <ul class="space-y-2.5 text-sm md:text-base text-foreground/85 leading-relaxed">
+          {section.bullets.map((b) => (
+            <li class="flex gap-3">
+              <span class="flex-none mt-2.5 w-1 h-1 rounded-full bg-primary" aria-hidden="true"></span>
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+</section>

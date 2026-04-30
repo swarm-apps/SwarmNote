@@ -1,0 +1,31 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import SiteHeader from "../../components/SiteHeader.astro";
+import Hero from "../../sections/Hero.astro";
+import Metaphor from "../../sections/Metaphor.astro";
+import Pillars from "../../sections/Pillars.astro";
+import CoreShared from "../../sections/CoreShared.astro";
+import Pairing from "../../sections/Pairing.astro";
+import FolderIsTruth from "../../sections/FolderIsTruth.astro";
+import Compare from "../../sections/Compare.astro";
+import Download from "../../sections/Download.astro";
+import Ecosystem from "../../sections/Ecosystem.astro";
+import SiteFooter from "../../sections/SiteFooter.astro";
+import { getLangFromUrl, useTranslations } from "../../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+<BaseLayout title={t("site.title")}>
+  <SiteHeader />
+  <Hero />
+  <Metaphor />
+  <Pillars />
+  <CoreShared />
+  <Pairing />
+  <FolderIsTruth />
+  <Compare />
+  <Download />
+  <Ecosystem />
+  <SiteFooter />
+</BaseLayout>

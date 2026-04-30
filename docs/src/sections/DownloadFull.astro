@@ -1,0 +1,171 @@
+---
+/*
+  /download 子页正文：完整平台 + 全部 arch/格式 + 校验和 + Mobile 占位
+*/
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+import {
+  loadReleases,
+  groupDesktopAssetsByPlatform,
+  collectOtherAssets,
+  formatPublishedAt,
+  formatBytes,
+} from "../lib/releases";
+import DownloadPlatformCard from "../components/DownloadPlatformCard.astro";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const releases = await loadReleases();
+const latest = releases.desktop.latest;
+const latestMobile = releases.mobile.latest;
+const desktopAssets = groupDesktopAssetsByPlatform(latest);
+const otherAssets = collectOtherAssets(latest);
+const androidAssets = latestMobile?.assets.filter((a) => a.platform === "android") ?? [];
+
+const platformsLabel = (t as unknown as (k: string) => unknown)(
+  "download.platforms",
+) as Record<string, string>;
+
+// 简单图标 path（Lucide 风格）
+const ICON_PATHS: Record<string, string> = {
+  windows: "M3 3h8v8H3z M13 3h8v8h-8z M3 13h8v8H3z M13 13h8v8h-8z",
+  macos:
+    "M12 2.5c-.6 0-1 .4-1 1 0 .9-.4 1.7-1 2.3-.7.6-1.6 1-2.5 1-.5 0-1 .4-1 1 0 1.4.5 2.7 1.5 3.7s2.3 1.5 3.7 1.5c1.4 0 2.7-.5 3.7-1.5s1.5-2.3 1.5-3.7c0-.6-.4-1-1-1-.9 0-1.7-.4-2.3-1-.7-.6-1-1.4-1-2.3 0-.5-.4-1-1-1z M8 14c-2 0-4 1.5-4 5 0 1 .3 2 1 2.5.3.2.7 0 .9-.3.4-.6 1.4-1.2 2.5-1.2.7 0 1.4.2 2 .6.3.2.7.2 1 0 .6-.4 1.3-.6 2-.6 1.1 0 2.1.6 2.5 1.2.2.3.6.5.9.3.7-.5 1-1.5 1-2.5 0-3.5-2-5-4-5-1 0-2 .5-2.5 1-.5-.5-1.5-1-2.5-1z",
+  linux:
+    "M9 4c-1 0-2 1-2 2.5 0 1 .5 2 1 2.5-1.5 1-3 3-3 6.5 0 1.5 1 3 2 4 0 .5-.5 1-1 1-.5 0-1 .5-1 1h12c0-.5-.5-1-1-1-.5 0-1-.5-1-1 1-1 2-2.5 2-4 0-3.5-1.5-5.5-3-6.5.5-.5 1-1.5 1-2.5C15 5 14 4 13 4h-4z",
+  android: "M5 16V9a7 7 0 0 1 14 0v7 M5 16h14 M5 16a2 2 0 0 0 0 4h14a2 2 0 0 0 0-4 M9 7l-2-3 M15 7l2-3",
+  ios: "M14 4h.01 M16 8a4 4 0 0 0-4 4 M19 12a7 7 0 1 1-14 0 7 7 0 0 1 14 0z",
+};
+
+const sizeLabel = lang === "zh" ? "大小" : "Size";
+const archLabel = lang === "zh" ? "架构" : "Arch";
+const downloadLabel = lang === "zh" ? "下载" : "Download";
+const checksumLabel = t("downloadPage.checksum");
+const updatedLabel = t("downloadPage.updated");
+const fallbackNote = t("downloadPage.fallbackNote");
+const otherSectionTitle = lang === "zh" ? "其他资产" : "Other assets";
+const fullHistoryLabel =
+  lang === "zh" ? "完整发布历史 →" : "Full release history →";
+---
+<section class="max-w-5xl mx-auto px-6 py-16 md:py-24">
+  {/* Page hero */}
+  <header class="mb-12 md:mb-16 text-center">
+    <p class="text-xs font-mono uppercase tracking-[0.25em] text-primary mb-4">
+      Releases
+    </p>
+    <h1 class="text-4xl md:text-5xl font-semibold tracking-tight text-foreground mb-4">
+      {t("downloadPage.h1")}
+    </h1>
+    {latest ? (
+      <p class="text-sm md:text-base text-muted-foreground tabular-nums">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 text-primary font-mono text-xs mr-2">
+          v{latest.version}
+        </span>
+        <span>
+          {updatedLabel}: {formatPublishedAt(latest.publishedAt, lang)}
+        </span>
+      </p>
+    ) : (
+      <p class="text-sm text-muted-foreground italic">{fallbackNote}</p>
+    )}
+    {releases.source === "cache" && (
+      <p class="mt-3 text-xs text-muted-foreground/80 italic">{fallbackNote}</p>
+    )}
+  </header>
+
+  {/* Desktop */}
+  <div class="space-y-6 md:space-y-8 mb-16">
+    <DownloadPlatformCard
+      platformLabel={platformsLabel.windows}
+      iconPath={ICON_PATHS.windows}
+      assets={desktopAssets.windows}
+      pendingMsg={lang === "zh" ? "暂无 Windows 构建" : "No Windows build yet"}
+      sizeLabel={sizeLabel}
+      archLabel={archLabel}
+      downloadLabel={downloadLabel}
+    />
+    <DownloadPlatformCard
+      platformLabel={platformsLabel.macos}
+      iconPath={ICON_PATHS.macos}
+      assets={desktopAssets.macos}
+      pendingMsg={lang === "zh" ? "暂无 macOS 构建" : "No macOS build yet"}
+      sizeLabel={sizeLabel}
+      archLabel={archLabel}
+      downloadLabel={downloadLabel}
+    />
+    <DownloadPlatformCard
+      platformLabel={platformsLabel.linux}
+      iconPath={ICON_PATHS.linux}
+      assets={desktopAssets.linux}
+      pendingMsg={lang === "zh" ? "暂无 Linux 构建" : "No Linux build yet"}
+      sizeLabel={sizeLabel}
+      archLabel={archLabel}
+      downloadLabel={downloadLabel}
+    />
+    <DownloadPlatformCard
+      platformLabel={platformsLabel.android}
+      iconPath={ICON_PATHS.android}
+      assets={androidAssets}
+      pendingMsg={lang === "zh" ? "暂无 Android 构建" : "No Android build yet"}
+      pendingLink="https://github.com/yexiyue/SwarmNote-RN/releases"
+      pendingLinkLabel={t("download.android.linkLabel")}
+      sizeLabel={sizeLabel}
+      archLabel={archLabel}
+      downloadLabel={downloadLabel}
+    />
+    <DownloadPlatformCard
+      platformLabel={platformsLabel.ios}
+      iconPath={ICON_PATHS.ios}
+      assets={[]}
+      pendingMsg={t("download.ios.placeholder")}
+      pendingLink="https://github.com/yexiyue/SwarmNote-RN"
+      pendingLinkLabel={t("download.ios.linkLabel")}
+      sizeLabel={sizeLabel}
+      archLabel={archLabel}
+      downloadLabel={downloadLabel}
+    />
+  </div>
+
+  {/* Other assets (signatures / latest.json / checksums) */}
+  {otherAssets.length > 0 && (
+    <section class="rounded-xl border border-border/70 bg-muted/30 p-6 md:p-8 mb-12">
+      <h3 class="text-sm font-mono uppercase tracking-[0.18em] text-muted-foreground mb-4">
+        {otherSectionTitle}
+      </h3>
+      <ul class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        {otherAssets.map((a) => (
+          <li>
+            <a
+              href={a.downloadUrl}
+              class="flex items-center justify-between gap-3 px-3 py-2 rounded-md hover:bg-card transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <span class="font-mono text-foreground/85 truncate">{a.name}</span>
+              <span class="text-[11px] font-mono text-muted-foreground tabular-nums whitespace-nowrap">
+                {formatBytes(a.size)}
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="mt-4 text-[11px] text-muted-foreground italic">
+        {lang === "zh"
+          ? "签名 (.sig)、updater 元数据 (latest.json)、校验和等。"
+          : "Signatures (.sig), updater metadata (latest.json), checksums, etc."}
+      </p>
+    </section>
+  )}
+
+  {/* History link */}
+  <div class="text-center">
+    <a
+      href="https://github.com/yexiyue/SwarmNote/releases"
+      class="inline-flex items-center gap-2 text-sm text-primary hover:underline underline-offset-4 font-medium"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {fullHistoryLabel}
+    </a>
+  </div>
+</section>

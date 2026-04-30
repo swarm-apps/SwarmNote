@@ -1,0 +1,25 @@
+---
+/*
+  Section 04 包装 —— 给 React island 注入 i18n dict。
+*/
+import CoreShared from "../components/sections/CoreShared";
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const dict = {
+  h1: t("coreShared.h1"),
+  lede: t("coreShared.lede"),
+  leftLabel: t("coreShared.leftLabel"),
+  leftStack: t("coreShared.leftStack"),
+  leftCall: t("coreShared.leftCall"),
+  centerLabel: t("coreShared.centerLabel"),
+  centerStack: t("coreShared.centerStack"),
+  rightLabel: t("coreShared.rightLabel"),
+  rightStack: t("coreShared.rightStack"),
+  rightCall: t("coreShared.rightCall"),
+  footnote: t("coreShared.footnote"),
+};
+---
+<CoreShared client:visible dict={dict} />

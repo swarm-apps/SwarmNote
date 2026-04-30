@@ -1,0 +1,14 @@
+---
+import PageLayout from "../../layouts/PageLayout.astro";
+import DownloadFull from "../../sections/DownloadFull.astro";
+import { getLangFromUrl, useTranslations } from "../../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+---
+<PageLayout
+  title={t("downloadPage.h1")}
+  description={t("download.h1")}
+>
+  <DownloadFull />
+</PageLayout>

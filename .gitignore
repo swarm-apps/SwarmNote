@@ -45,3 +45,4 @@ dist-ssr
 src/locales/**/*.js
 **/target/**
 .omc
+**/*playwright*

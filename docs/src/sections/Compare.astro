@@ -1,0 +1,186 @@
+---
+/*
+  Section 07 — 与同类工具对比
+  - 桌面：表格，SwarmNote 列高亮
+  - 移动：堆叠卡片，每个 feature 独立显示
+*/
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+type Row = {
+  feature: string;
+  obsidian: string;
+  notion: string;
+  logseq: string;
+  swarmnote: string;
+};
+const rows = (t as unknown as (k: string) => unknown)("compare.rows") as Row[];
+
+const headers = (t as unknown as (k: string) => unknown)("compare.headers") as {
+  feature: string;
+  obsidian: string;
+  notion: string;
+  logseq: string;
+  swarmnote: string;
+};
+
+const competitorKeys = ["obsidian", "notion", "logseq"] as const;
+---
+<section
+  id="compare"
+  data-section="compare"
+  class="relative overflow-hidden py-32 md:py-40 bg-card/40"
+>
+  <div class="max-w-6xl mx-auto px-6">
+    <header class="text-center mb-12 md:mb-16 max-w-3xl mx-auto">
+      <p
+        data-cmp-eyebrow
+        class="text-xs font-mono uppercase tracking-[0.25em] text-primary mb-4"
+      >
+        Why SwarmNote, not the others
+      </p>
+      <h2
+        data-cmp-h2
+        class="text-4xl md:text-5xl font-semibold tracking-tight text-foreground mb-5"
+      >
+        {t("compare.h1")}
+      </h2>
+      <p data-cmp-lede class="text-base md:text-lg text-muted-foreground leading-relaxed">
+        {t("compare.lede")}
+      </p>
+    </header>
+
+    {/* 桌面：表格 */}
+    <div class="hidden md:block overflow-hidden rounded-2xl border border-border bg-card shadow-lg shadow-primary/5">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-border bg-muted/30">
+            <th class="px-6 py-4 text-left font-semibold text-muted-foreground tracking-wide">
+              {headers.feature}
+            </th>
+            {competitorKeys.map((k) => (
+              <th class="px-6 py-4 text-center font-medium text-muted-foreground tracking-wide">
+                {headers[k]}
+              </th>
+            ))}
+            <th
+              data-cmp-swarm-header
+              class="relative px-6 py-4 text-center font-bold text-primary bg-primary/5 ring-1 ring-primary/30"
+            >
+              <span class="inline-flex items-center gap-1.5">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="w-3.5 h-3.5"
+                  aria-hidden="true"
+                >
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                </svg>
+                {headers.swarmnote}
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => (
+            <tr
+              data-cmp-row
+              data-row-index={i}
+              class:list={[
+                "border-b border-border/60 last:border-b-0",
+                i % 2 === 1 && "bg-muted/10",
+              ]}
+            >
+              <td class="px-6 py-4 font-medium text-foreground">
+                {row.feature}
+              </td>
+              {competitorKeys.map((k) => (
+                <td class="px-6 py-4 text-center text-muted-foreground">
+                  {row[k]}
+                </td>
+              ))}
+              <td class="px-6 py-4 text-center font-semibold text-primary bg-primary/5 ring-1 ring-primary/15">
+                {row.swarmnote}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    {/* 移动端：堆叠卡片 */}
+    <div class="md:hidden space-y-4">
+      {rows.map((row, i) => (
+        <article
+          data-cmp-card
+          data-row-index={i}
+          class="rounded-xl border border-border bg-card p-5"
+        >
+          <h3 class="text-sm font-semibold text-foreground mb-3">
+            {row.feature}
+          </h3>
+          <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+            {competitorKeys.map((k) => (
+              <>
+                <dt class="text-muted-foreground">{headers[k]}</dt>
+                <dd class="text-foreground/80">{row[k]}</dd>
+              </>
+            ))}
+            <dt class="text-primary font-semibold">{headers.swarmnote}</dt>
+            <dd class="text-primary font-semibold">{row.swarmnote}</dd>
+          </dl>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from "gsap";
+  import { ensureScrollTrigger, prefersReducedMotion } from "../lib/scroll-utils";
+
+  const ScrollTrigger = ensureScrollTrigger();
+  const reduced = prefersReducedMotion();
+
+  const root = document.querySelector<HTMLElement>('[data-section="compare"]');
+  if (root) {
+    const eyebrow = root.querySelector("[data-cmp-eyebrow]");
+    const h2 = root.querySelector("[data-cmp-h2]");
+    const lede = root.querySelector("[data-cmp-lede]");
+    const rows = Array.from(root.querySelectorAll<HTMLElement>("[data-cmp-row]"));
+    const cards = Array.from(root.querySelectorAll<HTMLElement>("[data-cmp-card]"));
+
+    if (!reduced) {
+      gsap.set([eyebrow, h2, lede], { y: 24, autoAlpha: 0 });
+      gsap.set([...rows, ...cards], { y: 18, autoAlpha: 0 });
+
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: root,
+            start: "top 70%",
+            end: "top 10%",
+            toggleActions: "play none none reverse",
+          },
+        })
+        .to(eyebrow, { y: 0, autoAlpha: 1, duration: 0.5, ease: "power2.out" })
+        .to(h2, { y: 0, autoAlpha: 1, duration: 0.6, ease: "power2.out" }, "-=0.3")
+        .to(lede, { y: 0, autoAlpha: 1, duration: 0.5, ease: "power2.out" }, "-=0.4")
+        .to([...rows, ...cards], {
+          y: 0,
+          autoAlpha: 1,
+          duration: 0.45,
+          stagger: 0.08,
+          ease: "power2.out",
+        }, "-=0.2");
+    }
+  }
+
+  requestAnimationFrame(() => ScrollTrigger.refresh());
+</script>

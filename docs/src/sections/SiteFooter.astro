@@ -1,0 +1,87 @@
+---
+/*
+  Section 10 — Footer
+*/
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+import LanguageSwitcher from "../components/LanguageSwitcher.astro";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+type FooterItem = { label: string; href: string };
+type Column = { title: string; items: FooterItem[] };
+const columns = (t as unknown as (k: string) => unknown)("footer.columns") as {
+  product: Column;
+  develop: Column;
+  legal: Column;
+  ecosystem: Column;
+};
+
+// 内部链接补 locale 前缀
+function localizedHref(href: string): string {
+  if (href.startsWith("http")) return href;
+  if (lang === "zh") return href;
+  return `/${lang}${href === "/" ? "/" : href}`;
+}
+---
+<footer class="border-t border-border bg-card/30">
+  <div class="max-w-6xl mx-auto px-6 py-16 md:py-20">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-8 md:gap-10 mb-12">
+      {/* Brand 列 */}
+      <div class="col-span-2 md:col-span-1">
+        <a
+          href={lang === "zh" ? "/" : "/en/"}
+          class="inline-flex items-center gap-2.5 mb-4"
+        >
+          <img
+            src="/logo.png"
+            alt={t("site.title")}
+            width="40"
+            height="40"
+            class="w-10 h-10"
+            loading="lazy"
+            decoding="async"
+          />
+          <span class="text-base font-semibold tracking-tight text-foreground">
+            {t("site.title")}
+          </span>
+        </a>
+        <p class="text-xs text-muted-foreground leading-relaxed">
+          {t("footer.brand")}
+        </p>
+      </div>
+
+      {/* 4 个分类 */}
+      {(["product", "develop", "legal", "ecosystem"] as const).map((key) => (
+        <div>
+          <h4 class="text-xs font-mono uppercase tracking-[0.18em] text-muted-foreground mb-4">
+            {columns[key].title}
+          </h4>
+          <ul class="space-y-2.5">
+            {columns[key].items.map((item) => (
+              <li>
+                <a
+                  href={localizedHref(item.href)}
+                  class="text-sm text-foreground/80 hover:text-primary transition-colors"
+                  {...(item.href.startsWith("http")
+                    ? { target: "_blank", rel: "noopener noreferrer" }
+                    : {})}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+
+    <div class="pt-8 border-t border-border flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 text-xs text-muted-foreground">
+        <p>{t("footer.copyright")}</p>
+        <p class="italic">{t("footer.noTracking")}</p>
+      </div>
+      <LanguageSwitcher />
+    </div>
+  </div>
+</footer>

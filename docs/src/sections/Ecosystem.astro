@@ -1,0 +1,186 @@
+---
+/*
+  Section 09 — Swarm 系列开源项目
+  - 4 个项目，swarm-p2p-core 作为 foundation 高亮
+*/
+import { getLangFromUrl, useTranslations } from "../i18n/utils";
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+type EcoItem = { name: string; desc: string; status: string };
+const items = (t as unknown as (k: string) => unknown)("ecosystem.items") as EcoItem[];
+
+// 与 i18n items 顺序对齐：SwarmDrop / SwarmNote / SwarmNote-RN / swarm-p2p-core
+const meta: Array<{
+  href: string;
+  role: "consumer" | "current" | "foundation";
+  badge: string;
+}> = [
+  {
+    href: "https://github.com/yexiyue/swarmdrop",
+    role: "consumer",
+    badge: "FILE TRANSFER",
+  },
+  {
+    href: "https://github.com/yexiyue/SwarmNote",
+    role: "current",
+    badge: "NOTES (HERE)",
+  },
+  {
+    href: "https://github.com/yexiyue/SwarmNote-RN",
+    role: "consumer",
+    badge: "MOBILE",
+  },
+  {
+    href: "https://github.com/yexiyue/swarm-p2p",
+    role: "foundation",
+    badge: "FOUNDATION",
+  },
+];
+---
+<section
+  id="ecosystem"
+  data-section="ecosystem"
+  class="relative overflow-hidden py-32 md:py-40 bg-card/40"
+>
+  <div class="max-w-6xl mx-auto px-6">
+    <header class="text-center mb-12 md:mb-16 max-w-3xl mx-auto">
+      <p
+        data-eco-eyebrow
+        class="text-xs font-mono uppercase tracking-[0.25em] text-primary mb-4"
+      >
+        Open-source family
+      </p>
+      <h2
+        data-eco-h2
+        class="text-4xl md:text-5xl font-semibold tracking-tight text-foreground mb-5"
+      >
+        {t("ecosystem.h1")}
+      </h2>
+      <p data-eco-lede class="text-base md:text-lg text-muted-foreground leading-relaxed">
+        {t("ecosystem.lede")}
+      </p>
+    </header>
+
+    <div
+      data-eco-grid
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5"
+    >
+      {items.map((item, i) => {
+        const m = meta[i];
+        return (
+          <a
+            data-eco-card
+            data-card-index={i}
+            data-eco-role={m.role}
+            href={m.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            class:list={[
+              "group relative flex flex-col rounded-2xl p-6 md:p-7 transition-all border",
+              m.role === "foundation"
+                ? "bg-primary/5 border-primary/40 ring-1 ring-primary/20 hover:ring-2 hover:shadow-xl hover:shadow-primary/10"
+                : m.role === "current"
+                  ? "bg-card border-primary/30 hover:border-primary"
+                  : "bg-card border-border hover:border-primary/50 hover:-translate-y-0.5",
+              "hover:shadow-lg",
+            ]}
+          >
+            <div class="flex items-center gap-2 mb-4">
+              <span
+                class:list={[
+                  "text-[10px] font-mono uppercase tracking-[0.18em] px-2 py-0.5 rounded-full border",
+                  m.role === "foundation"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : m.role === "current"
+                      ? "bg-primary/10 text-primary border-primary/30"
+                      : "bg-muted text-muted-foreground border-border",
+                ]}
+              >
+                {m.badge}
+              </span>
+              <span
+                class="ml-auto text-[10px] font-mono text-muted-foreground/80 tabular-nums"
+                aria-hidden="true"
+              >
+                0{i + 1} / 04
+              </span>
+            </div>
+
+            <h3 class="text-lg md:text-xl font-semibold text-foreground mb-2 font-mono tracking-tight">
+              {item.name}
+            </h3>
+            <p class="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">
+              {item.desc}
+            </p>
+
+            <div class="flex items-center justify-between">
+              <span
+                class:list={[
+                  "text-xs font-mono",
+                  m.role === "foundation" ? "text-primary" : "text-muted-foreground",
+                ]}
+              >
+                {item.status}
+              </span>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-0.5 transition-all"
+                aria-hidden="true"
+              >
+                <path d="M7 17 17 7 M7 7h10v10" />
+              </svg>
+            </div>
+          </a>
+        );
+      })}
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from "gsap";
+  import { ensureScrollTrigger, prefersReducedMotion } from "../lib/scroll-utils";
+
+  const ScrollTrigger = ensureScrollTrigger();
+  const reduced = prefersReducedMotion();
+
+  const root = document.querySelector<HTMLElement>('[data-section="ecosystem"]');
+  if (root && !reduced) {
+    const eyebrow = root.querySelector("[data-eco-eyebrow]");
+    const h2 = root.querySelector("[data-eco-h2]");
+    const lede = root.querySelector("[data-eco-lede]");
+    const cards = Array.from(root.querySelectorAll<HTMLElement>("[data-eco-card]"));
+
+    gsap.set([eyebrow, h2, lede], { y: 24, autoAlpha: 0 });
+    gsap.set(cards, { y: 30, autoAlpha: 0 });
+
+    gsap
+      .timeline({
+        scrollTrigger: {
+          trigger: root,
+          start: "top 75%",
+          end: "top 20%",
+          toggleActions: "play none none reverse",
+        },
+      })
+      .to(eyebrow, { y: 0, autoAlpha: 1, duration: 0.5, ease: "power2.out" })
+      .to(h2, { y: 0, autoAlpha: 1, duration: 0.6, ease: "power2.out" }, "-=0.3")
+      .to(lede, { y: 0, autoAlpha: 1, duration: 0.5, ease: "power2.out" }, "-=0.4")
+      .to(cards, {
+        y: 0,
+        autoAlpha: 1,
+        duration: 0.5,
+        stagger: 0.1,
+        ease: "power2.out",
+      }, "-=0.2");
+  }
+
+  requestAnimationFrame(() => ScrollTrigger.refresh());
+</script>
