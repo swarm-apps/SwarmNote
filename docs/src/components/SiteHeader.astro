@@ -3,12 +3,13 @@
   Sticky 顶部导航。滚动后增加背景模糊。
 */
 import { getLangFromUrl, useTranslations, switchLocale, locales, type Locale } from "../i18n/utils";
+import { withBase } from "../lib/url";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
 const currentPath = Astro.url.pathname;
 
-const homeHref = lang === "zh" ? "/" : "/en/";
+const homeHref = withBase(lang === "zh" ? "/" : "/en/");
 
 const navItems: Array<{ label: string; href: string; external?: boolean }> = [
   { label: t("nav.features"), href: "#pillars" },
@@ -39,7 +40,7 @@ const navItems: Array<{ label: string; href: string; external?: boolean }> = [
       {/* Logo */}
       <a href={homeHref} class="flex items-center gap-2.5 group">
         <img
-          src="/logo.png"
+          src={withBase("/logo.png")}
           alt={t("site.title")}
           width="36"
           height="36"

@@ -1,6 +1,7 @@
 ---
 import PageLayout from "../layouts/PageLayout.astro";
 import { getLangFromUrl, useTranslations } from "../i18n/utils";
+import { withBase } from "../lib/url";
 
 const lang = getLangFromUrl(Astro.url);
 const t = useTranslations(lang);
@@ -15,7 +16,7 @@ const t = useTranslations(lang);
       {Astro.url.pathname}
     </p>
     <a
-      href={lang === "zh" ? "/" : "/en/"}
+      href={withBase(lang === "zh" ? "/" : "/en/")}
       class="inline-flex items-center gap-2 px-5 h-10 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
     >
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-4 h-4" aria-hidden="true">

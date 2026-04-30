@@ -5,6 +5,7 @@
   - Phase 8 会接入 GitHub Releases API；当前用 placeholder 数据
 */
 import { getLangFromUrl, useTranslations } from "../i18n/utils";
+import { withBase } from "../lib/url";
 import {
   loadReleases,
   groupDesktopAssetsByPlatform,
@@ -259,7 +260,7 @@ const detailsLabel = lang === "zh" ? "查看仓库" : "View repo";
 
     <div class="mt-10 text-center">
       <a
-        href={lang === "zh" ? "/download" : "/en/download"}
+        href={withBase(lang === "zh" ? "/download" : "/en/download")}
         class="inline-flex items-center gap-2 text-sm text-primary hover:underline underline-offset-4 font-medium"
       >
         {t("download.viewAll")}

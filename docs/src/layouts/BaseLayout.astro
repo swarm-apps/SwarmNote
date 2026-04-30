@@ -1,6 +1,7 @@
 ---
 import "../styles/theme.css";
 import { getLangFromUrl, getLocaleAlternates, useTranslations, type Locale } from "../i18n/utils";
+import { withBase } from "../lib/url";
 import SmoothScroll from "../components/SmoothScroll";
 
 export interface Props {
@@ -22,10 +23,13 @@ const fullTitle = Astro.props.title === siteTitle
   ? siteTitle
   : `${Astro.props.title} — ${siteTitle}`;
 
-const siteOrigin = Astro.site?.toString().replace(/\/$/, "") ?? "https://swarmnote.app";
+const siteOrigin = Astro.site?.toString().replace(/\/$/, "") ?? "https://yexiyue.github.io";
 const canonical = new URL(Astro.url.pathname, siteOrigin).toString();
 const alternates = getLocaleAlternates(Astro.url.pathname, siteOrigin);
-const ogImage = new URL(Astro.props.ogImage ?? `/og/home-${lang}.png`, siteOrigin).toString();
+const ogImage = new URL(
+  Astro.props.ogImage ?? withBase(`/og/home-${lang}.png`),
+  siteOrigin,
+).toString();
 ---
 <!doctype html>
 <html lang={lang}>
@@ -58,15 +62,15 @@ const ogImage = new URL(Astro.props.ogImage ?? `/og/home-${lang}.png`, siteOrigi
     <meta name="twitter:image" content={ogImage} />
 
     {/* Favicon */}
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="icon" type="image/png" sizes="any" href="/logo.png" />
-    <link rel="apple-touch-icon" href="/logo.png" />
+    <link rel="icon" type="image/x-icon" href={withBase("/favicon.ico")} />
+    <link rel="icon" type="image/png" sizes="any" href={withBase("/logo.png")} />
+    <link rel="apple-touch-icon" href={withBase("/logo.png")} />
 
     {/* Theme color (browser chrome on iOS / Android) */}
     <meta name="theme-color" content="#FDFCFA" />
 
     {/* Sitemap discovery hint */}
-    <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
+    <link rel="sitemap" type="application/xml" href={withBase("/sitemap-index.xml")} />
 
     {/* Fonts: 占位 — Phase 10 用 @fontsource/* 自托管 + preload。当前先依赖系统字体 fallback。 */}
   </head>

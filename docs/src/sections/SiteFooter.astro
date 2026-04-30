@@ -3,6 +3,7 @@
   Section 10 — Footer
 */
 import { getLangFromUrl, useTranslations } from "../i18n/utils";
+import { withBase } from "../lib/url";
 import LanguageSwitcher from "../components/LanguageSwitcher.astro";
 
 const lang = getLangFromUrl(Astro.url);
@@ -17,11 +18,11 @@ const columns = (t as unknown as (k: string) => unknown)("footer.columns") as {
   ecosystem: Column;
 };
 
-// 内部链接补 locale 前缀
+// 内部链接补 locale 前缀 + 部署 base
 function localizedHref(href: string): string {
   if (href.startsWith("http")) return href;
-  if (lang === "zh") return href;
-  return `/${lang}${href === "/" ? "/" : href}`;
+  const langPart = lang === "zh" ? href : `/${lang}${href === "/" ? "/" : href}`;
+  return withBase(langPart);
 }
 ---
 <footer class="border-t border-border bg-card/30">
@@ -30,11 +31,11 @@ function localizedHref(href: string): string {
       {/* Brand 列 */}
       <div class="col-span-2 md:col-span-1">
         <a
-          href={lang === "zh" ? "/" : "/en/"}
+          href={withBase(lang === "zh" ? "/" : "/en/")}
           class="inline-flex items-center gap-2.5 mb-4"
         >
           <img
-            src="/logo.png"
+            src={withBase("/logo.png")}
             alt={t("site.title")}
             width="40"
             height="40"
