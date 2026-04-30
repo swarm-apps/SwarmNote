@@ -4,16 +4,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { open } from "@tauri-apps/plugin-dialog";
 import { openPath } from "@tauri-apps/plugin-opener";
-import {
-  Copy,
-  EllipsisVertical,
-  ExternalLink,
-  FolderPlus,
-  Minus,
-  PenLine,
-  Trash2,
-  X,
-} from "lucide-react";
+import { Copy, EllipsisVertical, ExternalLink, FolderPlus, Minus, Trash2, X } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 
 import {
@@ -237,9 +228,7 @@ function WorkspaceManagerPage() {
         {/* Right Panel: Brand + Action Cards */}
         <div className="flex flex-1 flex-col items-center justify-center gap-6 p-8">
           <div className="flex flex-col items-center gap-2">
-            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-primary shadow-md">
-              <PenLine className="h-10 w-10 text-primary-foreground" />
-            </div>
+            <img src="/logo-128.png" alt="SwarmNote" width={80} height={80} className="h-20 w-20" />
             <h1 className="text-xl font-bold tracking-tight text-foreground">SwarmNote</h1>
             {appVersion && (
               <p className="text-xs text-muted-foreground">

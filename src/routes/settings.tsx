@@ -43,7 +43,7 @@ function SettingsLayout() {
       {/* Title Bar */}
       <header
         data-tauri-drag-region
-        className="flex h-10 shrink-0 items-center justify-between border-b border-sidebar-border bg-sidebar px-4"
+        className="flex h-10 shrink-0 items-center justify-between border-b border-border bg-background px-4"
       >
         <div className={`flex items-center ${isMac ? "pl-17.5" : ""}`} data-tauri-drag-region>
           <h2 className="pl-1 text-sm font-semibold tracking-tight">
@@ -56,7 +56,7 @@ function SettingsLayout() {
               <button
                 type="button"
                 onClick={() => appWindow.minimize()}
-                className="flex h-7 w-9 items-center justify-center text-muted-foreground hover:bg-sidebar-accent"
+                className="flex h-7 w-9 items-center justify-center text-muted-foreground hover:bg-accent"
               >
                 <Minus className="h-3.5 w-3.5" />
               </button>
