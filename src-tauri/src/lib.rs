@@ -145,6 +145,7 @@ pub fn run() {
             )?;
             app.manage(app_core.clone());
             app.manage(platform::WorkspaceMap::new());
+            app.manage(platform::SyncPendingMap::new());
 
             // System tray (desktop only).
             #[cfg(desktop)]

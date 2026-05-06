@@ -236,6 +236,44 @@ while let Some(event) = receiver.recv().await {
 
 **相关文件**：`crates/core/src/network/event_loop.rs`、`libs/core/`（submodule）
 
+### Wizard 同步流程的 `WorkspaceCore` lifetime
+
+`AppCore.workspaces: Mutex<HashMap<Uuid, Weak<WorkspaceCore>>>` 只持 Weak —— 调用方负责持 Strong。`create_workspace_for_sync` 命令 `open_workspace` 拿到 Arc 后**不能** `let _ws_core = ...`：函数 return 时 Arc drop，Weak 立刻 dangling。紧跟着的 `trigger_workspace_sync` 命令在后台 spawn 的 `full_sync` 跑到 `build_local_doc_list` 时 `get_workspace(uuid)` 返回 None，actions=0 早退，UI 看起来 done 但实际没拉任何文档。
+
+**修复（双层）**：
+
+1. **`coordinator.rs spawn_full_sync`**（共享 crate）启动时 upgrade Weak 拿 Strong Arc，move 进 spawn closure (`let _ws_pin = ws_arc;`) 持有到 sync 结束。
+2. **`platform::SyncPendingMap`**（桌面端 Tauri state）`Mutex<HashMap<Uuid, Arc<WorkspaceCore>>>` keep-alive 表。`create_workspace_for_sync` `stash(uuid, ws_core)`，`trigger_workspace_sync` 调完 `spawn_full_sync` 后 `release(uuid)`。Mobile-core 端是同名机制（`UniffiAppCore.sync_pending` 字段）。
+
+**为什么不让 frontend 持 Arc？** WorkspaceMap 已经按 window label 持 Arc，但 wizard 流程**没有打开窗口**——只到 dialog 显示 done，用户点"打开"才创建窗口。两次 IPC 之间没人持 Strong 是个真空窗口期。
+
+**踩坑现象**：之前桌面端 wizard 看起来"成功"是因为 dialog 不依赖 `SyncCompleted` 事件（fire-and-forget UI），即便实际同步失败也显示 done。一接到对方设备的真同步流程才暴露：14 篇笔记 0 篇拉到。
+
+**不要做**：不要把 keep-alive 时间窗放在 frontend（让 RN/Tauri 端持 ws Arc 跨 wizard）—— wizard 多 item 模式下这套不 scale，且与 single-active workspace 设计冲突。
+
+**相关文件**：`crates/core/src/workspace/sync/coordinator.rs::spawn_full_sync`、`src-tauri/src/platform/workspace_map.rs::SyncPendingMap`、`src-tauri/src/commands/{workspace,sync}.rs`
+
+### `full_sync` try/finally — `SyncCompleted` 必须 always-emit
+
+`AppEvent::SyncCompleted` 是 frontend wizard 唯一的 terminal 信号。早退路径（`request_doc_list` timeout、`NoWorkspaceDb` 等）漏 emit 会让 UI 卡死无限 spinner。
+
+```rust
+pub async fn full_sync(...) -> AppResult<()> {
+    emit(SyncStarted);
+    let result = run_full_sync(...).await;  // 内层 ? 自由用
+    let cancelled = cancel.is_cancelled();
+    let error = match &result { Ok(_) => None, Err(e) => Some(e.to_string()) };
+    emit(SyncCompleted { workspace_id, peer_id, cancelled, error });
+    result
+}
+```
+
+**协议演进**：`AppEvent::SyncCompleted` 加 `error: Option<String>` 字段。`Tauri sync-completed` payload 同步加 `result: "success" | "cancelled" | "error"` + `error: string | null`，frontend `SyncResult` union 扩展 `"error"`。
+
+**不要做**：不要在 `full_sync` 主体里用 `?` 早退然后忘记 emit `SyncCompleted` —— 任何新增早退分支必须放进 `run_full_sync` inner fn 让 outer 接管 emit。
+
+**相关文件**：`crates/core/src/workspace/sync/full_sync.rs`、`crates/core/src/events.rs`、`src-tauri/src/platform/event_bus.rs`、`src/stores/syncStore.ts`
+
 ### Sync 两层拆分
 
 同步模块拆为 AppCore 层和 WorkspaceCore 层：

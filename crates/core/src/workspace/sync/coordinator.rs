@@ -85,8 +85,24 @@ impl AppSyncCoordinator {
     }
 
     /// Spawn a full sync task if not already running for this (peer, workspace).
+    ///
+    /// Pins a strong `Arc<WorkspaceCore>` for the duration of the sync so the
+    /// workspace cannot be GC'd mid-flight. `AppCore.workspaces` only keeps
+    /// `Weak`s, so callers like `create_workspace_for_sync` that
+    /// open-then-drop the freshly-built workspace would otherwise leave a
+    /// dangling Weak by the time `full_sync` reaches `build_local_doc_list`.
     pub async fn spawn_full_sync(self: &Arc<Self>, peer_id: PeerId, workspace_uuid: Uuid) {
         let key = (peer_id, workspace_uuid);
+
+        let ws_arc = match self.core.get_workspace(&workspace_uuid).await {
+            Some(ws) => ws,
+            None => {
+                warn!(
+                    "Cannot start full sync: workspace {workspace_uuid} not registered (peer={peer_id})"
+                );
+                return;
+            }
+        };
 
         let cancel = {
             use dashmap::mapref::entry::Entry;
@@ -108,6 +124,7 @@ impl AppSyncCoordinator {
         let client = self.client.clone();
 
         tokio::spawn(async move {
+            let _ws_pin = ws_arc;
             let result = full_sync::full_sync(core, client, peer_id, workspace_uuid, cancel).await;
             if let Err(e) = result {
                 warn!("Full sync failed for {peer_id} / {workspace_uuid}: {e}");

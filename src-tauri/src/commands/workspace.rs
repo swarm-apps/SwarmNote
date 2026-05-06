@@ -18,7 +18,7 @@ use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindow, Webvi
 use uuid::Uuid;
 
 use crate::error::{AppError, AppResult};
-use crate::platform::{workspace_map::start_core_workspace, WorkspaceMap};
+use crate::platform::{workspace_map::start_core_workspace, SyncPendingMap, WorkspaceMap};
 
 /// 应用平台相关的窗口装饰配置。
 /// macOS: Overlay 标题栏 + 隐藏标题 + 红绿灯定位；其他平台: 无装饰（自定义标题栏）。
@@ -294,6 +294,7 @@ pub async fn create_workspace_for_sync(
     name: String,
     base_path: String,
     core: State<'_, Arc<AppCore>>,
+    sync_pending: State<'_, SyncPendingMap>,
 ) -> AppResult<String> {
     let ws_uuid =
         Uuid::parse_str(&uuid).map_err(|e| AppError::InvalidPath(format!("Invalid UUID: {e}")))?;
@@ -349,9 +350,9 @@ pub async fn create_workspace_for_sync(
     }
     drop(conn); // release before open_workspace re-opens it
 
-    // Register in AppCore by opening. This doesn't bind to any window —
-    // caller drops the Arc and AppCore.workspaces keeps only the Weak.
-    let _ws_core = core.inner().clone().open_workspace(ws_path.clone()).await?;
+    // Stash the Arc until `trigger_workspace_sync` runs — see `SyncPendingMap` docs.
+    let ws_core = core.inner().clone().open_workspace(ws_path.clone()).await?;
+    sync_pending.stash(ws_uuid, ws_core).await;
 
     // Record in recent_workspaces.
     if let Err(e) = update_last_workspace(

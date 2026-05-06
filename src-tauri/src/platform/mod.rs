@@ -16,4 +16,4 @@ pub mod workspace_map;
 pub use event_bus::TauriEventBus;
 pub use file_watcher::NotifyFileWatcher;
 pub use keychain::DesktopKeychain;
-pub use workspace_map::WorkspaceMap;
+pub use workspace_map::{SyncPendingMap, WorkspaceMap};

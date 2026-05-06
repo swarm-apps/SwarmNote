@@ -152,13 +152,22 @@ impl EventBus for TauriEventBus {
                 workspace_id,
                 peer_id,
                 cancelled,
+                error,
             } => {
+                let result = if cancelled {
+                    "cancelled"
+                } else if error.is_some() {
+                    "error"
+                } else {
+                    "success"
+                };
                 let _ = self.app.emit(
                     "sync-completed",
                     json!({
                         "workspaceUuid": workspace_id.to_string(),
                         "peerId": peer_id,
-                        "result": if cancelled { "cancelled" } else { "success" },
+                        "result": result,
+                        "error": error,
                     }),
                 );
             }

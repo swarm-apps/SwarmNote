@@ -110,5 +110,9 @@ pub enum AppEvent {
         peer_id: String,
         /// `true` if the session was cancelled mid-run; `false` = normal finish.
         cancelled: bool,
+        /// `Some` if the session terminated early due to an internal error
+        /// (e.g. `request_doc_list` timeout). `None` for clean finish or
+        /// user-cancelled. Frontend can show this as a sync failure reason.
+        error: Option<String>,
     },
 }

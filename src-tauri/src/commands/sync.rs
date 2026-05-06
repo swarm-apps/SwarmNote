@@ -8,12 +8,14 @@ use tauri::State;
 use uuid::Uuid;
 
 use crate::error::{AppError, AppResult};
+use crate::platform::SyncPendingMap;
 
 #[tauri::command]
 pub async fn trigger_workspace_sync(
     workspace_uuid: String,
     peer_id: String,
     core: State<'_, Arc<AppCore>>,
+    sync_pending: State<'_, SyncPendingMap>,
 ) -> AppResult<()> {
     let coordinator = core.sync_coordinator_or_err().await?;
     let uuid = Uuid::parse_str(&workspace_uuid)
@@ -22,5 +24,7 @@ pub async fn trigger_workspace_sync(
         .parse()
         .map_err(|e| AppError::InvalidPath(format!("Invalid PeerId: {e}")))?;
     coordinator.spawn_full_sync(pid, uuid).await;
+    // Safe to release — spawn_full_sync now holds its own Arc.
+    sync_pending.release(uuid).await;
     Ok(())
 }

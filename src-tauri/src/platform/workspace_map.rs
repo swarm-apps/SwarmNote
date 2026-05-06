@@ -69,6 +69,37 @@ impl Default for WorkspaceMap {
     }
 }
 
+/// Strong refs to workspaces created via `create_workspace_for_sync` but not
+/// yet bound to any window. Without this, the freshly-built `Arc<WorkspaceCore>`
+/// drops at the end of that command, `AppCore.workspaces` keeps only a `Weak`,
+/// and the immediately-following `trigger_workspace_sync` finds a dangling
+/// Weak — sync silently early-exits with `NoWorkspaceDb` and pulls zero
+/// documents. Cleared inside `trigger_workspace_sync` once `spawn_full_sync`
+/// has pinned its own strong ref for the sync task's lifetime.
+pub struct SyncPendingMap(Mutex<HashMap<Uuid, Arc<WorkspaceCore>>>);
+
+impl SyncPendingMap {
+    pub fn new() -> Self {
+        Self(Mutex::new(HashMap::new()))
+    }
+
+    pub async fn stash(&self, uuid: Uuid, core: Arc<WorkspaceCore>) {
+        self.0.lock().await.insert(uuid, core);
+    }
+
+    /// Drop the strong ref for `uuid`. Returns whether an entry was present —
+    /// callers can usually ignore the result.
+    pub async fn release(&self, uuid: Uuid) -> bool {
+        self.0.lock().await.remove(&uuid).is_some()
+    }
+}
+
+impl Default for SyncPendingMap {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Build a workspace runtime for `ws_path` via the registered factories on
 /// `AppCore` (desktop: `LocalFs` + `NotifyFileWatcher`) and bind it to `label`.
 ///

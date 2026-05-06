@@ -230,6 +230,11 @@ async fn priority_key(action: &SyncAction, core: &Arc<AppCore>, workspace_uuid: 
 // ── Full sync orchestration ──
 
 /// Execute a full sync session with a peer for a specific workspace.
+///
+/// Emits `SyncStarted` first, then `SyncCompleted` on every exit path —
+/// including early-return errors from inner steps like `request_doc_list`.
+/// Without this guarantee the frontend wizard can hang on the spinner forever
+/// when, say, the DocList request times out before any progress event fires.
 pub async fn full_sync(
     core: Arc<AppCore>,
     client: AppNetClient,
@@ -239,15 +244,46 @@ pub async fn full_sync(
 ) -> AppResult<()> {
     info!("Starting full sync with {peer_id} for workspace {workspace_uuid}");
 
-    // Emit sync-started
     core.event_bus.emit(AppEvent::SyncStarted {
         workspace_id: workspace_uuid,
         peer_id: peer_id.to_string(),
     });
 
+    let result = run_full_sync(&core, &client, peer_id, workspace_uuid, &cancel).await;
+
+    let cancelled = cancel.is_cancelled();
+    let error = match &result {
+        Ok(_) => None,
+        Err(e) => {
+            warn!("Full sync failed for {peer_id} / {workspace_uuid}: {e}");
+            Some(e.to_string())
+        }
+    };
+
+    core.event_bus.emit(AppEvent::SyncCompleted {
+        workspace_id: workspace_uuid,
+        peer_id: peer_id.to_string(),
+        cancelled,
+        error,
+    });
+
+    info!("Full sync with {peer_id} for workspace {workspace_uuid} ended (cancelled={cancelled})");
+
+    result
+}
+
+/// Inner body of `full_sync`. Errors propagate via `?` and are surfaced as
+/// `SyncCompleted { error: Some(...) }` by the outer `full_sync`.
+async fn run_full_sync(
+    core: &Arc<AppCore>,
+    client: &AppNetClient,
+    peer_id: PeerId,
+    workspace_uuid: Uuid,
+    cancel: &CancellationToken,
+) -> AppResult<()> {
     // 1. Exchange DocLists
-    let remote_docs = request_doc_list(&client, peer_id, workspace_uuid).await?;
-    let local_docs = build_local_doc_list(&core, workspace_uuid).await?;
+    let remote_docs = request_doc_list(client, peer_id, workspace_uuid).await?;
+    let local_docs = build_local_doc_list(core, workspace_uuid).await?;
 
     // 2. Diff
     let mut actions = diff_doc_lists(&local_docs, &remote_docs);
@@ -255,7 +291,7 @@ pub async fn full_sync(
     // 3. Sort by priority (async lookup into YDocManager → compute keys first)
     let mut keyed: Vec<((u8, i64), SyncAction)> = Vec::with_capacity(actions.len());
     for action in actions.drain(..) {
-        let key = priority_key(&action, &core, workspace_uuid).await;
+        let key = priority_key(&action, core, workspace_uuid).await;
         keyed.push((key, action));
     }
     keyed.sort_by_key(|(k, _)| *k);
@@ -272,7 +308,7 @@ pub async fn full_sync(
             break;
         }
 
-        if let Err(e) = execute_action(&core, &client, peer_id, workspace_uuid, action).await {
+        if let Err(e) = execute_action(core, client, peer_id, workspace_uuid, action).await {
             warn!("Sync action failed: {e}");
         }
 
@@ -286,17 +322,8 @@ pub async fn full_sync(
         });
     }
 
-    let cancelled = cancel.is_cancelled();
-
-    // Emit sync-completed
-    core.event_bus.emit(AppEvent::SyncCompleted {
-        workspace_id: workspace_uuid,
-        peer_id: peer_id.to_string(),
-        cancelled,
-    });
-
     info!(
-        "Full sync with {peer_id} for workspace {workspace_uuid} complete: {completed}/{total} actions"
+        "Full sync with {peer_id} for workspace {workspace_uuid} actions: {completed}/{total}"
     );
 
     Ok(())

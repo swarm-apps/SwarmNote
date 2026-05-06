@@ -10,7 +10,7 @@ interface ActiveSync {
   total: number;
 }
 
-type SyncResult = "success" | "cancelled" | "partial";
+type SyncResult = "success" | "cancelled" | "error" | "partial";
 
 interface LastSyncResult {
   lastSyncedAt: number;
