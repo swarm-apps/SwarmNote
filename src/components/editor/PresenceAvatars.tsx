@@ -4,37 +4,36 @@ import type { Awareness } from "y-protocols/awareness";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface RemoteUser {
-  clientId: number;
   name: string;
   platform: "desktop" | "mobile";
   deviceId: string;
   color: string;
 }
 
-interface AwarenessUserPayload {
-  name: string;
-  platform: "desktop" | "mobile";
-  deviceId: string;
-  color: string;
-}
-
+/**
+ * Project awareness states down to a list of physical devices. Multiple
+ * clientIDs sharing the same `user.deviceId` are folded into a single entry —
+ * happens transiently when an old clientID is awaiting the 30s outdated GC
+ * while a new one is already broadcasting (e.g. doc switch with brief packet
+ * loss). React keys use `deviceId` so the visible row doesn't remount when
+ * the representative clientID flips.
+ */
 function readRemoteUsers(awareness: Awareness): RemoteUser[] {
   const localId = awareness.clientID;
-  const out: RemoteUser[] = [];
+  const byDevice = new Map<string, RemoteUser>();
   for (const [clientId, raw] of awareness.getStates()) {
     if (clientId === localId) continue;
-    const state = raw as { user?: AwarenessUserPayload };
-    const u = state.user;
+    const u = (raw as { user?: RemoteUser }).user;
     if (!u || typeof u.name !== "string") continue;
-    out.push({
-      clientId,
+    if (byDevice.has(u.deviceId)) continue;
+    byDevice.set(u.deviceId, {
       name: u.name,
       platform: u.platform,
       deviceId: u.deviceId,
       color: u.color,
     });
   }
-  return out.sort((a, b) => a.deviceId.localeCompare(b.deviceId));
+  return [...byDevice.values()].sort((a, b) => a.deviceId.localeCompare(b.deviceId));
 }
 
 function PlatformIcon({
@@ -82,7 +81,7 @@ export function PresenceAvatars({ awareness }: { awareness: Awareness | null }) 
         >
           {visible.map((u) => (
             <div
-              key={u.clientId}
+              key={u.deviceId}
               className="h-5 w-5 rounded-full ring-2 ring-card flex items-center justify-center text-[10px] font-semibold text-white select-none"
               style={{ backgroundColor: u.color }}
             >
@@ -102,7 +101,7 @@ export function PresenceAvatars({ awareness }: { awareness: Awareness | null }) 
         </div>
         <ul className="mt-1 space-y-0.5">
           {users.map((u) => (
-            <li key={u.clientId} className="flex items-center gap-2 rounded-md px-2 py-1.5">
+            <li key={u.deviceId} className="flex items-center gap-2 rounded-md px-2 py-1.5">
               <div
                 className="h-6 w-6 shrink-0 rounded-full flex items-center justify-center text-[11px] font-semibold text-white"
                 style={{ backgroundColor: u.color }}

@@ -172,3 +172,46 @@ const imageResolver = useCallback(
 - Vite dev server 能直接 hot-reload。不需要 rebuild
 
 **相关文件**：`packages/editor/package.json`、`pnpm-workspace.yaml`
+
+## 协作光标 (Awareness) — 生命周期与去重
+
+### `TauriYjsProvider.destroy` 顺序敏感
+
+`setLocalState(null)` 是 awareness 的主动下线 API：调用后 awareness 内部会发一个 `update` 事件，把本地 clientID 加入 `removed` 列表。我们的 listener 接到这个事件后才会调 `invoke("broadcast_awareness", encodeAwarenessUpdate(awareness, [clientID]))`，对端**1 秒内**收到「这个 clientID 下线了」并 GC 掉。
+
+**正确顺序**（`src/lib/TauriYjsProvider.ts::destroy`）：
+
+```ts
+this.awareness.setLocalState(null);   // ① listener 仍在 → broadcast 触发
+this._destroying = true;               // ② 拦截后续异步 update
+this.doc.off("update", ...);
+this.awareness.off("update", ...);
+this.awareness.destroy();
+```
+
+**不要**：先 `off("update")` 再 `setLocalState(null)`。listener 已经被摘掉，下线事件就只是 awareness map 的本地 mutation，不会广播 → 对端等 30s `outdated` 超时才 GC → 用户切 doc / hot-reload 高频时，stale clientID 与新 clientID 短暂并存，对端 PresenceAvatars 看到「同设备 2 个头像」。
+
+崩溃 / 断网路径仍由 30s 超时兜底，不需要额外防护。
+
+### PresenceAvatars 按 `deviceId` 去重
+
+awareness 的 clientID 是 Y.Doc 实例级别的，不是设备级别。**绝对不要尝试自定义 clientID 让多 client 共享**（`new Y.Doc({ clientID })` 这个参数存在但只是测试用） — Yjs CRDT 协议要求 `(clientID, clock)` 全局唯一，复用会让 op 被静默丢弃。
+
+正确做法是在**展示层**按 `user.deviceId` 折叠：
+
+```ts
+// PresenceAvatars.tsx::readRemoteUsers
+const byDevice = new Map<string, RemoteUser>();
+for (const [clientId, raw] of awareness.getStates()) {
+  if (clientId === awareness.clientID) continue;
+  const u = (raw as { user?: ... }).user;
+  if (!u || byDevice.has(u.deviceId)) continue;
+  byDevice.set(u.deviceId, { name, platform, deviceId, color });
+}
+```
+
+React key 用 `u.deviceId` 而不是 clientID — 暂态 stale 期间代表性 clientID 切换时不会触发头像 remount。
+
+**caret 标签去不掉**：y-codemirror.next 按 clientID 渲染 `.cm-ySelection*` decorations，无法干预。但只要 destroy 顺序是对的，正常使用路径下 stale clientID 不会积累，caret 自动只有 1 个。偶发网络丢包导致的 1-30s 暂态多 caret 接受为已知 limit。
+
+**相关文件**：`src/lib/TauriYjsProvider.ts`、`src/components/editor/PresenceAvatars.tsx`

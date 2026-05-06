@@ -64,11 +64,14 @@ export class TauriYjsProvider {
   }
 
   destroy() {
+    // setLocalState(null) must precede off('update') so the synthetic
+    // "removed" event reaches the listener and triggers the broadcast —
+    // see dev-notes/knowledge/editor.md "destroy 顺序敏感".
+    this.awareness.setLocalState(null);
+
     this._destroying = true;
     this.doc.off("update", this._onDocUpdate);
     this.awareness.off("update", this._onAwarenessUpdate);
-    // Clear local state so peers see us go offline immediately.
-    this.awareness.setLocalState(null);
     this.awareness.destroy();
 
     closeYDoc(this._docUuid).catch((err) => {
