@@ -18,7 +18,8 @@ use crate::protocol::{
     AppRequest, AppResponse, WorkspaceMeta, WorkspaceRequest, WorkspaceResponse,
 };
 use crate::workspace::sync::{
-    decode_ws_gossip, parse_sync_topic, parse_ws_topic, AppSyncCoordinator,
+    decode_ws_awareness, decode_ws_gossip, parse_sync_topic, parse_ws_awareness_topic,
+    parse_ws_topic, AppSyncCoordinator,
 };
 
 /// 启动事件循环，持续读取 NodeEvent 并分发到 DeviceManager + EventBus。
@@ -181,6 +182,15 @@ async fn handle_event(
                         .await;
                 } else {
                     warn!("Invalid workspace GossipSub payload on {topic}");
+                }
+            } else if let Some(ws_uuid) = parse_ws_awareness_topic(&topic) {
+                // Workspace-level awareness topic: pure fan-out, no apply.
+                if let Some((doc_uuid, update)) = decode_ws_awareness(&data) {
+                    coordinator
+                        .handle_ws_awareness_gossip(ws_uuid, doc_uuid, update.to_vec())
+                        .await;
+                } else {
+                    warn!("Invalid awareness GossipSub payload on {topic}");
                 }
             } else if let Some(doc_uuid) = parse_sync_topic(&topic) {
                 // Legacy per-doc topic (backwards compat during transition).

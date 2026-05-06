@@ -87,3 +87,46 @@ pub fn parse_ws_topic(topic: &str) -> Option<Uuid> {
         .strip_prefix("swarmnote/ws/")
         .and_then(|s| Uuid::parse_str(s).ok())
 }
+
+// ── Awareness sub-topic ──
+//
+// Awareness rides on a separate GossipSub topic from doc updates because:
+//   1. doc-update wire format is positional `[uuid][bytes]` (no discriminator),
+//      so adding a tag byte would break old binaries that read first 16 bytes
+//      as a uuid.
+//   2. Awareness is ephemeral — separating topics prevents accidental reuse of
+//      the doc-update path's persistence/buffer infrastructure.
+//   3. Old peers without awareness support never subscribe to ws-aw topics, so
+//      they silently ignore awareness traffic without any warn-spam.
+
+/// GossipSub topic format for workspace-level awareness traffic.
+pub fn ws_awareness_topic(workspace_uuid: &Uuid) -> String {
+    format!("swarmnote/ws-aw/{workspace_uuid}")
+}
+
+/// Parse a workspace-level awareness GossipSub topic: `swarmnote/ws-aw/{uuid}`.
+pub fn parse_ws_awareness_topic(topic: &str) -> Option<Uuid> {
+    topic
+        .strip_prefix("swarmnote/ws-aw/")
+        .and_then(|s| Uuid::parse_str(s).ok())
+}
+
+/// Encode an awareness GossipSub payload: `[16 bytes doc_uuid][awareness bytes]`.
+/// Identical layout to `encode_ws_gossip` to keep the parser trivial.
+pub fn encode_ws_awareness(doc_uuid: &Uuid, update: &[u8]) -> Vec<u8> {
+    let mut buf = Vec::with_capacity(16 + update.len());
+    buf.extend_from_slice(doc_uuid.as_bytes());
+    buf.extend_from_slice(update);
+    buf
+}
+
+/// Decode an awareness GossipSub payload into (doc_uuid, awareness_bytes).
+/// Returns `None` for empty awareness payloads.
+pub fn decode_ws_awareness(data: &[u8]) -> Option<(Uuid, &[u8])> {
+    if data.len() <= 16 {
+        return None;
+    }
+    let uuid_bytes: [u8; 16] = data[..16].try_into().ok()?;
+    let doc_uuid = Uuid::from_bytes(uuid_bytes);
+    Some((doc_uuid, &data[16..]))
+}

@@ -92,6 +92,7 @@ pub fn run() {
             // Y.Doc 管理
             commands::yjs::open_ydoc,
             commands::yjs::apply_ydoc_update,
+            commands::yjs::broadcast_awareness,
             commands::yjs::close_ydoc,
             commands::yjs::rename_ydoc,
             commands::yjs::reload_ydoc_confirmed,

@@ -163,6 +163,16 @@ impl WorkspaceCore {
         self.sync.read().await.clone()
     }
 
+    /// Broadcast an awareness (caret / presence) update for an open doc.
+    /// Bytes are an opaque `y-protocols/awareness` encodeAwarenessUpdate
+    /// payload — never decoded, never persisted. Silently no-op when P2P is
+    /// down (awareness is best-effort by design).
+    pub async fn broadcast_awareness(&self, doc_uuid: Uuid, update: Vec<u8>) {
+        if let Some(sync) = self.sync().await {
+            sync.publish_awareness(doc_uuid, update).await;
+        }
+    }
+
     /// Install or replace the per-workspace sync runtime. Closes the
     /// previous instance (if any) to avoid leaking flush tasks / GossipSub
     /// subscriptions.

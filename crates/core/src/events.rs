@@ -37,6 +37,16 @@ pub enum AppEvent {
         #[serde(with = "serde_bytes")]
         update: Vec<u8>,
     },
+    /// Remote awareness (caret / presence) update for an open document.
+    /// Bytes are an opaque `y-protocols/awareness` encodeAwarenessUpdate
+    /// payload — core never decodes them. Frontend SHOULD apply via
+    /// `applyAwarenessUpdate(awareness, bytes, 'remote-awareness')`.
+    /// MUST NOT be persisted — awareness is ephemeral by design.
+    ExternalAwarenessUpdate {
+        doc_id: Uuid,
+        #[serde(with = "serde_bytes")]
+        update: Vec<u8>,
+    },
     /// An external editor modified a `.md` file while the user had unsaved
     /// edits — frontend MUST prompt for reload/keep.
     ExternalConflict {

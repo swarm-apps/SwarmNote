@@ -41,6 +41,15 @@ impl EventBus for TauriEventBus {
                     }),
                 );
             }
+            AppEvent::ExternalAwarenessUpdate { doc_id, update } => {
+                let _ = self.app.emit(
+                    "yjs:awareness-update",
+                    json!({
+                        "docUuid": doc_id.to_string(),
+                        "update": update,
+                    }),
+                );
+            }
             AppEvent::ExternalConflict { doc_id, rel_path } => {
                 let _ = self.app.emit(
                     "yjs:external-conflict",

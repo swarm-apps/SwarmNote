@@ -7,12 +7,13 @@ import {
   type EditorSettings,
   refreshBlockImagesEffect,
 } from "@swarmnote/editor";
-import { convertFileSrc } from "@tauri-apps/api/core";
+import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as Y from "yjs";
 import { openYDoc, reloadYDocConfirmed, saveMedia } from "@/commands/document";
+import { colorForDevice } from "@/lib/awareness-color";
 import { TauriYjsProvider } from "@/lib/TauriYjsProvider";
 import { useEditorStore } from "@/stores/editorStore";
 import { useUIStore } from "@/stores/uiStore";
@@ -80,7 +81,7 @@ export function NoteEditor() {
     );
   }
 
-  return <NoteEditorInner ydoc={yjsCtx.ydoc} />;
+  return <NoteEditorInner ydoc={yjsCtx.ydoc} provider={yjsCtx.provider} />;
 }
 
 /**
@@ -91,7 +92,7 @@ export function NoteEditor() {
  * The TauriYjsProvider is attached to the Y.Doc in the outer component and
  * is destroyed there on unmount — the inner component doesn't touch it.
  */
-function NoteEditorInner({ ydoc }: { ydoc: Y.Doc }) {
+function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsProvider }) {
   const { t } = useLingui();
   const resolvedTheme = useUIStore((s) => s.resolvedTheme);
   const readableLineLength = useUIStore((s) => s.readableLineLength);
@@ -148,6 +149,7 @@ function NoteEditorInner({ ydoc }: { ydoc: Y.Doc }) {
       collaboration: {
         ydoc,
         fragmentName: "document",
+        awareness: provider.awareness,
       },
       imageResolver,
       autofocus: true,
@@ -158,15 +160,33 @@ function NoteEditorInner({ ydoc }: { ydoc: Y.Doc }) {
       },
     });
 
+    // Seed awareness with our identity. y-codemirror.next reads `user.name`
+    // and `user.color` to render remote caret labels. Color is derived from
+    // peer_id so it stays stable across sessions.
+    invoke<{ peer_id: string; device_name: string }>("get_device_info")
+      .then((info) => {
+        provider.awareness.setLocalStateField("user", {
+          name: info.device_name,
+          platform: "desktop",
+          deviceId: info.peer_id,
+          color: colorForDevice(info.peer_id),
+        });
+      })
+      .catch((err) => {
+        console.warn("Awareness setLocalStateField skipped:", err);
+      });
+
     controlRef.current = control;
     useEditorStore.getState().setEditorControl(control);
+    useEditorStore.getState().setAwareness(provider.awareness);
 
     return () => {
       controlRef.current = null;
       useEditorStore.getState().setEditorControl(null);
+      useEditorStore.getState().setAwareness(null);
       control.destroy();
     };
-  }, [ydoc]);
+  }, [ydoc, provider]);
 
   // Reactively apply theme changes to the live editor.
   useEffect(() => {
@@ -217,6 +237,24 @@ function NoteEditorInner({ ydoc }: { ydoc: Y.Doc }) {
       unlistenPromise.then((unlisten) => unlisten());
     };
   }, [docUuid]);
+
+  // Awareness: remote caret/presence updates from peers.
+  useEffect(() => {
+    if (!docUuid) return;
+    const uuid = docUuid;
+    let cancelled = false;
+    const unlistenPromise = listen<{ docUuid: string; update: number[] }>(
+      "yjs:awareness-update",
+      (event) => {
+        if (cancelled || event.payload.docUuid !== uuid) return;
+        provider.applyRemoteAwarenessUpdate(new Uint8Array(event.payload.update));
+      },
+    );
+    return () => {
+      cancelled = true;
+      unlistenPromise.then((unlisten) => unlisten());
+    };
+  }, [docUuid, provider]);
 
   // External .md change silently applied as a yjs update (not dirty path).
   useEffect(() => {
@@ -327,7 +365,7 @@ function NoteEditorInner({ ydoc }: { ydoc: Y.Doc }) {
     <div
       ref={containerRef}
       className={`h-full w-full ${
-        readableLineLength ? "[&_.cm-content]:mx-auto [&_.cm-content]:max-w-4xl" : ""
+        readableLineLength ? "[&_.cm-scroller]:!px-[max(40px,calc((100%-56rem)/2))]" : ""
       }`}
     />
   );

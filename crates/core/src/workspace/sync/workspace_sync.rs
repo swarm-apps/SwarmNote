@@ -59,6 +59,13 @@ impl WorkspaceSync {
             Ok(_) => info!("Subscribed to workspace GossipSub topic: {topic}"),
             Err(e) => warn!("Failed to subscribe to {topic}: {e}"),
         }
+        // Awareness uses a parallel sub-topic so old peers without awareness
+        // support keep working unchanged. See sync/mod.rs ws-aw notes.
+        let aw_topic = super::ws_awareness_topic(&self.workspace_id);
+        match self.client.subscribe(&aw_topic).await {
+            Ok(_) => info!("Subscribed to workspace awareness topic: {aw_topic}"),
+            Err(e) => warn!("Failed to subscribe to {aw_topic}: {e}"),
+        }
     }
 
     pub async fn unsubscribe(&self) {
@@ -66,6 +73,11 @@ impl WorkspaceSync {
         match self.client.unsubscribe(&topic).await {
             Ok(_) => info!("Unsubscribed from workspace GossipSub topic: {topic}"),
             Err(e) => warn!("Failed to unsubscribe from {topic}: {e}"),
+        }
+        let aw_topic = super::ws_awareness_topic(&self.workspace_id);
+        match self.client.unsubscribe(&aw_topic).await {
+            Ok(_) => info!("Unsubscribed from workspace awareness topic: {aw_topic}"),
+            Err(e) => warn!("Failed to unsubscribe from {aw_topic}: {e}"),
         }
     }
 
@@ -95,6 +107,34 @@ impl WorkspaceSync {
                 coordinator.signal_sv_urgent();
             }
         }
+    }
+
+    /// Broadcast a local awareness update to peers. Awareness is ephemeral —
+    /// failure to publish only means peers won't see this presence beat;
+    /// no compensation logic is needed (the next beat or a full reconnect
+    /// will resync).
+    pub async fn publish_awareness(&self, doc_uuid: Uuid, update: Vec<u8>) {
+        let topic = super::ws_awareness_topic(&self.workspace_id);
+        let payload = super::encode_ws_awareness(&doc_uuid, &update);
+        if let Err(e) = self.client.publish(&topic, payload).await {
+            tracing::debug!("Failed to publish awareness to {topic}: {e}");
+        }
+    }
+
+    /// Route an incoming awareness GossipSub payload to the workspace's
+    /// event bus. Bytes are opaque — never decoded, never persisted.
+    /// Awareness is fire-and-forget: no apply path, no pending buffer.
+    pub fn handle_awareness_gossip(
+        &self,
+        ws: &std::sync::Arc<crate::workspace::WorkspaceCore>,
+        doc_uuid: Uuid,
+        data: Vec<u8>,
+    ) {
+        ws.event_bus()
+            .emit(crate::events::AppEvent::ExternalAwarenessUpdate {
+                doc_id: doc_uuid,
+                update: data,
+            });
     }
 
     /// Route an incoming workspace GossipSub payload to an open doc or the

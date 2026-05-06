@@ -12,12 +12,14 @@ import {
   X,
 } from "lucide-react";
 import { openSettingsWindow } from "@/commands/workspace";
+import { PresenceAvatars } from "@/components/editor/PresenceAvatars";
 import { OPEN_COMMAND_PALETTE } from "@/components/layout/CommandPalette";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspacePopover } from "@/components/workspace/WorkspacePopover";
 import { isMac, modKey } from "@/lib/utils";
+import { useEditorStore } from "@/stores/editorStore";
 import { type SidebarTab, useUIStore } from "@/stores/uiStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
@@ -29,6 +31,7 @@ export function TitleBar() {
   const sidebarTab = useUIStore((s) => s.sidebarTab);
   const setSidebarTab = useUIStore((s) => s.setSidebarTab);
   const workspace = useWorkspaceStore((s) => s.workspace);
+  const awareness = useEditorStore((s) => s.awareness);
 
   const needsTrafficLightPadding = isMac;
 
@@ -95,8 +98,9 @@ export function TitleBar() {
         )}
       </div>
 
-      {/* Right: Command Palette + Settings + Window Controls */}
+      {/* Right: Presence + Command Palette + Settings + Window Controls */}
       <div className="flex items-center gap-1">
+        <PresenceAvatars awareness={awareness} />
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

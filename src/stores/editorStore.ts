@@ -1,4 +1,5 @@
 import type { EditorControl } from "@swarmnote/editor";
+import type { Awareness } from "y-protocols/awareness";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { createTauriStorage, waitForHydration } from "@/lib/tauriStore";
@@ -26,6 +27,10 @@ interface EditorState {
   recentDocs: Record<string, RecentDoc[]>;
   /** Transient: current CM6 EditorControl (not persisted). */
   editorControl: EditorControl | null;
+  /** Transient: current `Awareness` instance for the active doc (collab mode).
+   *  TitleBar reads this to render the PresenceAvatars chip; null when no
+   *  doc is open or before the editor mounts. Not persisted. */
+  awareness: Awareness | null;
   /** Counter bumped on every editor content change; drives outline re-parse. */
   editorChangeTick: number;
 }
@@ -42,6 +47,7 @@ interface EditorActions {
   /** Drop recentDocs entries for workspace ids not present in the given set. */
   pruneRecentDocs: (validWorkspaceIds: Set<string>) => void;
   setEditorControl: (control: EditorControl | null) => void;
+  setAwareness: (awareness: Awareness | null) => void;
   bumpEditorChangeTick: () => void;
 }
 
@@ -59,6 +65,7 @@ const initialState: EditorState = {
   ...ephemeralInitial,
   recentDocs: {},
   editorControl: null,
+  awareness: null,
   editorChangeTick: 0,
 };
 
@@ -128,6 +135,7 @@ export const useEditorStore = create<EditorState & EditorActions>()(
         }),
 
       setEditorControl: (control) => set({ editorControl: control }),
+      setAwareness: (awareness) => set({ awareness }),
       bumpEditorChangeTick: () =>
         set((state) => ({ editorChangeTick: state.editorChangeTick + 1 })),
     }),

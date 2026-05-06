@@ -238,6 +238,22 @@ impl AppSyncCoordinator {
         }
     }
 
+    /// Handle an incoming workspace-level awareness GossipSub message. Pure
+    /// fan-out to the event bus — no persistence, no apply, no buffering.
+    pub async fn handle_ws_awareness_gossip(
+        &self,
+        workspace_uuid: Uuid,
+        doc_uuid: Uuid,
+        data: Vec<u8>,
+    ) {
+        let Some(ws) = self.core.get_workspace(&workspace_uuid).await else {
+            return;
+        };
+        if let Some(ws_sync) = ws.sync().await {
+            ws_sync.handle_awareness_gossip(&ws, doc_uuid, data);
+        }
+    }
+
     /// Find workspace UUID and rel_path for a document by searching all open
     /// workspaces. Cross-workspace operation — must live at AppCore level.
     async fn find_doc_context(&self, doc_id: Uuid) -> Option<(Uuid, String)> {

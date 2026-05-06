@@ -58,6 +58,20 @@ pub async fn apply_ydoc_update(
 }
 
 #[tauri::command]
+pub async fn broadcast_awareness(
+    window: Window,
+    doc_uuid: String,
+    update: Vec<u8>,
+    ws_map: State<'_, WorkspaceMap>,
+) -> AppResult<()> {
+    let uuid = parse_doc_uuid(&doc_uuid)?;
+    let ws = workspace_from_label(&ws_map, window.label()).await?;
+    // Awareness is fire-and-forget. No persistence, no urgent compensation.
+    ws.broadcast_awareness(uuid, update).await;
+    Ok(())
+}
+
+#[tauri::command]
 pub async fn close_ydoc(
     window: Window,
     doc_uuid: String,
