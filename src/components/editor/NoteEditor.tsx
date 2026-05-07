@@ -14,6 +14,11 @@ import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "reac
 import * as Y from "yjs";
 import { openYDoc, reloadYDocConfirmed, saveMedia } from "@/commands/document";
 import { EditorContextMenu } from "@/components/editor/EditorContextMenu";
+import {
+  initialTableContextMenuState,
+  TableContextMenu,
+  type TableContextMenuState,
+} from "@/components/editor/TableContextMenu";
 import { colorForDevice } from "@/lib/awareness-color";
 import { TauriYjsProvider } from "@/lib/TauriYjsProvider";
 import { useEditorStore } from "@/stores/editorStore";
@@ -117,6 +122,15 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
   // editor mounts/unmounts).
   const editorControl = useEditorStore((s) => s.editorControl);
 
+  // Table widget cell right-click menu — driven by `EditorTableContextMenu`
+  // events; the widget itself never paints menu DOM.
+  const [tableMenuState, setTableMenuState] = useState<TableContextMenuState>(
+    initialTableContextMenuState,
+  );
+  const handleTableMenuOpenChange = useCallback((open: boolean) => {
+    setTableMenuState((prev) => ({ ...prev, open }));
+  }, []);
+
   // Shared "user supplied a File → save to workspace → insert into doc" path
   // used by drag/drop, clipboard paste, and the context menu's "插入图片" item.
   const handleFiles = useCallback(async (files: FileList | File[]) => {
@@ -194,6 +208,18 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
       onEvent: (event) => {
         if (event.kind === EditorEventType.Change) {
           useEditorStore.getState().bumpEditorChangeTick();
+        } else if (event.kind === EditorEventType.TableContextMenu) {
+          setTableMenuState({
+            open: true,
+            clientX: event.clientX,
+            clientY: event.clientY,
+            rowIdx: event.rowIdx,
+            colIdx: event.colIdx,
+            alignment: event.alignment,
+            rowCount: event.rowCount,
+            colCount: event.colCount,
+            actions: event.actions,
+          });
         }
       },
     });
@@ -403,6 +429,7 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
         hidden
         onChange={handleFileInputChange}
       />
+      <TableContextMenu state={tableMenuState} onOpenChange={handleTableMenuOpenChange} />
     </>
   );
 }
