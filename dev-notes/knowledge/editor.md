@@ -273,3 +273,63 @@ shadcn 的 `<ContextMenu>` 已经处理了 `oncontextmenu` 拦截、Portal 位�
 `Mod-Shift-h` 已被 `cycleHeading` 占用，不要重用。
 
 **相关文件**：`packages/editor/src/editorCommands/markdown.ts`、`packages/editor/src/editorCommands/blockquote.ts`、`packages/editor/src/createEditor.ts::buildFormatKeymap`
+
+## Live Preview 装饰层
+
+### 双层装饰机制
+
+CM6 的 markdown live preview 由两套互补扩展实现：
+
+| 扩展 | 职责 | reveal 行为 |
+|---|---|---|
+| `markdownDecorationExtension` | 永久样式装饰（行/区间挂 CSS class） | 不分 reveal 状态 |
+| `makeInlineReplaceExtension`（`inlineRendering/`） | conceal 标记字符 + 给内容挂 class | 按 spec 的 `getRevealStrategy` 决定 |
+
+`makeInlineReplaceExtension` 在 `shouldReveal` 返回 `true` 时**直接 return 不挂任何装饰**——这是关键：reveal 状态下用户看到纯 markdown 源码，离开后看到装饰版本。所以"光标进入 strikethrough 时不带 line-through"是天然行为，不需要单独处理。
+
+### Reveal 策略语义
+
+```ts
+type RevealStrategy = 'line' | 'active' | 'select';
+```
+
+- `'line'`：光标所在行内的所有同节点装饰均 reveal（HeaderMark / CodeMark / QuoteMark 用此）
+- `'active'`：光标 head 落在节点 `[from, to]` 内才 reveal（EmphasisMark / StrikethroughMark / HighlightMarker / LinkMark / URL / Emphasis / StrongEmphasis / Strikethrough 用此）
+- `'select'`：选区 `[from, to)` 与节点相交才 reveal（Link / URL 在 `addFormattingClasses` 中的 link 装饰用此）
+
+### lezer markdown 节点名速查
+
+| 节点 | 含义 | 典型用法 |
+|---|---|---|
+| `StrongEmphasis` | `**bold**` 整段（含 marker） | 加粗装饰 |
+| `Emphasis` | `*italic*` 整段（含 marker） | 斜体装饰 |
+| `EmphasisMark` | 单个 `*` / `**` 字符 | conceal |
+| `Strikethrough` | `~~xxx~~` 整段 | 删除线装饰 |
+| `StrikethroughMark` | 单个 `~~` | conceal |
+| `Highlight` | `==xxx==` 整段（GFM 扩展） | 黄色背景 |
+| `HighlightMarker` | `==` | conceal |
+| `Link` | `[text](url)` 整段 | 链接样式 |
+| `LinkMark` | `[` `]` `(` `)` 单字符 | conceal |
+| `URL` | `(...)` 内的 url 文本 | conceal（光标外完全隐藏） |
+| `HeaderMark` | `#` `##` ... | mark 装饰 + opacity 0.35 |
+| `QuoteMark` | `>` | mark 装饰 + opacity 0.45 |
+| `CodeMark` | `` ` `` `` ``` `` | conceal |
+
+### 添加新装饰的 checklist
+
+1. **选哪个扩展**：始终装饰 → `markdownDecorationExtension`；需要 conceal/reveal → `addFormattingClasses` / 新增独立 spec。
+2. **加节点名**：在 `nodeNames` 数组追加。
+3. **写 createDecoration 分支**：返回 `Decoration.mark({ class })` 或 `Decoration.line({ attributes: { class } })`。
+4. **声明 reveal 策略**：`getRevealStrategy(node)` 返回 `'line' | 'active' | 'select'`，与既有同类节点对齐。
+5. **加 CSS**：`addFormattingClasses` 的样式放 `formattingClassesTheme`，`markdownDecorationExtension` 的样式放 `markdownTheme`，与 `createTheme.ts` 的 `c.link` / `c.foreground` 等主题变量绑定。
+
+### Selection 与 activeLine 的设计反转
+
+CM6 默认配置 + 暖色品牌系统会导致 selection 与 activeLine 撞色：
+
+- `lightDefaults.activeLine` 原 `hsl(40, 18%, 96%)`（暖米色高亮当前行）+ `selection` 原 alpha `0.20` → 拖选时几乎看不出选中范围
+- 修复方案：参照 Obsidian Live Preview 设计——**activeLine 完全透明，selection 独享主题色**
+- 现在的值：`activeLine: 'transparent'`、`.cm-activeLineGutter: { backgroundColor: 'transparent' }`、`selection alpha 0.30 (light) / 0.35 (dark)`
+- 取舍：用户失去"光标在哪行"的视觉锚点，依赖 caret 自身。Live Preview 模式下用户感知主要靠光标本身，可接受
+
+**相关文件**：`packages/editor/src/extensions/inlineRendering/addFormattingClasses.ts`、`packages/editor/src/extensions/inlineRendering/replaceFormatCharacters.ts`、`packages/editor/src/extensions/markdownDecorationExtension.ts`、`packages/editor/src/theme/createTheme.ts`

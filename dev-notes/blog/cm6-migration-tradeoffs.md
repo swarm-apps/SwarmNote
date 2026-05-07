@@ -920,3 +920,16 @@ graph LR
 从工程角度看，这是一个**删除代码比编写代码更有价值**的典型案例。不是因为那些代码写得不好——`yrs-blocknote` 和 `mdast-util-to-markdown` 都是精心设计、充分测试的 crate——而是因为选对了文档模型之后，这些桥接工作本身就不需要存在了。
 
 > 最好的代码是不需要写的代码。最好的桥接层是不需要桥接的架构。
+
+---
+
+## 9. 装饰层后续打磨（2026-05）
+
+迁移到 CM6 + Live Preview 之后，装饰层覆盖度被发现严重不足：粗体/斜体没视觉样式、链接显示一半、selection 与 activeLine 撞色等。`polish-editor-live-preview` change（`openspec/changes/polish-editor-live-preview/`）一次性补完：
+
+- `addFormattingClasses` 加入 `Emphasis` / `StrongEmphasis` 节点 → `.cm-ext-em` / `.cm-ext-strong` 样式
+- `replaceFormatCharacters` 加入 `URL` 节点 conceal → 光标离开链接时完整隐藏 url，仅显示带 hyperlink 样式的 link text
+- `createTheme.ts` 设计反转：`activeLine: 'transparent'` + selection alpha 适度提升 → 选中范围以蜂蜜金独享视觉
+- HeaderMark / QuoteMark 弱化色 + Front matter 左边线 + Heading paddingTop 收敛
+
+设计原则与节点速查见 `dev-notes/knowledge/editor.md` "Live Preview 装饰层"小节。
