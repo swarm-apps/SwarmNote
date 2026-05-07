@@ -215,3 +215,61 @@ React key 用 `u.deviceId` 而不是 clientID — 暂态 stale 期间代表性 c
 **caret 标签去不掉**：y-codemirror.next 按 clientID 渲染 `.cm-ySelection*` decorations，无法干预。但只要 destroy 顺序是对的，正常使用路径下 stale clientID 不会积累，caret 自动只有 1 个。偶发网络丢包导致的 1-30s 暂态多 caret 接受为已知 limit。
 
 **相关文件**：`src/lib/TauriYjsProvider.ts`、`src/components/editor/PresenceAvatars.tsx`
+
+## 桌面端右键菜单
+
+### 直接用 Radix `ContextMenuTrigger asChild`，**不**走 CM6 `domEventHandlers`
+
+shadcn 的 `<ContextMenu>` 已经处理了 `oncontextmenu` 拦截、Portal 位置、焦点管理与 ESC 关闭。CM6 的 `EditorView.domEventHandlers({ contextmenu })` + 自管 React state 是重复发明轮子。
+
+**正确做法**：
+```tsx
+<ContextMenu onOpenChange={syncFormatting}>
+  <ContextMenuTrigger asChild>
+    <div ref={containerRef} />  {/* CM6 mounts here */}
+  </ContextMenuTrigger>
+  <ContextMenuContent>...</ContextMenuContent>
+</ContextMenu>
+```
+
+`asChild` 走 Radix `Slot` 模式，把 trigger 的 `onContextMenu` 等 props 合到 `<div>` 上，并合并 ref —— `containerRef` 仍指向那个 div，CM6 mount 不受影响。
+
+**相关文件**：`src/components/editor/EditorContextMenu.tsx`、`src/components/editor/NoteEditor.tsx`
+
+### 选区状态用 `onOpenChange` 同步而**不**订阅事件
+
+桌面端右键菜单是按需弹出，菜单关闭时不需要维护订阅。在菜单 `onOpenChange(true)` 瞬间一次性调 `control.getSelectionFormatting()` + 读 `view.state.selection.main.empty`，写入 React state 冻结住——子菜单悬停期间状态不会跟光标移动飘。
+
+订阅 `EditorEventType.SelectionFormattingChange` 是移动端工具栏的方案（常驻 UI），桌面端**不要**这么做：菜单 99% 时间不可见时仍跑订阅是浪费，且引入"菜单先打开后选区变了"的同步窗口边界。
+
+**相关文件**：`src/components/editor/EditorContextMenu.tsx::handleOpenChange`
+
+### 不要嵌套 ContextMenu —— 最内层赢，外层项不可达
+
+`EditorPane` 之前在编辑区外层包过一个只有"可读行宽"一项的 `<ContextMenu>`。如果 NoteEditor 内部再加一层 `<ContextMenu>`，Radix 会让最内层的 trigger 赢，外层那一项**永远点不到**。
+
+**正确做法**：把视图设置项合并到内层菜单的"视图"分组里，外层 `EditorPane` 只剩 `<main><div>{NoteEditor}</div><StatusBar /></main>` 的纯布局结构。
+
+**相关文件**：`src/components/layout/EditorPane.tsx`
+
+### 插入图片：隐藏 `<input type="file">` 复用 `handleFiles`
+
+仓库**没有** `@tauri-apps/plugin-fs`。Tauri Dialog `open()` 只返回路径，没有读字节能力，要真的要走 plugin-fs 路径需要新装一整套（npm + cargo + capability + lib.rs 注册）。
+
+最干净的做法：在 `NoteEditor` 渲染一个隐藏的 `<input type="file" accept="image/*" hidden>`，菜单"插入图片"项只做 `fileInputRef.current?.click()`。`onChange` 拿到 `FileList` 后调用现有 `handleFiles`（drag/drop + paste 共用），完整复用 `arrayBuffer → saveMedia → execCommand('insertImage')` 链路。
+
+`onChange` 必须 `e.target.value = ""` 复位，否则连续选同一张图不会再次触发。
+
+**相关文件**：`src/components/editor/NoteEditor.tsx::handleInsertImageFromMenu / handleFileInputChange`
+
+### `toggleHighlight` / `toggleBlockquote` 在编辑器子仓 — 跨仓提交序
+
+两个命令现位于 `packages/editor/src/editorCommands/markdown.ts`（highlight 与 strike 同 helper）和 `packages/editor/src/editorCommands/blockquote.ts`（独立文件，行级前缀切换，模式照搬 `list.ts`）。`@swarmnote/editor` 是 git submodule，更改后**必须**先 push 子仓再 bump 主仓 pointer，否则远端 submodule 指针悬空。
+
+新键位：
+- `Mod-Shift-=` → `toggleHighlight`
+- `Mod-Shift-q` → `toggleBlockquote`
+
+`Mod-Shift-h` 已被 `cycleHeading` 占用，不要重用。
+
+**相关文件**：`packages/editor/src/editorCommands/markdown.ts`、`packages/editor/src/editorCommands/blockquote.ts`、`packages/editor/src/createEditor.ts::buildFormatKeymap`

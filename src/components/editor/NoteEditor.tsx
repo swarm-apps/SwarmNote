@@ -10,9 +10,10 @@ import {
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { confirm } from "@tauri-apps/plugin-dialog";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import * as Y from "yjs";
 import { openYDoc, reloadYDocConfirmed, saveMedia } from "@/commands/document";
+import { EditorContextMenu } from "@/components/editor/EditorContextMenu";
 import { colorForDevice } from "@/lib/awareness-color";
 import { TauriYjsProvider } from "@/lib/TauriYjsProvider";
 import { useEditorStore } from "@/stores/editorStore";
@@ -110,6 +111,43 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
 
   const containerRef = useRef<HTMLDivElement>(null);
   const controlRef = useRef<EditorControl | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Reactive control instance for the right-click menu (re-renders when the
+  // editor mounts/unmounts).
+  const editorControl = useEditorStore((s) => s.editorControl);
+
+  // Shared "user supplied a File → save to workspace → insert into doc" path
+  // used by drag/drop, clipboard paste, and the context menu's "插入图片" item.
+  const handleFiles = useCallback(async (files: FileList | File[]) => {
+    const control = controlRef.current;
+    if (!control) return;
+    const rel = useEditorStore.getState().relPath;
+    if (!rel) return;
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith("image/")) continue;
+      const buffer = await file.arrayBuffer();
+      const bytes = Array.from(new Uint8Array(buffer));
+      const savedRel = await saveMedia(rel, file.name, bytes);
+      control.execCommand("insertImage", savedRel, file.name);
+    }
+  }, []);
+
+  const handleInsertImageFromMenu = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileInputChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (files && files.length > 0) {
+        void handleFiles(files);
+      }
+      // Reset so picking the same file twice in a row still fires onChange.
+      e.target.value = "";
+    },
+    [handleFiles],
+  );
 
   // Image resolver: map workspace-relative paths to Tauri asset:// URLs.
   const imageResolver = useCallback(
@@ -324,19 +362,6 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
     const parent = containerRef.current;
     if (!parent) return;
 
-    const handleFiles = async (files: FileList | File[]) => {
-      const control = controlRef.current;
-      if (!control) return;
-      const rel = useEditorStore.getState().relPath;
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith("image/")) continue;
-        const buffer = await file.arrayBuffer();
-        const bytes = Array.from(new Uint8Array(buffer));
-        const savedRel = await saveMedia(rel, file.name, bytes);
-        control.execCommand("insertImage", savedRel, file.name);
-      }
-    };
-
     const onDrop = (e: DragEvent) => {
       if (!e.dataTransfer?.files || e.dataTransfer.files.length === 0) return;
       const hasImage = Array.from(e.dataTransfer.files).some((f) => f.type.startsWith("image/"));
@@ -359,14 +384,25 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
       parent.removeEventListener("drop", onDrop);
       parent.removeEventListener("paste", onPaste);
     };
-  }, []);
+  }, [handleFiles]);
 
   return (
-    <div
-      ref={containerRef}
-      className={`h-full w-full ${
-        readableLineLength ? "[&_.cm-scroller]:!px-[max(40px,calc((100%-56rem)/2))]" : ""
-      }`}
-    />
+    <>
+      <EditorContextMenu control={editorControl} onInsertImage={handleInsertImageFromMenu}>
+        <div
+          ref={containerRef}
+          className={`h-full w-full select-text ${
+            readableLineLength ? "[&_.cm-scroller]:!px-[max(40px,calc((100%-56rem)/2))]" : ""
+          }`}
+        />
+      </EditorContextMenu>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+        hidden
+        onChange={handleFileInputChange}
+      />
+    </>
   );
 }
