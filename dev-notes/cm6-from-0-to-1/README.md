@@ -2,7 +2,7 @@
 
 # CodeMirror 6 学习教程：从 React + TypeScript 入门，到 SwarmNote 项目实战
 
-> 这是一套面向 React + TypeScript 开发者的 CodeMirror 6 教程。你会先从 `pnpm create vite` 搭一个最小学习环境，再一步步学会挂载编辑器、管理 `EditorView` 生命周期、监听更新、理解 transaction 和扩展系统，最后回到 `packages/editor/` 看一个真实 Markdown Live Preview 编辑器是怎么做出来的。
+> 这是一套面向 React + TypeScript 开发者的 CodeMirror 6 教程。你会先从 `pnpm create vite` 搭一个最小学习环境，再一路围着同一个 `cm6-lab` 学会挂载编辑器、管理 `EditorView` 生命周期、监听更新、写扩展、做最小 Live Preview，最后再回到 `packages/editor/` 看真实项目是怎么装起来的。
 
 ## 这套教程适合谁
 
@@ -46,15 +46,15 @@
 | 02 | 在 React 中挂出第一个最小可输入的 CM6 编辑器 |
 | 03A | 学会稳定管理 `EditorView` 生命周期 |
 | 03 | 学会监听编辑器更新，并建立 transaction 直觉 |
-| 04 | 学会判断 Facet、StateField、ViewPlugin、Compartment 的使用场景 |
-| 05 | 学会用 Decoration 和 Widget 增强显示层 |
-| 06 | 看懂 `packages/editor/` 是怎么被装配起来的 |
-| 07 | 自己从零写一个最小扩展 |
-| 08 | 学会阅读一个真实、复杂、带 widget 的扩展 |
+| 04 | 在 lab 里通过 4 个小功能真正分清 Facet、StateField、ViewPlugin、Compartment |
+| 05 | 在 lab 里做出最小 Live Preview，理解 line / mark / replace / widget |
+| 06 | 带着 lab 里的例子回看 `packages/editor/` 的真实装配方式 |
+| 07 | 把前面零散能力收成一个真正的小扩展 |
+| 08 | 带着明确问题去读 `renderBlockImages` 这个真实扩展 |
 | 09 | 给自己安排练习题、复习顺序和二刷路径 |
-| 10 | 给编辑器加命令、快捷键和格式化动作 |
-| 11 | 理解 CM6 为什么能自然接上 Y.Text、y-codemirror.next 和 awareness |
-| 12 | 学会设计自己的 Markdown Live Preview 架构 |
+| 10 | 在 lab 里先写命令和快捷键，再回看项目实现 |
+| 11 | 先看顺最小协作链，再理解 Y.Text、y-codemirror.next 和 awareness |
+| 12 | 把前面的编辑、预览、协作经验收成一套架构判断 |
 
 ## 配套源码入口
 
@@ -73,17 +73,17 @@
 
 ```mermaid
 graph TD
-    A[01 Vite + React TS 环境] --> B[02 挂载第一个 EditorView]
+    A[01 搭好 cm6-lab 环境] --> B[02 挂载第一个 EditorView]
     B --> C[03A 管理生命周期]
     C --> D[03 监听更新与 transaction]
-    D --> E[04 扩展系统]
-    E --> F[05 Decoration 与 Widget]
-    F --> G[07 自己写最小扩展]
-    G --> H[10 命令与快捷键]
-    H --> I[06 拆项目装配]
-    I --> J[08 读真实扩展]
-    J --> K[11 协作绑定]
-    K --> L[12 架构设计]
+    D --> E[04 用 4 个小功能分清扩展职责]
+    E --> F[05 做最小 Live Preview]
+    F --> G[07 收成一个真正的小扩展]
+    G --> H[10 在 lab 里写命令和快捷键]
+    H --> I[06 带着 lab 回看项目装配]
+    I --> J[08 带着问题读真实扩展]
+    J --> K[11 先看顺最小协作链]
+    K --> L[12 从 lab 反推架构判断]
 ```
 
 ## 一句话总览
