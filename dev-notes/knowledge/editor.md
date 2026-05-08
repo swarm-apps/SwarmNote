@@ -154,6 +154,55 @@ const imageResolver = useCallback(
 
 `saveMedia(relPath, fileName, bytes)` 返回 workspace 相对路径（通常是 `images/xxxxxx.png`），然后调 `control.execCommand("insertImage", savedRel, fileName)` 插入。
 
+### 图片渲染：block / inline 双路径
+
+`renderBlockImages.ts` 同时处理两类 markdown 图片：
+
+- **Block solo**（独占一行）：使用 `Decoration.replace({block: true})`，widget 自带 `<img>` 居中、选中态边框、`</>` 源码切换图标
+- **Inline**（嵌套在标题/强调/引用/列表/表格/同行多图）：`Decoration.replace`（非 block），widget 是行内 `<span><img/></span>`
+
+判定逻辑：检查 lezer `Image` 节点所在行除自身外是否还有非空白文本——是 → inline path。
+
+光标进入图片范围（block 是整行，inline 是 `[node.from, node.to]`）→ 跳过 emission，露出原始 markdown 源码可编辑。
+
+**相关文件**：`packages/editor/src/extensions/renderBlockImages.ts`
+
+### Lezer `Image.parent === Link` = 图片链接
+
+`[![alt](img)](href)` 在 lezer 树里是 `Link > Image`。`getLinkedImageInfo()` 用 `parent.getChild('URL')`/`parent.getChild('LinkTitle')` 提取链接 href + title（不要手写 nextSibling 走，已踩坑过）。命中后用 Link 的整个范围作 `Decoration.replace`，避免外层 `[` 和 `](url)` 露出。widget 加底部右下/右上的外链按钮，Ctrl/Cmd-click 图片或点按钮触发跳转。
+
+**相关文件**：`packages/editor/src/extensions/renderBlockImages.ts::getLinkedImageInfo`
+
+### 跳转链接：走 `editorEventCallback` Facet 派发 LinkOpen
+
+Tauri webview 默认安全策略屏蔽 `window.open`——所有链接打开都走 `editorEventCallback` Facet 派发 `EditorEventType.LinkOpen` 事件，由 host (`NoteEditor.tsx::onEvent`) 调 `@tauri-apps/plugin-opener` 的 `openUrl()`。markdown link 的 ctrl-click、图片链接按钮、HTML `<a>` 内嵌链接 ctrl-click 全部统一这条管道。
+
+**相关文件**：`packages/editor/src/extensions/renderBlockImages.ts::dispatchLinkOpen`、`packages/editor/src/extensions/renderRawHtml.ts::attachLinkInterceptor`、`src/components/editor/NoteEditor.tsx::onEvent` 的 `LinkOpen` 分支
+
+## 原生 HTML 渲染（renderRawHtml.ts）
+
+通过 `dompurify` 渲染 `HTMLBlock`（块级）和自闭合/配对 `HTMLTag`（内联）。覆盖 `<img>`/`<picture>`/`<figure>`/`<details>`/`<u>`/`<s>`/`<a>`/`<span style>` 等所有 DOMPurify 默认放行的标签。
+
+- 配对标签（`<u>...</u>` 等）：通过 lezer `nextSibling` + 深度计数器找匹配 close
+- 排除 `<mark>`/`<kbd>`/`<sup>`/`<sub>`——它们由 `inlineRendering/replaceInlineHtml.ts` 的 class-based 系统处理（避免双重渲染）
+- `<br>` 包装的 span 必须 `display: inline`（不是 inline-block），否则 `<br>` 的换行被困在 wrapper 内不传播到外层段落
+- 表格单元格 `<br>`：`renderInlineMarkdown.ts` 用 PUA 占位符在 escapeHtml 之前抽出 `<br>`，结尾还原——不抽出会被 `&lt;br&gt;` 转义掉
+
+**相关文件**：`packages/editor/src/extensions/renderRawHtml.ts`、`packages/editor/src/utils/renderInlineMarkdown.ts`
+
+## Admonition / Callout
+
+GFM `> [!NOTE]` 与 Obsidian `> **NOTE**` 双语法兼容（`packages/editor/src/extensions/admonition/`）。Obsidian 风格圆角填充盒，Lucide SVG 图标 + label，cursor 进入块内任意位置 → 整块切源码模式。
+
+### 关键约束
+
+1. **正则中第二个 `\s*` 必须用 `[ \t]*`**——`\s` 匹配 `\n` 会让 `(.*)` 跨行捕获 body 当成 customTitle，渲染出 `[icon] > body文本` 的 bug。
+2. **必须显式 `background-image: none !important`**——`markdownDecorationExtension` 给所有 blockquote 加 `cm-blockQuote-d0` 类，用 `background-image: linear-gradient(...)` 画金黄色 2px 竖线。这是独立 CSS 属性，`backgroundColor` 不会覆盖它，必须显式清空。
+3. **标题 widget 用 `block: true` Decoration.replace**——之前用 inline replace + line decoration 重叠，CodeMirror reconciliation 在「装饰从无到有再到无」循环中可能掉装饰。block widget 自带完整 DOM（含 bg/圆角），独立行，不依赖 line decoration。
+4. **行号迭代用 `state.doc.line(n)`**——之前用 `rawText.split(/\n>/)` + cursor offset 推导每行偏移，在 CJK + 行边界 `\n` 上有 off-by-one。直接 `lineAt(node.from).number` 起、`lineAt(node.to).number` 止逐号取行最稳。
+
+**相关文件**：`packages/editor/src/extensions/admonition/admonitionExtension.ts`、`presets.ts`（Lucide SVG icons）
+
 ## 大纲提取
 
 `extractHeadings(state)` 使用 CM6 `syntaxTree` + ATX 正则，正确排除 fenced code block 里的伪 heading。

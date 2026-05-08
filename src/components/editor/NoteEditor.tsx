@@ -10,6 +10,7 @@ import {
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { confirm } from "@tauri-apps/plugin-dialog";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import * as Y from "yjs";
 import { openYDoc, reloadYDocConfirmed, saveMedia } from "@/commands/document";
@@ -219,6 +220,13 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
             rowCount: event.rowCount,
             colCount: event.colCount,
             actions: event.actions,
+          });
+        } else if (event.kind === EditorEventType.LinkOpen) {
+          // Markdown link Ctrl/Cmd-click + image-link button click both
+          // route here. window.open is unreliable inside Tauri webview, so
+          // delegate to plugin-opener which uses the system default browser.
+          openUrl(event.url).catch(() => {
+            // URL may be malformed or blocked — silent.
           });
         }
       },
