@@ -18,7 +18,7 @@
 这次我们只做两个很小的效果：
 
 1. 标题行看起来更像标题
-2. `**bold**` 在平时弱化标记，光标进去时露出源码
+2. `**bold**` 在平时真正隐藏标记，光标进去时露出源码
 
 ```mermaid
 graph TD
@@ -132,6 +132,8 @@ Decoration.line({ attributes: { class: 'cm-preview-heading' } })
 
 接下来做一点更像 Live Preview 的事。
 
+这次我们不只是把 `**` 弱化，而是真的先把两侧 marker 隐藏掉。
+
 假设你输入：
 
 ```md
@@ -140,7 +142,7 @@ Decoration.line({ attributes: { class: 'cm-preview-heading' } })
 
 我们想做的不是删掉 `**`，而是：
 
-- 平时弱化或隐藏 `**`
+- 平时先真正隐藏两侧 `**`
 - 光标进入这段附近时，再露出源码方便编辑
 
 这就是 reveal / conceal。
@@ -194,13 +196,13 @@ function buildDecorations(view: EditorView): DecorationSet {
         builder.add(
           node.from,
           node.from + 2,
-          Decoration.mark({ attributes: { class: 'cm-preview-hidden-mark' } }),
+          Decoration.replace({}),
         );
 
         builder.add(
           node.to - 2,
           node.to,
-          Decoration.mark({ attributes: { class: 'cm-preview-hidden-mark' } }),
+          Decoration.replace({}),
         );
 
         builder.add(
@@ -235,9 +237,6 @@ export const boldPreviewExtension = ViewPlugin.fromClass(
 );
 
 export const boldPreviewTheme = EditorView.theme({
-  '.cm-preview-hidden-mark': {
-    opacity: '0.25',
-  },
   '.cm-preview-bold-text': {
     fontWeight: '700',
   },
@@ -253,17 +252,17 @@ boldPreviewTheme,
 
 现在你会得到一个很有代表性的最小体验：
 
-- 平时 `**` 被弱化
+- 平时两侧 `**` 会真正被隐藏
 - 光标进入这段区域时，源码完整露出
 
 这就是最小 reveal / conceal。
 
-## 7. 这里你实际用到的是 `Decoration.mark`
+## 7. 这里你实际同时用到了 `Decoration.replace` 和 `Decoration.mark`
 
-上面最关键的是这三段：
+上面最关键的是这两类操作：
 
 ```ts
-Decoration.mark({ attributes: { class: 'cm-preview-hidden-mark' } })
+Decoration.replace({})
 ```
 
 和：
@@ -272,22 +271,21 @@ Decoration.mark({ attributes: { class: 'cm-preview-hidden-mark' } })
 Decoration.mark({ attributes: { class: 'cm-preview-bold-text' } })
 ```
 
-`mark` 更适合处理：
+这里的分工很清楚：
 
-- 行内样式
-- 链接样式
-- inline code 背景
-- 加粗、斜体、高亮这类范围样式
+- `replace` 负责把两侧 `**` 临时隐藏掉
+- `mark` 负责让中间正文继续显示成加粗效果
 
 你可以先把它理解成：
 
-> **给某一段文本范围挂显示样式。**
+- `replace`：**这段原文先别显示**
+- `mark`：**这段原文继续显示，但换一种样式**
 
 ## 8. 那 `replace` 和 `widget` 又是什么
 
-到这里你已经实际用了 `line` 和 `mark`。
+到这里你已经实际用了 `line`、`mark` 和 `replace`。
 
-剩下两个先不要死背，直接按用途理解。
+剩下的 `widget` 先不要死背，直接按用途理解。
 
 ### `Decoration.replace(...)`
 
@@ -296,7 +294,7 @@ Decoration.mark({ attributes: { class: 'cm-preview-bold-text' } })
 - 隐藏原始 markdown 标记
 - 把一段文本换成别的显示
 
-比如你以后不想只是把 `**` 弱化，而是想让它直接看不见，这时往往会想到 `replace`。
+你刚才这个 bold 例子里，两侧 `**` 就是靠 `replace` 先隐藏掉的。
 
 ### `Decoration.widget(...)`
 
@@ -357,8 +355,8 @@ graph TD
 这一篇最重要的不是把四种 decoration 都背一遍，而是先做出一个最小可运行结果：
 
 - 用 `Decoration.line` 让标题行更像标题
-- 用 `Decoration.mark` 让 `**bold**` 更像 preview
+- 用 `Decoration.replace + Decoration.mark` 让 `**bold**` 真正进入最小 preview
 - 用选区判断做最小 reveal / conceal
-- 知道 `replace` 和 `widget` 是下一层更强的显示替换工具
+- 知道 `widget` 是下一层更强的显示替换工具
 
 继续看下一篇：[`06-拆解 packages/editor 的装配方式`](./06-拆解-packages-editor-的装配方式.md)
