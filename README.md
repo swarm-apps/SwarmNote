@@ -163,7 +163,7 @@ graph LR
 ```mermaid
 graph TB
     Frontend["前端 — React 19 + TypeScript<br/>shadcn/ui · Tailwind 4 · TanStack Router · Zustand"]
-    Editor["@swarmnote/editor<br/>CodeMirror 6 + y-codemirror.next + KaTeX"]
+    Editor["@swarmnote/editor-core<br/>CodeMirror 6 + y-codemirror.next + KaTeX"]
 
     Tauri["平台层 — Tauri 2 (src-tauri/)<br/>Tauri Commands · 文件监听 · 系统托盘 · OS Keychain"]
 
@@ -195,7 +195,7 @@ graph TB
 | 层级 | 技术 |
 |------|------|
 | 前端 | React 19 · TypeScript 5.8 · Vite 7 |
-| 编辑器 | CodeMirror 6 + `@codemirror/lang-markdown` + `y-codemirror.next` + KaTeX（封装在 `@swarmnote/editor` 包） |
+| 编辑器 | CodeMirror 6 + `@codemirror/lang-markdown` + `y-codemirror.next` + KaTeX（封装在独立仓 [`@swarmnote/editor-core`](https://github.com/swarm-apps/swarmnote-editor) 包，本地通过 pnpm link 接入） |
 | UI 组件 | shadcn/ui · Radix · Tailwind CSS 4 · Lucide |
 | 状态管理 | Zustand 5（9 个 Store · 部分通过 `tauri-plugin-store` 持久化） |
 | 路由 | TanStack Router（文件系统路由） |
@@ -217,14 +217,15 @@ graph TB
 swarmnote/
 ├── src/                       # 前端源码
 ├── src-tauri/                 # 平台层（Tauri 命令处理 / OS 集成）
-├── packages/
-│   └── editor/                # @swarmnote/editor —— CodeMirror 6 编辑器
 ├── crates/
 │   ├── core/                  # swarmnote-core —— 平台无关核心 (桌面 + 移动共享)
 │   ├── entity/                # SeaORM entity 定义
 │   └── migration/             # 数据库迁移
 ├── libs/core/                 # swarm-p2p-core (Git submodule —— P2P 网络层)
 └── docs/                      # Astro + Starlight 文档站
+
+# 编辑器核心是独立仓，通过 pnpm link --global 接入：
+../swarmnote-editor/           # @swarmnote/editor-core (https://github.com/swarm-apps/swarmnote-editor)
 ```
 
 </details>
@@ -240,11 +241,15 @@ swarmnote/
 ### 构建步骤
 
 ```bash
-# 克隆仓库（含 swarm-p2p-core 子模块）
+# 1. 克隆 SwarmNote 主仓（含 swarm-p2p-core 子模块）
 git clone --recurse-submodules https://github.com/swarm-apps/SwarmNote.git
 cd SwarmNote
 
-# 安装依赖
+# 2. 在同级目录 clone & 构建 swarmnote-editor（编辑器内核）
+git clone https://github.com/swarm-apps/swarmnote-editor.git ../swarmnote-editor
+(cd ../swarmnote-editor && pnpm install && pnpm -r build)
+
+# 3. 安装主仓依赖（`pnpm.overrides` 已经把 @swarmnote/editor-core 指向 sibling 仓的 dist）
 pnpm install
 
 # 桌面端开发（前端 + Rust 后端）
@@ -257,6 +262,18 @@ pnpm tauri build
 pnpm lint
 cd src-tauri && cargo clippy -- -D warnings
 ```
+
+### 编辑器联调（开发 swarmnote-editor 同时运行主仓）
+
+```bash
+# 在 swarmnote-editor 仓启动 watch（每次改源码自动重建 dist）
+(cd ../swarmnote-editor && pnpm dev)
+
+# 主仓另开终端跑 dev（Vite HMR 会因 dist 变化自动 reload）
+pnpm tauri dev
+```
+
+主仓 `package.json` 的 `pnpm.overrides` 把 `@swarmnote/editor-core` 锚定到 `../swarmnote-editor/packages/editor-core`——所以 sibling 必须 clone 到主仓同级目录。未来 `@swarmnote/editor-core` 发到 npm 后会移除这条 override，改用版本号。
 
 ## Swarm 生态
 

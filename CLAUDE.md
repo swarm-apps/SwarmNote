@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 知识库主题：
 
 - `dev-notes/knowledge/theme-and-styling.md` — shadcn/ui、主题变量、窗口装饰
-- `dev-notes/knowledge/editor.md` — CM6、Y.Doc、y-codemirror.next、@swarmnote/editor submodule
+- `dev-notes/knowledge/editor.md` — CM6、Y.Doc、y-codemirror.next、`@swarmnote/editor-core` 外部 sibling 仓 + pnpm link 接入
 - `dev-notes/knowledge/rust-backend.md` — Tauri command、SeaORM、YDocManager、P2P
 - `dev-notes/knowledge/toolchain.md` — Biome、Lefthook、Lingui、Cargo workspace、Vite
 
@@ -20,8 +20,13 @@ SwarmNote is a decentralized, local-first, peer-to-peer note-taking app built wi
 ## Development Commands
 
 ```bash
-# First-time setup: init git submodule (libs/core) + install deps
+# First-time setup: clone with submodule (libs/core), build sibling editor-core, then install host
 git submodule update --init --recursive
+
+# Editor core lives in a separate sibling repo, linked via pnpm.overrides → ../swarmnote-editor
+git clone https://github.com/swarm-apps/swarmnote-editor.git ../swarmnote-editor
+(cd ../swarmnote-editor && pnpm install && pnpm -r build)
+
 pnpm install
 
 # Launch full Tauri desktop app (starts frontend + Rust backend)
