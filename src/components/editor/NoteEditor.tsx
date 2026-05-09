@@ -6,7 +6,7 @@ import {
   EditorEventType,
   type EditorSettings,
   refreshBlockImagesEffect,
-} from "@swarmnote/editor";
+} from "@swarmnote/editor-core";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { confirm } from "@tauri-apps/plugin-dialog";
@@ -92,7 +92,7 @@ export function NoteEditor() {
 }
 
 /**
- * Inner component: mounts `@swarmnote/editor` (CM6) bound to the given
+ * Inner component: mounts `@swarmnote/editor-core` (CM6) bound to the given
  * Y.Doc via `y-codemirror.next`, wires up Tauri event bridges for flush,
  * external updates, external conflict, and asset refresh.
  *

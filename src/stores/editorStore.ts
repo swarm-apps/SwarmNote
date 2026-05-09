@@ -1,4 +1,4 @@
-import type { EditorControl } from "@swarmnote/editor";
+import type { EditorControl } from "@swarmnote/editor-core";
 import type { Awareness } from "y-protocols/awareness";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
