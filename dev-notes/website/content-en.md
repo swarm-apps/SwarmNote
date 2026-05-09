@@ -81,7 +81,7 @@
 ## 09 The Swarm ecosystem
 
 - **H1**: Swarm open-source family
-- **Lede**: All projects share the [`swarm-p2p-core`](https://github.com/yexiyue/swarm-p2p) network layer
+- **Lede**: All projects share the [`swarm-p2p-core`](https://github.com/swarm-apps/swarm-p2p) network layer
 - **Cards**:
   - **SwarmDrop** — Decentralized file transfer ("LocalSend across networks")
   - **SwarmNote** — P2P notes (you're here)

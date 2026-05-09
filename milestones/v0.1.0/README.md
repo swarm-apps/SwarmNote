@@ -75,16 +75,16 @@ graph TD
 
 | 功能 | 优先级 | 依赖 | Feature 文档 | Issue |
 |------|--------|------|-------------|-------|
-| UI 设计稿 | P0 | - | [ui-design.md](features/ui-design.md) | [#1](https://github.com/yexiyue/SwarmNote/issues/1) |
-| UI 框架搭建 | P0 | - | [ui-framework.md](features/ui-framework.md) | [#2](https://github.com/yexiyue/SwarmNote/issues/2) |
-| 状态管理 | P0 | - | [state-management.md](features/state-management.md) | [#3](https://github.com/yexiyue/SwarmNote/issues/3) |
-| SQLite 存储层 | P0 | - | [sqlite-storage.md](features/sqlite-storage.md) | [#4](https://github.com/yexiyue/SwarmNote/issues/4) |
-| Stronghold 密钥管理 | P0 | - | [device-identity.md](features/device-identity.md) | [#5](https://github.com/yexiyue/SwarmNote/issues/5) |
-| Markdown 存储 | P0 | SQLite | [markdown-storage.md](features/markdown-storage.md) | [#6](https://github.com/yexiyue/SwarmNote/issues/6) |
-| BlockNote 编辑器 | P0 | UI 框架, 状态管理, Markdown 存储, UI 设计稿 | [blocknote-editor.md](features/blocknote-editor.md) | [#7](https://github.com/yexiyue/SwarmNote/issues/7) |
-| 文件树 + CRUD | P0 | UI 框架, SQLite, 状态管理, UI 设计稿 | [file-tree.md](features/file-tree.md) | [#8](https://github.com/yexiyue/SwarmNote/issues/8) |
-| 工作区管理 | P0 | SQLite | [workspace-management.md](features/workspace-management.md) | [#9](https://github.com/yexiyue/SwarmNote/issues/9) |
-| Onboarding 引导流程 | P0 | UI 框架, 状态管理, Stronghold, 工作区管理, 编辑器, 文件树, UI 设计稿 | [onboarding.md](features/onboarding.md) | [#10](https://github.com/yexiyue/SwarmNote/issues/10) |
+| UI 设计稿 | P0 | - | [ui-design.md](features/ui-design.md) | [#1](https://github.com/swarm-apps/SwarmNote/issues/1) |
+| UI 框架搭建 | P0 | - | [ui-framework.md](features/ui-framework.md) | [#2](https://github.com/swarm-apps/SwarmNote/issues/2) |
+| 状态管理 | P0 | - | [state-management.md](features/state-management.md) | [#3](https://github.com/swarm-apps/SwarmNote/issues/3) |
+| SQLite 存储层 | P0 | - | [sqlite-storage.md](features/sqlite-storage.md) | [#4](https://github.com/swarm-apps/SwarmNote/issues/4) |
+| Stronghold 密钥管理 | P0 | - | [device-identity.md](features/device-identity.md) | [#5](https://github.com/swarm-apps/SwarmNote/issues/5) |
+| Markdown 存储 | P0 | SQLite | [markdown-storage.md](features/markdown-storage.md) | [#6](https://github.com/swarm-apps/SwarmNote/issues/6) |
+| BlockNote 编辑器 | P0 | UI 框架, 状态管理, Markdown 存储, UI 设计稿 | [blocknote-editor.md](features/blocknote-editor.md) | [#7](https://github.com/swarm-apps/SwarmNote/issues/7) |
+| 文件树 + CRUD | P0 | UI 框架, SQLite, 状态管理, UI 设计稿 | [file-tree.md](features/file-tree.md) | [#8](https://github.com/swarm-apps/SwarmNote/issues/8) |
+| 工作区管理 | P0 | SQLite | [workspace-management.md](features/workspace-management.md) | [#9](https://github.com/swarm-apps/SwarmNote/issues/9) |
+| Onboarding 引导流程 | P0 | UI 框架, 状态管理, Stronghold, 工作区管理, 编辑器, 文件树, UI 设计稿 | [onboarding.md](features/onboarding.md) | [#10](https://github.com/swarm-apps/SwarmNote/issues/10) |
 
 ## 验收标准
 
@@ -132,4 +132,4 @@ graph TD
 
 - 开始日期：2026-03
 - 目标发布日期：待定
-- Milestone：[v0.1.0](https://github.com/yexiyue/SwarmNote/milestone/1)
+- Milestone：[v0.1.0](https://github.com/swarm-apps/SwarmNote/milestone/1)

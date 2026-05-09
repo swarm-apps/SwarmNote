@@ -8,7 +8,7 @@
 
 *Your notes, swarming across your own devices.*
 
-[![Release](https://img.shields.io/github/v/release/yexiyue/SwarmNote?style=flat-square)](https://github.com/yexiyue/SwarmNote/releases)
+[![Release](https://img.shields.io/github/v/release/swarm-apps/SwarmNote?style=flat-square)](https://github.com/swarm-apps/SwarmNote/releases)
 [![License](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 [![Tauri](https://img.shields.io/badge/Tauri-v2-FFC131?style=flat-square&logo=tauri)](https://tauri.app)
 [![libp2p](https://img.shields.io/badge/libp2p-0.56-blue?style=flat-square)](https://libp2p.io)
@@ -111,14 +111,14 @@ graph LR
 
 ## 下载安装
 
-前往 [Releases](https://github.com/yexiyue/SwarmNote/releases/latest) 下载最新版本（应用内置自动更新）：
+前往 [Releases](https://github.com/swarm-apps/SwarmNote/releases/latest) 下载最新版本（应用内置自动更新）：
 
 | 平台 | 格式 | 架构 |
 |------|------|------|
 | **Windows** | `.msi` · `.exe` | x64 |
 | **macOS** | `.dmg` | Apple Silicon · Intel |
 | **Linux** | `.deb` · `.rpm` · `.AppImage` | x64 |
-| **Android / iOS** | 见 [SwarmNote-RN](https://github.com/yexiyue/SwarmNote-RN) | 开发中 |
+| **Android / iOS** | 见 [SwarmNote-RN](https://github.com/swarm-apps/SwarmNote-RN) | 开发中 |
 
 ## 快速开始
 
@@ -150,7 +150,7 @@ graph LR
 | P2P 节点（DHT 发现 · NAT 检测 · DCUtR 打洞 · Relay 兜底） | ✅ |
 | 6 位数字配对码设备配对 | ✅ |
 | 跨设备实时同步（GossipSub + Yjs） | 🚧 进行中 |
-| 移动端 [SwarmNote-RN](https://github.com/yexiyue/SwarmNote-RN)（Expo + uniffi-bindgen-rn） | 🚧 进行中 |
+| 移动端 [SwarmNote-RN](https://github.com/swarm-apps/SwarmNote-RN)（Expo + uniffi-bindgen-rn） | 🚧 进行中 |
 | 实时协作编辑（多人同时编辑同一文档） | 📋 计划中 |
 | 工作区共享（邀请码 · 权限管理） | 📋 计划中 |
 | 全文搜索 | 📋 计划中 |
@@ -187,7 +187,7 @@ graph TB
     style RN fill:#fef3c7,stroke:#d97706,stroke-dasharray: 5 5
 ```
 
-`swarmnote-core` 是平台无关的核心 crate，被桌面端 (`src-tauri`) 直接调用，也被 [SwarmNote-RN](https://github.com/yexiyue/SwarmNote-RN) 通过 [`uniffi-bindgen-react-native`](https://github.com/jhugman/uniffi-bindgen-react-native) 桥接到 React Native——**桌面和移动端共享同一份业务逻辑和 CRDT 状态机**。
+`swarmnote-core` 是平台无关的核心 crate，被桌面端 (`src-tauri`) 直接调用，也被 [SwarmNote-RN](https://github.com/swarm-apps/SwarmNote-RN) 通过 [`uniffi-bindgen-react-native`](https://github.com/jhugman/uniffi-bindgen-react-native) 桥接到 React Native——**桌面和移动端共享同一份业务逻辑和 CRDT 状态机**。
 
 <details>
 <summary><b>技术栈详情</b></summary>
@@ -204,7 +204,7 @@ graph TB
 | 跨平台核心 | `swarmnote-core` crate（桌面 + 移动端共享） |
 | ORM | SeaORM 2.0-rc · SQLite |
 | CRDT | yrs 0.25（Yjs Rust 实现）+ similar（外部编辑文本 diff） |
-| P2P | libp2p 0.56 via [`swarm-p2p-core`](https://github.com/yexiyue/swarm-p2p) |
+| P2P | libp2p 0.56 via [`swarm-p2p-core`](https://github.com/swarm-apps/swarm-p2p) |
 | Tauri 插件 | updater · store · dialog · opener · notification · process · mcp-bridge |
 | 工具链 | Biome · rustfmt · Clippy · Lefthook · commitlint · git-cliff |
 
@@ -241,7 +241,7 @@ swarmnote/
 
 ```bash
 # 克隆仓库（含 swarm-p2p-core 子模块）
-git clone --recurse-submodules https://github.com/yexiyue/SwarmNote.git
+git clone --recurse-submodules https://github.com/swarm-apps/SwarmNote.git
 cd SwarmNote
 
 # 安装依赖
@@ -260,21 +260,21 @@ cd src-tauri && cargo clippy -- -D warnings
 
 ## Swarm 生态
 
-SwarmNote 是 Swarm 系列开源项目之一，所有项目共享 [`swarm-p2p-core`](https://github.com/yexiyue/swarm-p2p) 网络层：
+SwarmNote 是 Swarm 系列开源项目之一，所有项目共享 [`swarm-p2p-core`](https://github.com/swarm-apps/swarm-p2p) 网络层：
 
 | 项目 | 说明 | 状态 |
 |------|------|------|
-| [SwarmDrop](https://github.com/yexiyue/swarmdrop) | P2P 文件传输（"跨网络版 LocalSend"） | v0.4.4 |
+| [SwarmDrop](https://github.com/swarm-apps/SwarmDrop) | P2P 文件传输（"跨网络版 LocalSend"） | v0.4.4 |
 | **SwarmNote** | P2P 笔记同步（桌面端） | v0.2.3 |
-| [SwarmNote-RN](https://github.com/yexiyue/SwarmNote-RN) | SwarmNote 移动端（Expo + React Native） | 开发中 |
-| [swarm-p2p-core](https://github.com/yexiyue/swarm-p2p) | P2P 网络 SDK（libp2p 封装） | 已完成 |
+| [SwarmNote-RN](https://github.com/swarm-apps/SwarmNote-RN) | SwarmNote 移动端（Expo + React Native） | 开发中 |
+| [swarm-p2p-core](https://github.com/swarm-apps/swarm-p2p) | P2P 网络 SDK（libp2p 封装） | 已完成 |
 
 ## 路线图
 
 - [x] **v0.1** — 工具链与基础设施（Tauri 2 · React 19 · Cargo workspace）
 - [x] **v0.2** — 单机笔记编辑 + P2P 网络 + 设备配对（**当前**）
 - [ ] **v0.3** — 跨设备实时同步（GossipSub + Yjs CRDT）
-- [ ] **v0.4** — 移动端首个可用版本（[SwarmNote-RN](https://github.com/yexiyue/SwarmNote-RN)）
+- [ ] **v0.4** — 移动端首个可用版本（[SwarmNote-RN](https://github.com/swarm-apps/SwarmNote-RN)）
 - [ ] **v0.5** — 工作区共享 + 端到端加密
 - [ ] **v1.0** — 实时协作 + 全文搜索 + MCP 集成
 

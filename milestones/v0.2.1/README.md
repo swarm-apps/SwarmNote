@@ -60,13 +60,13 @@ graph TD
 
 | 功能 | 优先级 | 依赖 | Feature 文档 | Issue |
 |------|--------|------|-------------|-------|
-| 设备连接类型识别 | P0 | - | [device-connection-type.md](features/device-connection-type.md) | [#44](https://github.com/yexiyue/SwarmNote/issues/44) |
-| 侧边栏同步状态增强 | P0 | - | [sidebar-sync-status.md](features/sidebar-sync-status.md) | [#45](https://github.com/yexiyue/SwarmNote/issues/45) |
-| 后端工作区列表交换 API | P0 | - | [workspace-list-api.md](features/workspace-list-api.md) | [#46](https://github.com/yexiyue/SwarmNote/issues/46) |
-| 桌面端自动更新 | P0 | - | [auto-update.md](features/auto-update.md) | [#47](https://github.com/yexiyue/SwarmNote/issues/47) |
-| 设置页重组 + 同步 Tab | P0 | 连接类型识别 | [settings-sync-tab.md](features/settings-sync-tab.md) | [#48](https://github.com/yexiyue/SwarmNote/issues/48) |
-| 引导页 P2P 流程改造 | P0 | 设置页重组 | [onboarding-p2p-flow.md](features/onboarding-p2p-flow.md) | [#49](https://github.com/yexiyue/SwarmNote/issues/49) |
-| Workspace Picker 同步入口 | P0 | 设置页重组, 后端 API | [workspace-sync-picker.md](features/workspace-sync-picker.md) | [#50](https://github.com/yexiyue/SwarmNote/issues/50) |
+| 设备连接类型识别 | P0 | - | [device-connection-type.md](features/device-connection-type.md) | [#44](https://github.com/swarm-apps/SwarmNote/issues/44) |
+| 侧边栏同步状态增强 | P0 | - | [sidebar-sync-status.md](features/sidebar-sync-status.md) | [#45](https://github.com/swarm-apps/SwarmNote/issues/45) |
+| 后端工作区列表交换 API | P0 | - | [workspace-list-api.md](features/workspace-list-api.md) | [#46](https://github.com/swarm-apps/SwarmNote/issues/46) |
+| 桌面端自动更新 | P0 | - | [auto-update.md](features/auto-update.md) | [#47](https://github.com/swarm-apps/SwarmNote/issues/47) |
+| 设置页重组 + 同步 Tab | P0 | 连接类型识别 | [settings-sync-tab.md](features/settings-sync-tab.md) | [#48](https://github.com/swarm-apps/SwarmNote/issues/48) |
+| 引导页 P2P 流程改造 | P0 | 设置页重组 | [onboarding-p2p-flow.md](features/onboarding-p2p-flow.md) | [#49](https://github.com/swarm-apps/SwarmNote/issues/49) |
+| Workspace Picker 同步入口 | P0 | 设置页重组, 后端 API | [workspace-sync-picker.md](features/workspace-sync-picker.md) | [#50](https://github.com/swarm-apps/SwarmNote/issues/50) |
 
 ## 验收标准
 
@@ -107,4 +107,4 @@ graph TD
 
 - 开始日期：v0.2.0 发布后
 - 目标发布日期：待定
-- Milestone：[v0.2.1](https://github.com/yexiyue/SwarmNote/milestone/4)
+- Milestone：[v0.2.1](https://github.com/swarm-apps/SwarmNote/milestone/4)

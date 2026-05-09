@@ -24,7 +24,7 @@ const androidApk = latestMobile?.assets.find((a) => a.platform === "android") ??
 const RELEASE = {
   version: latestDesktop?.version ?? "0.3.1",
   publishedAt: formatPublishedAt(latestDesktop?.publishedAt ?? "", lang),
-  url: latestDesktop?.url ?? "https://github.com/yexiyue/SwarmNote/releases",
+  url: latestDesktop?.url ?? "https://github.com/swarm-apps/SwarmNote/releases",
 };
 
 const subtitleTemplate = t("download.subtitleTemplate")
@@ -89,7 +89,7 @@ const platforms: Platform[] = [
   {
     key: "android",
     available: !!androidApk,
-    link: androidApk?.downloadUrl ?? "https://github.com/yexiyue/SwarmNote-RN/releases",
+    link: androidApk?.downloadUrl ?? "https://github.com/swarm-apps/SwarmNote-RN/releases",
     fileHint: androidApk ? ".apk · arm64/x64" : undefined,
     version: latestMobile?.version,
     pendingMsg: t("download.android.placeholder"),
@@ -98,7 +98,7 @@ const platforms: Platform[] = [
   {
     key: "ios",
     available: false,
-    link: "https://github.com/yexiyue/SwarmNote-RN",
+    link: "https://github.com/swarm-apps/SwarmNote-RN",
     pendingMsg: t("download.ios.placeholder"),
     pendingLinkLabel: t("download.ios.linkLabel"),
   },

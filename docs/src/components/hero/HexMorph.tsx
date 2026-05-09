@@ -362,7 +362,7 @@ export default function HexMorph(): React.ReactElement {
       {/* 顶部 cycling tagline */}
       <div className="absolute top-16 left-0 right-0 px-6 max-w-5xl mx-auto text-center" style={{ zIndex: 20 }}>
         <a
-          href="https://github.com/yexiyue/SwarmNote"
+          href="https://github.com/swarm-apps/SwarmNote"
           className="inline-flex items-center gap-2 px-3 py-1 text-xs font-medium text-muted-foreground border border-border rounded-full bg-card/90 backdrop-blur hover:text-primary hover:border-primary transition-colors"
         >
           <span className="size-1.5 rounded-full bg-primary"></span>
@@ -559,7 +559,7 @@ export default function HexMorph(): React.ReactElement {
             免费下载
           </a>
           <a
-            href="https://github.com/yexiyue/SwarmNote"
+            href="https://github.com/swarm-apps/SwarmNote"
             className="px-5 py-2.5 rounded-lg border border-border bg-background/80 backdrop-blur text-foreground hover:bg-accent transition-colors"
           >
             在 GitHub 上查看

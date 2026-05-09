@@ -37,7 +37,7 @@
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDI3MTA0MTRDNzM0OTlBQzgKUldUSW1rbHpURUVRSjBsN1g0c3R1OGxVdTNEVmozcjFwYUkvekNXMWNUNzJHZGM4RVhsTndlZVEK",
       "endpoints": [
         "https://api.upgrade.toolsetlink.com/v1/tauri/upgrade?tauriKey=TODO_REPLACE_WITH_TAURI_KEY&versionName={{current_version}}&target={{target}}&arch={{arch}}",
-        "https://github.com/yexiyue/SwarmNote/releases/latest/download/latest.json"
+        "https://github.com/swarm-apps/SwarmNote/releases/latest/download/latest.json"
       ],
       "windows": {
         "installMode": "passive"

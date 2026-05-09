@@ -111,7 +111,7 @@ app.plugin(tauri_plugin_updater::Builder::new().build())?;
       "pubkey": "<minisign 公钥>",
       "endpoints": [
         "https://api.upgrade.toolsetlink.com/v1/tauri/upgrade?tauriKey=<KEY>&versionName={{current_version}}&target={{target}}&arch={{arch}}",
-        "https://github.com/yexiyue/SwarmNote/releases/latest/download/latest.json"
+        "https://github.com/swarm-apps/SwarmNote/releases/latest/download/latest.json"
       ]
     }
   }

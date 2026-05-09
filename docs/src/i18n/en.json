@@ -154,29 +154,29 @@
         "title": "Product",
         "items": [
           { "label": "Download", "href": "/en/download" },
-          { "label": "Changelog", "href": "https://github.com/yexiyue/SwarmNote/releases" }
+          { "label": "Changelog", "href": "https://github.com/swarm-apps/SwarmNote/releases" }
         ]
       },
       "develop": {
         "title": "Develop",
         "items": [
-          { "label": "GitHub", "href": "https://github.com/yexiyue/SwarmNote" },
-          { "label": "Issues", "href": "https://github.com/yexiyue/SwarmNote/issues" },
-          { "label": "Contributing", "href": "https://github.com/yexiyue/SwarmNote/blob/main/README.md" }
+          { "label": "GitHub", "href": "https://github.com/swarm-apps/SwarmNote" },
+          { "label": "Issues", "href": "https://github.com/swarm-apps/SwarmNote/issues" },
+          { "label": "Contributing", "href": "https://github.com/swarm-apps/SwarmNote/blob/main/README.md" }
         ]
       },
       "legal": {
         "title": "Legal",
         "items": [
           { "label": "Privacy", "href": "/en/legal/privacy" },
-          { "label": "License (MIT)", "href": "https://github.com/yexiyue/SwarmNote/blob/main/LICENSE" }
+          { "label": "License (MIT)", "href": "https://github.com/swarm-apps/SwarmNote/blob/main/LICENSE" }
         ]
       },
       "ecosystem": {
         "title": "Ecosystem",
         "items": [
-          { "label": "SwarmDrop", "href": "https://github.com/yexiyue/swarmdrop" },
-          { "label": "swarm-p2p-core", "href": "https://github.com/yexiyue/swarm-p2p" }
+          { "label": "SwarmDrop", "href": "https://github.com/swarm-apps/SwarmDrop" },
+          { "label": "swarm-p2p-core", "href": "https://github.com/swarm-apps/swarm-p2p" }
         ]
       }
     },

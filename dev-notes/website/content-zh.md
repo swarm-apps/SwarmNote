@@ -81,7 +81,7 @@
 ## 09 Swarm 生态
 
 - **H1**：Swarm 系列开源项目
-- **导语**：所有项目共享 [`swarm-p2p-core`](https://github.com/yexiyue/swarm-p2p) 网络层
+- **导语**：所有项目共享 [`swarm-p2p-core`](https://github.com/swarm-apps/swarm-p2p) 网络层
 - **卡片**：
   - **SwarmDrop** — 去中心化文件传输（"跨网络版 LocalSend"）
   - **SwarmNote** — P2P 笔记同步（你正在看的这个）

@@ -7,7 +7,7 @@ All notable changes to SwarmNote will be documented in this file.\n
 """
 body = """
 {%- macro remote_url() -%}
-  https://github.com/yexiyue/SwarmNote
+  https://github.com/swarm-apps/SwarmNote
 {%- endmacro -%}
 
 {% if version -%}

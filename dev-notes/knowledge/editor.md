@@ -6,7 +6,7 @@
 
 调用链：`React (NoteEditor) → createEditor() → CM6 EditorView → ySync extension ↔ Y.Text`
 
-- 编辑器核心：`packages/editor/`（submodule：`yexiyue/swarmnote-editor`），桌面端和移动端共享
+- 编辑器核心：`packages/editor/`（submodule：`swarm-apps/swarmnote-editor`），桌面端和移动端共享
 - 桌面端 React 容器：`src/components/editor/NoteEditor.tsx`
 - 文档大纲：`src/components/editor/DocumentOutline.tsx`（基于 `extractHeadings`）
 

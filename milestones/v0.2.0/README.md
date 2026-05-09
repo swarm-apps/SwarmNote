@@ -83,16 +83,16 @@ graph TD
 
 | 功能 | 优先级 | 依赖 | Feature 文档 | Issue |
 |------|--------|------|-------------|-------|
-| **多工作区 per-window** | **P0** | **-** | [multi-workspace-window.md](features/multi-workspace-window.md) | [#22](https://github.com/yexiyue/SwarmNote/issues/22) |
-| swarm-p2p-core 集成 | P0 | - | [p2p-core-integration.md](features/p2p-core-integration.md) | [#24](https://github.com/yexiyue/SwarmNote/issues/24) |
-| Markdown ↔ Y.Doc 转换器 | P0 | - | [markdown-yrs-converter.md](features/markdown-yrs-converter.md) | [#37](https://github.com/yexiyue/SwarmNote/issues/37) |
-| 设备发现与配对 | P0 | p2p-core | [device-pairing.md](features/device-pairing.md) | [#26](https://github.com/yexiyue/SwarmNote/issues/26) |
-| 编辑器 yjs 集成 | P0 | 多工作区, 转换器 | [yjs-editor.md](features/yjs-editor.md) | [#27](https://github.com/yexiyue/SwarmNote/issues/27) |
-| yjs CRDT 同步 | P0 | 设备配对, 编辑器 yjs, 转换器 | [crdt-sync.md](features/crdt-sync.md) | [#28](https://github.com/yexiyue/SwarmNote/issues/28) |
-| 离线合并 | P0 | yjs CRDT 同步 | [offline-merge.md](features/offline-merge.md) | [#29](https://github.com/yexiyue/SwarmNote/issues/29) |
-| 设备状态 UI | P1 | yjs CRDT 同步, 离线合并 | [device-status-ui.md](features/device-status-ui.md) | [#30](https://github.com/yexiyue/SwarmNote/issues/30) |
-| v0.2.0 UI 设计 | P1 | 设备配对, 设备状态 UI | [ui-design.md](features/ui-design.md) | [#31](https://github.com/yexiyue/SwarmNote/issues/31) |
-| 工作区自定义忽略规则 | P2 | - | [workspace-ignore-filter.md](features/workspace-ignore-filter.md) | [#25](https://github.com/yexiyue/SwarmNote/issues/25) |
+| **多工作区 per-window** | **P0** | **-** | [multi-workspace-window.md](features/multi-workspace-window.md) | [#22](https://github.com/swarm-apps/SwarmNote/issues/22) |
+| swarm-p2p-core 集成 | P0 | - | [p2p-core-integration.md](features/p2p-core-integration.md) | [#24](https://github.com/swarm-apps/SwarmNote/issues/24) |
+| Markdown ↔ Y.Doc 转换器 | P0 | - | [markdown-yrs-converter.md](features/markdown-yrs-converter.md) | [#37](https://github.com/swarm-apps/SwarmNote/issues/37) |
+| 设备发现与配对 | P0 | p2p-core | [device-pairing.md](features/device-pairing.md) | [#26](https://github.com/swarm-apps/SwarmNote/issues/26) |
+| 编辑器 yjs 集成 | P0 | 多工作区, 转换器 | [yjs-editor.md](features/yjs-editor.md) | [#27](https://github.com/swarm-apps/SwarmNote/issues/27) |
+| yjs CRDT 同步 | P0 | 设备配对, 编辑器 yjs, 转换器 | [crdt-sync.md](features/crdt-sync.md) | [#28](https://github.com/swarm-apps/SwarmNote/issues/28) |
+| 离线合并 | P0 | yjs CRDT 同步 | [offline-merge.md](features/offline-merge.md) | [#29](https://github.com/swarm-apps/SwarmNote/issues/29) |
+| 设备状态 UI | P1 | yjs CRDT 同步, 离线合并 | [device-status-ui.md](features/device-status-ui.md) | [#30](https://github.com/swarm-apps/SwarmNote/issues/30) |
+| v0.2.0 UI 设计 | P1 | 设备配对, 设备状态 UI | [ui-design.md](features/ui-design.md) | [#31](https://github.com/swarm-apps/SwarmNote/issues/31) |
+| 工作区自定义忽略规则 | P2 | - | [workspace-ignore-filter.md](features/workspace-ignore-filter.md) | [#25](https://github.com/swarm-apps/SwarmNote/issues/25) |
 
 ## 验收标准
 
@@ -138,4 +138,4 @@ graph TD
 
 - 开始日期：v0.1.0 发布后
 - 目标发布日期：待定
-- Milestone：[v0.2.0](https://github.com/yexiyue/SwarmNote/milestone/2)
+- Milestone：[v0.2.0](https://github.com/swarm-apps/SwarmNote/milestone/2)

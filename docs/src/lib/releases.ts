@@ -48,8 +48,8 @@ export interface ReleasesData {
 }
 
 // ---------- 配置 ----------
-const DESKTOP_REPO = "yexiyue/SwarmNote";
-const MOBILE_REPO = "yexiyue/SwarmNote-RN";
+const DESKTOP_REPO = "swarm-apps/SwarmNote";
+const MOBILE_REPO = "swarm-apps/SwarmNote-RN";
 const HISTORY_LIMIT = 10;
 const FETCH_TIMEOUT_MS = 10_000;
 

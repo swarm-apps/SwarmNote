@@ -102,7 +102,7 @@ function AboutPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => openUrl("https://github.com/yexiyue/SwarmNote/releases")}
+            onClick={() => openUrl("https://github.com/swarm-apps/SwarmNote/releases")}
           >
             <FileText className="h-3.5 w-3.5" />
             <Trans>更新日志</Trans>
@@ -112,14 +112,14 @@ function AboutPage() {
 
       {/* Bottom Links */}
       <div className="absolute bottom-6 flex items-center gap-4">
-        <LinkButton icon={Code2} label="GitHub" url="https://github.com/yexiyue/SwarmNote" />
+        <LinkButton icon={Code2} label="GitHub" url="https://github.com/swarm-apps/SwarmNote" />
         <Separator orientation="vertical" className="h-3" />
-        <LinkButton icon={BookOpen} label={t`文档`} url="https://yexiyue.github.io/SwarmNote/" />
+        <LinkButton icon={BookOpen} label={t`文档`} url="https://swarm-apps.github.io/SwarmNote/" />
         <Separator orientation="vertical" className="h-3" />
         <LinkButton
           icon={MessageSquare}
           label={t`反馈`}
-          url="https://github.com/yexiyue/SwarmNote/issues"
+          url="https://github.com/swarm-apps/SwarmNote/issues"
         />
       </div>
     </div>

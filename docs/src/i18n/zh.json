@@ -154,29 +154,29 @@
         "title": "产品",
         "items": [
           { "label": "下载", "href": "/download" },
-          { "label": "更新日志", "href": "https://github.com/yexiyue/SwarmNote/releases" }
+          { "label": "更新日志", "href": "https://github.com/swarm-apps/SwarmNote/releases" }
         ]
       },
       "develop": {
         "title": "开发",
         "items": [
-          { "label": "GitHub", "href": "https://github.com/yexiyue/SwarmNote" },
-          { "label": "提交 Issue", "href": "https://github.com/yexiyue/SwarmNote/issues" },
-          { "label": "贡献指南", "href": "https://github.com/yexiyue/SwarmNote/blob/main/README.md" }
+          { "label": "GitHub", "href": "https://github.com/swarm-apps/SwarmNote" },
+          { "label": "提交 Issue", "href": "https://github.com/swarm-apps/SwarmNote/issues" },
+          { "label": "贡献指南", "href": "https://github.com/swarm-apps/SwarmNote/blob/main/README.md" }
         ]
       },
       "legal": {
         "title": "法律",
         "items": [
           { "label": "隐私", "href": "/legal/privacy" },
-          { "label": "许可证 (MIT)", "href": "https://github.com/yexiyue/SwarmNote/blob/main/LICENSE" }
+          { "label": "许可证 (MIT)", "href": "https://github.com/swarm-apps/SwarmNote/blob/main/LICENSE" }
         ]
       },
       "ecosystem": {
         "title": "生态",
         "items": [
-          { "label": "SwarmDrop", "href": "https://github.com/yexiyue/swarmdrop" },
-          { "label": "swarm-p2p-core", "href": "https://github.com/yexiyue/swarm-p2p" }
+          { "label": "SwarmDrop", "href": "https://github.com/swarm-apps/SwarmDrop" },
+          { "label": "swarm-p2p-core", "href": "https://github.com/swarm-apps/swarm-p2p" }
         ]
       }
     },
