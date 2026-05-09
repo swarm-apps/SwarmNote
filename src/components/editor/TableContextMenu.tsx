@@ -1,5 +1,5 @@
 import { useLingui } from "@lingui/react/macro";
-import type { TableAlignment, TableContextMenuActions } from "@swarmnote/editor";
+import type { TableAlignment, TableContextMenuActions } from "@swarmnote/editor-core";
 import {
   AlignCenter,
   AlignJustify,

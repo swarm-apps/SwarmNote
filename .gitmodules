@@ -1,6 +1,3 @@
 [submodule "libs"]
 	path = libs
 	url = https://github.com/swarm-apps/swarm-p2p.git
-[submodule "packages/editor"]
-	path = packages/editor
-	url = https://github.com/swarm-apps/swarmnote-editor.git

@@ -3,7 +3,7 @@ import {
   DEFAULT_SELECTION_FORMATTING,
   type EditorControl,
   type SelectionFormatting,
-} from "@swarmnote/editor";
+} from "@swarmnote/editor-core";
 import {
   Bold,
   Code,

@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/react/macro";
-import { extractHeadings, type HeadingItem } from "@swarmnote/editor";
+import { extractHeadings, type HeadingItem } from "@swarmnote/editor-core";
 import { ListTree } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 

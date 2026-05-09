@@ -6,33 +6,49 @@
 
 调用链：`React (NoteEditor) → createEditor() → CM6 EditorView → ySync extension ↔ Y.Text`
 
-- 编辑器核心：`packages/editor/`（submodule：`swarm-apps/swarmnote-editor`），桌面端和移动端共享
+- 编辑器内核：`@swarmnote/editor-core`（独立仓 [`swarm-apps/swarmnote-editor`](https://github.com/swarm-apps/swarmnote-editor)，pnpm workspace monorepo），桌面端和移动端共享
 - 桌面端 React 容器：`src/components/editor/NoteEditor.tsx`
 - 文档大纲：`src/components/editor/DocumentOutline.tsx`（基于 `extractHeadings`）
 
-## @swarmnote/editor 是 git submodule
+## @swarmnote/editor-core 是外部 sibling 仓 + pnpm link
 
-`packages/editor/` 有独立 Git 仓库。修改编辑器核心代码的流程：
+`@swarmnote/editor-core` 不再是主仓的 submodule，而是独立 repo `swarm-apps/swarmnote-editor`。本地通过 `pnpm.overrides` 把包名解析到 sibling 路径 `../swarmnote-editor/packages/editor-core`，所以 sibling 必须 clone 到与 SwarmNote 同级目录。
+
+### Local development with editor-core
+
+修改编辑器内核代码的流程：
 
 ```bash
-# 1. 在 submodule 内修改、提交、推送
-cd packages/editor
-git add .
-git commit -m "feat: ..."
-git push origin main
+# 1. 在 sibling 仓启动 watch（每次改源码自动 rebuild dist）
+cd ../swarmnote-editor
+pnpm dev    # tsdown --watch on @swarmnote/editor-core
 
-# 2. 回到主仓库，更新 submodule 引用
-cd ../..
-git add packages/editor
-git commit -m "chore: update editor submodule"
+# 2. 主仓另开终端跑 dev，dist 变化会自动反映
+cd ../SwarmNote
+pnpm tauri dev
+```
+
+提交流程：
+
+```bash
+# 1. 在 sibling 仓内分支提交、push、开 PR
+cd ../swarmnote-editor
+git checkout -b feat/...
+git add . && git commit -m "feat: ..."
+git push -u origin feat/...
+# → swarm-apps/swarmnote-editor PR
+
+# 2. sibling PR 合并后，主仓的 link target 即指向新版 main，无需主仓任何改动
+#    （未来 npm 化后，主仓 package.json 改版本号 + 删除 pnpm.overrides 即可切换）
 ```
 
 **关键注意**：
-- 主仓库只记录 submodule 指向的 commit hash。**子模块 push 必须先于主仓库 push**，否则远端 submodule 指针指向不存在的 commit
-- 不要在主仓库层面直接改 `packages/editor/` 内的文件然后在主仓库提交——那样不会推到 submodule 仓库
-- 拉取最新 submodule：`git submodule update --remote packages/editor`
 
-**相关文件**：`packages/editor/`（submodule）、`.gitmodules`
+- sibling 必须 clone 到 `../swarmnote-editor`（package.json 的 `pnpm.overrides` 锚定该相对路径）
+- 主仓不再有 submodule 链路——把"先 push submodule 再 bump 主仓 pointer"那套规则忘掉
+- CI 通过 `git clone` 把 sibling 拉到 `${{ github.workspace }}/../swarmnote-editor` 然后 build；主仓 install 自动用 link
+
+**相关文件**：主仓 `package.json::pnpm.overrides`、`.github/workflows/ci.yml`、sibling 仓 `packages/editor-core/`
 
 ## Y.Doc 关键约束
 
@@ -82,7 +98,7 @@ const field = StateField.define<DecorationSet>({
 
 图片、代码块、表格这些跨行 widget 都遵循这个模式。
 
-**相关文件**：`packages/editor/src/extensions/renderBlockImages.ts`、`renderBlockCode.ts`、`renderBlockTables.ts`
+**相关文件**：`../swarmnote-editor/packages/editor-core/src/extensions/renderBlockImages.ts`、`renderBlockCode.ts`、`renderBlockTables.ts`
 
 ### Collaboration 模式初始化时必须 seed 文档
 
@@ -96,7 +112,7 @@ if (collaboration) {
 }
 ```
 
-**相关文件**：`packages/editor/src/createEditor.ts`
+**相关文件**：`../swarmnote-editor/packages/editor-core/src/createEditor.ts`
 
 ### 禁用 EDIT_CONTEXT
 
@@ -108,7 +124,7 @@ Android WebView（移动端场景）上必须禁用，桌面端也一并禁用�
 
 不要删掉这行。
 
-**相关文件**：`packages/editor/src/createEditor.ts`
+**相关文件**：`../swarmnote-editor/packages/editor-core/src/createEditor.ts`
 
 ### Ctrl+B 快捷键冲突
 
@@ -142,7 +158,7 @@ const imageResolver = useCallback(
 );
 ```
 
-**相关文件**：`src/components/editor/NoteEditor.tsx`、`packages/editor/src/extensions/renderBlockImages.ts`
+**相关文件**：`src/components/editor/NoteEditor.tsx`、`../swarmnote-editor/packages/editor-core/src/extensions/renderBlockImages.ts`
 
 ### P2P 媒体到达后刷新 widget
 
@@ -165,19 +181,19 @@ const imageResolver = useCallback(
 
 光标进入图片范围（block 是整行，inline 是 `[node.from, node.to]`）→ 跳过 emission，露出原始 markdown 源码可编辑。
 
-**相关文件**：`packages/editor/src/extensions/renderBlockImages.ts`
+**相关文件**：`../swarmnote-editor/packages/editor-core/src/extensions/renderBlockImages.ts`
 
 ### Lezer `Image.parent === Link` = 图片链接
 
 `[![alt](img)](href)` 在 lezer 树里是 `Link > Image`。`getLinkedImageInfo()` 用 `parent.getChild('URL')`/`parent.getChild('LinkTitle')` 提取链接 href + title（不要手写 nextSibling 走，已踩坑过）。命中后用 Link 的整个范围作 `Decoration.replace`，避免外层 `[` 和 `](url)` 露出。widget 加底部右下/右上的外链按钮，Ctrl/Cmd-click 图片或点按钮触发跳转。
 
-**相关文件**：`packages/editor/src/extensions/renderBlockImages.ts::getLinkedImageInfo`
+**相关文件**：`../swarmnote-editor/packages/editor-core/src/extensions/renderBlockImages.ts::getLinkedImageInfo`
 
 ### 跳转链接：走 `editorEventCallback` Facet 派发 LinkOpen
 
 Tauri webview 默认安全策略屏蔽 `window.open`——所有链接打开都走 `editorEventCallback` Facet 派发 `EditorEventType.LinkOpen` 事件，由 host (`NoteEditor.tsx::onEvent`) 调 `@tauri-apps/plugin-opener` 的 `openUrl()`。markdown link 的 ctrl-click、图片链接按钮、HTML `<a>` 内嵌链接 ctrl-click 全部统一这条管道。
 
-**相关文件**：`packages/editor/src/extensions/renderBlockImages.ts::dispatchLinkOpen`、`packages/editor/src/extensions/renderRawHtml.ts::attachLinkInterceptor`、`src/components/editor/NoteEditor.tsx::onEvent` 的 `LinkOpen` 分支
+**相关文件**：`../swarmnote-editor/packages/editor-core/src/extensions/renderBlockImages.ts::dispatchLinkOpen`、`../swarmnote-editor/packages/editor-core/src/extensions/renderRawHtml.ts::attachLinkInterceptor`、`src/components/editor/NoteEditor.tsx::onEvent` 的 `LinkOpen` 分支
 
 ## 原生 HTML 渲染（renderRawHtml.ts）
 
@@ -188,11 +204,11 @@ Tauri webview 默认安全策略屏蔽 `window.open`——所有链接打开都�
 - `<br>` 包装的 span 必须 `display: inline`（不是 inline-block），否则 `<br>` 的换行被困在 wrapper 内不传播到外层段落
 - 表格单元格 `<br>`：`renderInlineMarkdown.ts` 用 PUA 占位符在 escapeHtml 之前抽出 `<br>`，结尾还原——不抽出会被 `&lt;br&gt;` 转义掉
 
-**相关文件**：`packages/editor/src/extensions/renderRawHtml.ts`、`packages/editor/src/utils/renderInlineMarkdown.ts`
+**相关文件**：`../swarmnote-editor/packages/editor-core/src/extensions/renderRawHtml.ts`、`../swarmnote-editor/packages/editor-core/src/utils/renderInlineMarkdown.ts`
 
 ## Admonition / Callout
 
-GFM `> [!NOTE]` 与 Obsidian `> **NOTE**` 双语法兼容（`packages/editor/src/extensions/admonition/`）。Obsidian 风格圆角填充盒，Lucide SVG 图标 + label，cursor 进入块内任意位置 → 整块切源码模式。
+GFM `> [!NOTE]` 与 Obsidian `> **NOTE**` 双语法兼容（`../swarmnote-editor/packages/editor-core/src/extensions/admonition/`）。Obsidian 风格圆角填充盒，Lucide SVG 图标 + label，cursor 进入块内任意位置 → 整块切源码模式。
 
 ### 关键约束
 
@@ -201,7 +217,7 @@ GFM `> [!NOTE]` 与 Obsidian `> **NOTE**` 双语法兼容（`packages/editor/src
 3. **标题 widget 用 `block: true` Decoration.replace**——之前用 inline replace + line decoration 重叠，CodeMirror reconciliation 在「装饰从无到有再到无」循环中可能掉装饰。block widget 自带完整 DOM（含 bg/圆角），独立行，不依赖 line decoration。
 4. **行号迭代用 `state.doc.line(n)`**——之前用 `rawText.split(/\n>/)` + cursor offset 推导每行偏移，在 CJK + 行边界 `\n` 上有 off-by-one。直接 `lineAt(node.from).number` 起、`lineAt(node.to).number` 止逐号取行最稳。
 
-**相关文件**：`packages/editor/src/extensions/admonition/admonitionExtension.ts`、`presets.ts`（Lucide SVG icons）
+**相关文件**：`../swarmnote-editor/packages/editor-core/src/extensions/admonition/admonitionExtension.ts`、`presets.ts`（Lucide SVG icons）
 
 ## 大纲提取
 
@@ -211,16 +227,17 @@ GFM `> [!NOTE]` 与 Obsidian `> **NOTE**` 双语法兼容（`packages/editor/src
 - 返回 `HeadingItem[]`：`{ level, text, offset }`
 - 订阅 `editorChangeTick`（zustand）做 debounce re-parse，默认 300ms
 
-**相关文件**：`packages/editor/src/utils/extractHeadings.ts`、`src/components/editor/DocumentOutline.tsx`
+**相关文件**：`../swarmnote-editor/packages/editor-core/src/utils/extractHeadings.ts`、`src/components/editor/DocumentOutline.tsx`
 
 ## 修改编辑器包后的构建
 
-桌面端通过 pnpm workspace 直接 symlink `packages/editor/`，**不需要手动 build bundle**（和移动端的 WebView 方案不同）。但：
+主仓通过 `pnpm.overrides` 把 `@swarmnote/editor-core` link 到 `../swarmnote-editor/packages/editor-core/dist/`——所以**必须有 dist 产物**才能跑。日常开发用 watch 模式：
 
-- 修改 `packages/editor/src/**/*.ts` 后，TypeScript 检查跑 `pnpm --filter @swarmnote/editor typecheck`
-- Vite dev server 能直接 hot-reload。不需要 rebuild
+- 在 sibling 仓跑 `pnpm dev`（= `tsdown --watch`），修改 `../swarmnote-editor/packages/editor-core/src/**/*.ts` 后 dist 自动重建
+- 主仓 Vite dev server 监听 `node_modules/@swarmnote/editor-core` symlink target 的 dist 变化，HMR 自动 reload
+- TypeScript 检查在 sibling 仓跑：`(cd ../swarmnote-editor && pnpm -r typecheck)`
 
-**相关文件**：`packages/editor/package.json`、`pnpm-workspace.yaml`
+**相关文件**：`../swarmnote-editor/packages/editor-core/package.json`、`../swarmnote-editor/packages/editor-core/tsdown.config.ts`、主仓 `package.json::pnpm.overrides`
 
 ## 协作光标 (Awareness) — 生命周期与去重
 
@@ -313,7 +330,7 @@ shadcn 的 `<ContextMenu>` 已经处理了 `oncontextmenu` 拦截、Portal 位�
 
 ### `toggleHighlight` / `toggleBlockquote` 在编辑器子仓 — 跨仓提交序
 
-两个命令现位于 `packages/editor/src/editorCommands/markdown.ts`（highlight 与 strike 同 helper）和 `packages/editor/src/editorCommands/blockquote.ts`（独立文件，行级前缀切换，模式照搬 `list.ts`）。`@swarmnote/editor` 是 git submodule，更改后**必须**先 push 子仓再 bump 主仓 pointer，否则远端 submodule 指针悬空。
+两个命令现位于 `../swarmnote-editor/packages/editor-core/src/editorCommands/markdown.ts`（highlight 与 strike 同 helper）和 `../swarmnote-editor/packages/editor-core/src/editorCommands/blockquote.ts`（独立文件，行级前缀切换，模式照搬 `list.ts`）。`@swarmnote/editor-core` 是独立仓，改动走 sibling 仓 PR；本地 link 模式下主仓自动反映最新 dist，不需要主仓任何 commit。
 
 新键位：
 - `Mod-Shift-=` → `toggleHighlight`
@@ -321,7 +338,7 @@ shadcn 的 `<ContextMenu>` 已经处理了 `oncontextmenu` 拦截、Portal 位�
 
 `Mod-Shift-h` 已被 `cycleHeading` 占用，不要重用。
 
-**相关文件**：`packages/editor/src/editorCommands/markdown.ts`、`packages/editor/src/editorCommands/blockquote.ts`、`packages/editor/src/createEditor.ts::buildFormatKeymap`
+**相关文件**：`../swarmnote-editor/packages/editor-core/src/editorCommands/markdown.ts`、`../swarmnote-editor/packages/editor-core/src/editorCommands/blockquote.ts`、`../swarmnote-editor/packages/editor-core/src/createEditor.ts::buildFormatKeymap`
 
 ## Live Preview 装饰层
 
@@ -381,4 +398,4 @@ CM6 默认配置 + 暖色品牌系统会导致 selection 与 activeLine 撞色�
 - 现在的值：`activeLine: 'transparent'`、`.cm-activeLineGutter: { backgroundColor: 'transparent' }`、`selection alpha 0.30 (light) / 0.35 (dark)`
 - 取舍：用户失去"光标在哪行"的视觉锚点，依赖 caret 自身。Live Preview 模式下用户感知主要靠光标本身，可接受
 
-**相关文件**：`packages/editor/src/extensions/inlineRendering/addFormattingClasses.ts`、`packages/editor/src/extensions/inlineRendering/replaceFormatCharacters.ts`、`packages/editor/src/extensions/markdownDecorationExtension.ts`、`packages/editor/src/theme/createTheme.ts`
+**相关文件**：`../swarmnote-editor/packages/editor-core/src/extensions/inlineRendering/addFormattingClasses.ts`、`../swarmnote-editor/packages/editor-core/src/extensions/inlineRendering/replaceFormatCharacters.ts`、`../swarmnote-editor/packages/editor-core/src/extensions/markdownDecorationExtension.ts`、`../swarmnote-editor/packages/editor-core/src/theme/createTheme.ts`
