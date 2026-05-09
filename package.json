@@ -19,7 +19,10 @@
     "onlyBuiltDependencies": [
       "lefthook",
       "esbuild"
-    ]
+    ],
+    "overrides": {
+      "@swarmnote/editor-core": "link:../swarmnote-editor/packages/editor-core"
+    }
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.8",
@@ -27,7 +30,7 @@
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@lingui/core": "^5.9.3",
     "@lingui/react": "^5.9.3",
-    "@swarmnote/editor": "workspace:*",
+    "@swarmnote/editor-core": "*",
     "@tailwindcss/vite": "^4.2.2",
     "@tanstack/react-router": "^1.168.1",
     "@tauri-apps/api": "^2.10.1",

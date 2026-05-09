@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@swarmnote/editor-core': link:../swarmnote-editor/packages/editor-core
+
 importers:
 
   .:
@@ -23,9 +26,9 @@ importers:
       '@lingui/react':
         specifier: ^5.9.3
         version: 5.9.3(@lingui/babel-plugin-lingui-macro@5.9.3(typescript@5.8.3))(react@19.2.4)
-      '@swarmnote/editor':
-        specifier: workspace:*
-        version: link:packages/editor
+      '@swarmnote/editor-core':
+        specifier: link:../swarmnote-editor/packages/editor-core
+        version: link:../swarmnote-editor/packages/editor-core
       '@tailwindcss/vite':
         specifier: ^4.2.2
         version: 4.2.2(vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))
