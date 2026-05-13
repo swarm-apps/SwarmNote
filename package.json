@@ -21,7 +21,8 @@
       "esbuild"
     ],
     "overrides": {
-      "@swarmnote/editor-core": "link:../swarmnote-editor/packages/editor-core"
+      "@swarmnote/editor-core": "link:../swarmnote-editor/packages/editor-core",
+      "@swarmnote/editor-react": "link:../swarmnote-editor/packages/editor-react"
     }
   },
   "dependencies": {
@@ -31,6 +32,7 @@
     "@lingui/core": "^5.9.3",
     "@lingui/react": "^5.9.3",
     "@swarmnote/editor-core": "*",
+    "@swarmnote/editor-react": "*",
     "@tailwindcss/vite": "^4.2.2",
     "@tanstack/react-router": "^1.168.1",
     "@tauri-apps/api": "^2.10.1",

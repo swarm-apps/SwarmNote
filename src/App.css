@@ -4,6 +4,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Scan @swarmnote/editor-react built output so Tailwind picks up className
+   string literals used inside the component library (e.g. EditorToolbar). */
+@source "../../swarmnote-editor/packages/editor-react/dist/**/*.{mjs,cjs,d.mts,d.cts}";
+
 @plugin "tailwind-scrollbar";
 
 @custom-variant hover-none (@media (hover: none));
