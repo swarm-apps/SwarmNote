@@ -36,6 +36,7 @@ import {
   bumpSlashMru,
   getSlashItems,
   getWikilinkItems,
+  resolveInternalLink,
 } from "@/components/editor/interactionProviders";
 import { SelectionToolbar } from "@/components/editor/SelectionToolbar";
 import { SlashCommandPopover } from "@/components/editor/SlashCommandPopover";
@@ -292,6 +293,13 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
         resolveImage: imageResolver,
         uploadFile,
         openLink: (url) => {
+          // Resolve wikilink target / .md relative path → load note
+          const internal = resolveInternalLink(url);
+          if (internal) {
+            useEditorStore.getState().loadDocument(internal.id, internal.title, internal.id);
+            return;
+          }
+          // Fall back to system browser for external URLs
           openUrl(url).catch(() => {
             // URL may be malformed or blocked — silent.
           });
@@ -317,12 +325,17 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
             actions: event.actions,
           });
         } else if (event.kind === EditorEventType.LinkOpen) {
-          // Markdown link Ctrl/Cmd-click + image-link button click both
-          // route here. window.open is unreliable inside Tauri webview, so
-          // delegate to plugin-opener which uses the system default browser.
-          openUrl(event.url).catch(() => {
-            // URL may be malformed or blocked — silent.
-          });
+          // Ctrl/Cmd-click on markdown link / wikilink / image link routes
+          // here. First try to resolve as an internal note (wikilink target
+          // or .md path); fall back to system browser for external URLs.
+          const internal = resolveInternalLink(event.url);
+          if (internal) {
+            useEditorStore.getState().loadDocument(internal.id, internal.title, internal.id);
+          } else {
+            openUrl(event.url).catch(() => {
+              // URL may be malformed or blocked — silent.
+            });
+          }
         } else if (event.kind === EditorEventType.SlashTriggerChange) {
           setSlashMatch(event.match.active ? event.match : null);
         } else if (event.kind === EditorEventType.WikilinkTriggerChange) {

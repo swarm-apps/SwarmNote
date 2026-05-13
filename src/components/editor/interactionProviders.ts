@@ -25,12 +25,21 @@ function basename(relPath: string): string {
   return last.replace(/\.md$/i, "");
 }
 
-/**
- * MRU registry of recently-used slash item ids. Persisted to localStorage so
- * users see their favourites near the top across sessions (Notion-style).
- *
- * The list is most-recent-first; `bumpSlashMru(id)` lifts an id to the head.
- */
+/** Snapshot notes from fileTreeStore matching `query` (empty → first N). */
+function matchNotes(query: string): FileTreeNode[] {
+  const trimmed = query.trim().toLowerCase();
+  const notes = flattenNotes(useFileTreeStore.getState().tree);
+  if (!trimmed) return notes.slice(0, MAX_NOTE_JUMP_ITEMS);
+  return notes
+    .filter((n) => basename(n.id).toLowerCase().includes(trimmed))
+    .slice(0, MAX_NOTE_JUMP_ITEMS);
+}
+
+// ---------------------------------------------------------------------------
+// MRU: persist recently-confirmed slash item ids to localStorage so favourites
+// surface at the top across sessions (Notion-style).
+// ---------------------------------------------------------------------------
+
 function readMru(): string[] {
   try {
     const raw = localStorage.getItem(MRU_STORAGE_KEY);
@@ -55,136 +64,115 @@ export function bumpSlashMru(id: string): void {
   writeMru([id, ...cur.filter((x) => x !== id)]);
 }
 
-/** Build a static block-item catalog (Heading / List / Quote / Divider / Date). */
-function basicBlockItems(): SlashItem[] {
-  return [
-    {
-      id: "heading.1",
-      title: "Heading 1",
-      description: "Top-level section heading",
-      icon: "H₁",
-      keywords: ["h1", "heading", "标题"],
+// ---------------------------------------------------------------------------
+// Basic block catalog — module-level since SlashItem.run closures only look up
+// editorControl lazily through the store; no per-call captured state.
+// ---------------------------------------------------------------------------
+
+const HEADING_LEVELS: ReadonlyArray<{ level: 1 | 2 | 3; icon: string; description: string }> = [
+  { level: 1, icon: "H₁", description: "Top-level section heading" },
+  { level: 2, icon: "H₂", description: "Section heading" },
+  { level: 3, icon: "H₃", description: "Subsection heading" },
+];
+
+const BASIC_BLOCK_ITEMS: readonly SlashItem[] = [
+  ...HEADING_LEVELS.map(
+    ({ level, icon, description }): SlashItem => ({
+      id: `heading.${level}`,
+      title: `Heading ${level}`,
+      description,
+      icon,
+      keywords: [`h${level}`, "heading", "标题"],
       section: "Basic",
       run: () => {
-        useEditorStore.getState().editorControl?.execCommand("toggleHeading", 1);
+        useEditorStore.getState().editorControl?.execCommand("toggleHeading", level);
       },
+    }),
+  ),
+  {
+    id: "list.bulleted",
+    title: "Bulleted list",
+    description: "Insert an unordered list",
+    icon: "•",
+    keywords: ["list", "bullet", "unordered", "无序列表"],
+    section: "Basic",
+    commandId: "toggleUnorderedList",
+  },
+  {
+    id: "list.numbered",
+    title: "Numbered list",
+    description: "Insert an ordered list",
+    icon: "1.",
+    keywords: ["list", "ordered", "numbered", "有序列表"],
+    section: "Basic",
+    commandId: "toggleOrderedList",
+  },
+  {
+    id: "list.check",
+    title: "Check list",
+    description: "Insert a todo / checkbox list",
+    icon: "☐",
+    keywords: ["check", "todo", "task", "任务", "复选"],
+    section: "Basic",
+    commandId: "toggleCheckList",
+  },
+  {
+    id: "quote",
+    title: "Quote",
+    description: "Insert a blockquote",
+    icon: "❝",
+    keywords: ["quote", "blockquote", "引用"],
+    section: "Basic",
+    commandId: "toggleBlockquote",
+  },
+  {
+    id: "divider",
+    title: "Divider",
+    description: "Insert a horizontal rule",
+    icon: "—",
+    keywords: ["divider", "hr", "separator", "分割线"],
+    section: "Basic",
+    commandId: "insertHorizontalRule",
+  },
+  {
+    id: "date.today",
+    title: "Today's date",
+    description: "Insert YYYY-MM-DD at cursor",
+    icon: "📅",
+    keywords: ["date", "today", "日期", "今天"],
+    section: "Basic",
+    run: ({ view, range }) => {
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const insert = `${yyyy}-${mm}-${dd}`;
+      view.dispatch({
+        changes: { from: range.from, insert },
+        selection: { anchor: range.from + insert.length },
+      });
     },
-    {
-      id: "heading.2",
-      title: "Heading 2",
-      description: "Section heading",
-      icon: "H₂",
-      keywords: ["h2", "heading", "标题"],
-      section: "Basic",
-      run: () => {
-        useEditorStore.getState().editorControl?.execCommand("toggleHeading", 2);
-      },
-    },
-    {
-      id: "heading.3",
-      title: "Heading 3",
-      description: "Subsection heading",
-      icon: "H₃",
-      keywords: ["h3", "heading", "标题"],
-      section: "Basic",
-      run: () => {
-        useEditorStore.getState().editorControl?.execCommand("toggleHeading", 3);
-      },
-    },
-    {
-      id: "list.bulleted",
-      title: "Bulleted list",
-      description: "Insert an unordered list",
-      icon: "•",
-      keywords: ["list", "bullet", "unordered", "无序列表"],
-      section: "Basic",
-      commandId: "toggleUnorderedList",
-    },
-    {
-      id: "list.numbered",
-      title: "Numbered list",
-      description: "Insert an ordered list",
-      icon: "1.",
-      keywords: ["list", "ordered", "numbered", "有序列表"],
-      section: "Basic",
-      commandId: "toggleOrderedList",
-    },
-    {
-      id: "list.check",
-      title: "Check list",
-      description: "Insert a todo / checkbox list",
-      icon: "☐",
-      keywords: ["check", "todo", "task", "任务", "复选"],
-      section: "Basic",
-      commandId: "toggleCheckList",
-    },
-    {
-      id: "quote",
-      title: "Quote",
-      description: "Insert a blockquote",
-      icon: "❝",
-      keywords: ["quote", "blockquote", "引用"],
-      section: "Basic",
-      commandId: "toggleBlockquote",
-    },
-    {
-      id: "divider",
-      title: "Divider",
-      description: "Insert a horizontal rule",
-      icon: "—",
-      keywords: ["divider", "hr", "separator", "分割线"],
-      section: "Basic",
-      commandId: "insertHorizontalRule",
-    },
-    {
-      id: "date.today",
-      title: "Today's date",
-      description: "Insert YYYY-MM-DD at cursor",
-      icon: "📅",
-      keywords: ["date", "today", "日期", "今天"],
-      section: "Basic",
-      run: ({ view, range }) => {
-        const now = new Date();
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, "0");
-        const dd = String(now.getDate()).padStart(2, "0");
-        const insert = `${yyyy}-${mm}-${dd}`;
-        view.dispatch({
-          changes: { from: range.from, insert },
-          selection: { anchor: range.from + insert.length },
-        });
-      },
-    },
-  ];
-}
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Host providers consumed by editor SDK
+// ---------------------------------------------------------------------------
 
 /**
- * Host implementation of `EditorHostCapabilities.getSlashItems`.
+ * Host `getSlashItems`. Returns:
+ * 1. Basic block catalog (Heading / List / Quote / Divider / Date)
+ * 2. Jump-to-note items matching query (or first 8 when empty)
  *
- * Returns three groups:
- * 1. Basic blocks (Heading / List / Quote / Divider / Date) — via commandId or run
- * 2. Notes (Jump to: <title>) — from `fileTreeStore`, fuzzy on query
- * 3. (Plugin items are merged in by the SDK from `ctx.registerSlashItems`)
- *
- * MRU items get a boosted priority so recently-used items appear near the top.
+ * MRU items get a boosted priority + "Recent" section so favourites surface
+ * at the top. Plugin items are merged in by the SDK from `ctx.registerSlashItems`.
  */
 export async function getSlashItems(query: string, signal: AbortSignal): Promise<SlashItem[]> {
   if (signal.aborted) return [];
 
-  const items: SlashItem[] = [];
-  const trimmed = query.trim().toLowerCase();
+  const items: SlashItem[] = [...BASIC_BLOCK_ITEMS];
 
-  // 1. Basic block catalog
-  items.push(...basicBlockItems());
-
-  // 2. Note jumps
-  const tree = useFileTreeStore.getState().tree;
-  const allNotes = flattenNotes(tree);
-  const matchedNotes = trimmed
-    ? allNotes.filter((n) => basename(n.id).toLowerCase().includes(trimmed))
-    : allNotes.slice(0, MAX_NOTE_JUMP_ITEMS);
-
-  for (const note of matchedNotes.slice(0, MAX_NOTE_JUMP_ITEMS)) {
+  for (const note of matchNotes(query)) {
     const title = basename(note.id);
     items.push({
       id: `jump:${note.id}`,
@@ -198,14 +186,12 @@ export async function getSlashItems(query: string, signal: AbortSignal): Promise
     });
   }
 
-  // 3. Lift MRU items via per-item priority override (SDK reads item.priority)
   const mru = readMru();
   if (mru.length > 0) {
     for (const item of items) {
       const idx = mru.indexOf(item.id);
       if (idx >= 0) {
         item.priority = MRU_PRIORITY_BASE + (MRU_LIMIT - idx);
-        // Re-section so the popover renders them in a "Recent" group
         item.section = "Recent";
       }
     }
@@ -215,33 +201,52 @@ export async function getSlashItems(query: string, signal: AbortSignal): Promise
   return items;
 }
 
-/**
- * Host implementation of `EditorHostCapabilities.getWikilinkItems`.
- *
- * Returns matching note titles from `fileTreeStore`. Empty query returns
- * the first 8 notes (lets users browse without typing).
- */
+/** Host `getWikilinkItems`. Returns matching note titles for `[[query` trigger. */
 export async function getWikilinkItems(
   query: string,
   signal: AbortSignal,
 ): Promise<WikilinkItem[]> {
   if (signal.aborted) return [];
 
-  const trimmed = query.trim().toLowerCase();
-  const tree = useFileTreeStore.getState().tree;
-  const allNotes = flattenNotes(tree);
-  const matched = trimmed
-    ? allNotes.filter((n) => basename(n.id).toLowerCase().includes(trimmed))
-    : allNotes.slice(0, MAX_NOTE_JUMP_ITEMS);
-
-  const items: WikilinkItem[] = matched.slice(0, MAX_NOTE_JUMP_ITEMS).map((note) => ({
+  const items: WikilinkItem[] = matchNotes(query).map((note) => ({
     id: note.id,
     title: basename(note.id),
     description: note.id,
     icon: "📄",
-    commit: "replaceWithLink" as const,
+    commit: "replaceWithLink",
   }));
 
   if (signal.aborted) return [];
   return items;
+}
+
+/**
+ * Resolve a `LinkOpen` event's url to an internal note. Returns null when the
+ * url should be opened as an external URL by the host.
+ *
+ * Match order:
+ * 1. External scheme (`xxx://` / `mailto:` / `tel:` ...) → null
+ * 2. `.md` path → exact match
+ * 3. Wikilink target → basename case-insensitive, then fuzzy contains
+ */
+export function resolveInternalLink(url: string): { id: string; title: string } | null {
+  if (!url) return null;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(url)) return null;
+
+  const normalized = url.startsWith("./") ? url.slice(2) : url;
+  const lowered = normalized.toLowerCase();
+  const notes = flattenNotes(useFileTreeStore.getState().tree);
+
+  if (lowered.endsWith(".md")) {
+    const hit = notes.find((n) => n.id === normalized);
+    if (hit) return { id: hit.id, title: basename(hit.id) };
+  }
+
+  const exactTitle = notes.find((n) => basename(n.id).toLowerCase() === lowered);
+  if (exactTitle) return { id: exactTitle.id, title: basename(exactTitle.id) };
+
+  const fuzzy = notes.find((n) => basename(n.id).toLowerCase().includes(lowered));
+  if (fuzzy) return { id: fuzzy.id, title: basename(fuzzy.id) };
+
+  return null;
 }
