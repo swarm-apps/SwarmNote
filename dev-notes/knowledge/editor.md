@@ -25,9 +25,24 @@
 - 桌面端 React 容器：`src/components/editor/NoteEditor.tsx`
 - 文档大纲：`src/components/editor/DocumentOutline.tsx`（基于 `extractHeadings`）
 
+## Sibling 仓 swarmnote-editor 的四包架构（v0.2 起）
+
+sibling 仓 `swarm-apps/swarmnote-editor` 现在包含 4 个包，按职责分层：
+
+| 包 | 角色 | 桌面 host 用 | RN host 用 |
+|----|------|------------|----------|
+| `@swarmnote/editor-core` | 平台无关 CM6 内核 + Plugin SDK | ✅ 直接 import | ❌ 不可直接 import（dep graph 含 web-only CodeMirror）|
+| `@swarmnote/editor-web` | WebView 内 runtime + Comlink endpoint + `dist/index.html` 单文件 | ❌ 不用 | ✅ 通过 `./contracts` subpath 拿类型 + `./dist/index.html` require 拿 WebView 资源 |
+| `@swarmnote/editor-react` | React 组件库（EditorView / EditorToolbar / I18nProvider） | ✅ 按需 import | ❌ |
+| `@swarmnote/editor-react-native` | RN 组件库（useEditorBridge / useEditorFormatting / comlink-webview-adapter / I18nProvider） | ❌ | ✅ |
+
+**设计哲学**：`editor-react` / `editor-react-native` 是**独立组件库**（类似 chakra-ui / radix-ui 范式），不是 SwarmNote 桌面 / RN 端现有组件的搬迁目标。host 是「用户之一」，可以选用内置组件，也可以自己实现。
+
+详见 OpenSpec change [`split-editor-react-packages`](../../openspec/changes/split-editor-react-packages/design.md) D12 决策。
+
 ## @swarmnote/editor-core 是外部 sibling 仓 + pnpm link
 
-`@swarmnote/editor-core` 不再是主仓的 submodule，而是独立 repo `swarm-apps/swarmnote-editor`。本地通过 `pnpm.overrides` 把包名解析到 sibling 路径 `../swarmnote-editor/packages/editor-core`，所以 sibling 必须 clone 到与 SwarmNote 同级目录。
+`@swarmnote/editor-core` 不再是主仓的 submodule，而是独立 repo `swarm-apps/swarmnote-editor`。本地通过 `pnpm.overrides` 把包名解析到 sibling 路径 `../swarmnote-editor/packages/editor-core`，所以 sibling 必须 clone 到与 SwarmNote 同级目录。v0.2 起新增 3 个 sibling 包（editor-web / editor-react / editor-react-native）同样走 `pnpm.overrides` link。
 
 ### Local development with editor-core
 

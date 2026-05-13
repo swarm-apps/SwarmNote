@@ -545,6 +545,10 @@ graph TD
 
 ## 六、建议的拆分结果
 
+> **已落实（部分）于 OpenSpec change [`split-editor-react-packages`](../../openspec/changes/split-editor-react-packages/proposal.md)（v0.2）**：sibling 仓 swarmnote-editor 已新增 3 个包（editor-web / editor-react / editor-react-native），架子搭起。
+>
+> v0.2 范围（按 design D12 修订）：包内只含**通用组件示例**（EditorView / EditorToolbar 简版 / I18nProvider）+ **干净的 hooks/adapter**（useEditorBridge / useEditorFormatting / comlink-webview-adapter）。SwarmNote 桌面的 ContextMenu / TableContextMenu 和 SwarmNote-RN 的 MarkdownEditor / EditorToolbar / EditorHeadingSheet **仍保留在 host**（业务编排级耦合，按组件库哲学留 v0.2.1 重写为通用版本）。
+
 ### 应保留在 `editor-core`
 
 - `createEditor`
