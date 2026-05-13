@@ -6,6 +6,9 @@ import {
   EditorEventType,
   type EditorPlugin,
   type EditorSettings,
+  type SelectionToolbarMatch,
+  type SlashTriggerMatch,
+  type WikilinkTriggerMatch,
 } from "@swarmnote/editor-core";
 import { admonitionPlugin } from "@swarmnote/editor-core/plugins/admonition";
 import {
@@ -13,6 +16,9 @@ import {
   refreshBlockImagesEffect,
 } from "@swarmnote/editor-core/plugins/blockImage";
 import { codeBlockPlugin } from "@swarmnote/editor-core/plugins/codeBlock";
+import { selectionToolbarPlugin } from "@swarmnote/editor-core/plugins/interactions/selectionToolbar";
+import { slashCommandPlugin } from "@swarmnote/editor-core/plugins/interactions/slash";
+import { wikilinkPlugin } from "@swarmnote/editor-core/plugins/interactions/wikilink";
 import { mathPlugin } from "@swarmnote/editor-core/plugins/math";
 import { mermaidPlugin } from "@swarmnote/editor-core/plugins/mermaid";
 import { rawHtmlPlugin } from "@swarmnote/editor-core/plugins/rawHtml";
@@ -27,10 +33,19 @@ import * as Y from "yjs";
 import { openYDoc, reloadYDocConfirmed, saveMedia } from "@/commands/document";
 import { EditorContextMenu } from "@/components/editor/EditorContextMenu";
 import {
+  bumpSlashMru,
+  getSlashItems,
+  getWikilinkItems,
+  resolveInternalLink,
+} from "@/components/editor/interactionProviders";
+import { SelectionToolbar } from "@/components/editor/SelectionToolbar";
+import { SlashCommandPopover } from "@/components/editor/SlashCommandPopover";
+import {
   initialTableContextMenuState,
   TableContextMenu,
   type TableContextMenuState,
 } from "@/components/editor/TableContextMenu";
+import { WikilinkPopover } from "@/components/editor/WikilinkPopover";
 import { colorForDevice } from "@/lib/awareness-color";
 import { TauriYjsProvider } from "@/lib/TauriYjsProvider";
 import { useEditorStore } from "@/stores/editorStore";
@@ -59,6 +74,14 @@ function buildEditorPlugins(
   if (enabled.has("blockImage")) plugins.push(blockImagePlugin());
   if (enabled.has("rawHtml")) plugins.push(rawHtmlPlugin());
   if (enabled.has("smartPaste")) plugins.push(smartPastePlugin());
+  if (enabled.has("slash"))
+    plugins.push(
+      slashCommandPlugin({
+        onItemConfirmed: (id) => bumpSlashMru(id),
+      }),
+    );
+  if (enabled.has("wikilink")) plugins.push(wikilinkPlugin());
+  if (enabled.has("selectionToolbar")) plugins.push(selectionToolbarPlugin());
   return plugins;
 }
 
@@ -164,6 +187,15 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
   const [tableMenuState, setTableMenuState] = useState<TableContextMenuState>(
     initialTableContextMenuState,
   );
+
+  // Slash command popover state — driven by `SlashTriggerChange` events.
+  const [slashMatch, setSlashMatch] = useState<SlashTriggerMatch | null>(null);
+  // Wikilink popover state — driven by `WikilinkTriggerChange` events.
+  const [wikilinkMatch, setWikilinkMatch] = useState<WikilinkTriggerMatch | null>(null);
+  // Selection toolbar state — driven by `SelectionToolbarChange` events.
+  const [selectionToolbarMatch, setSelectionToolbarMatch] = useState<SelectionToolbarMatch | null>(
+    null,
+  );
   const handleTableMenuOpenChange = useCallback((open: boolean) => {
     setTableMenuState((prev) => ({ ...prev, open }));
   }, []);
@@ -261,10 +293,19 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
         resolveImage: imageResolver,
         uploadFile,
         openLink: (url) => {
+          // Resolve wikilink target / .md relative path → load note
+          const internal = resolveInternalLink(url);
+          if (internal) {
+            useEditorStore.getState().loadDocument(internal.id, internal.title, internal.id);
+            return;
+          }
+          // Fall back to system browser for external URLs
           openUrl(url).catch(() => {
             // URL may be malformed or blocked — silent.
           });
         },
+        getSlashItems,
+        getWikilinkItems,
       },
       plugins,
       autofocus: true,
@@ -284,12 +325,23 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
             actions: event.actions,
           });
         } else if (event.kind === EditorEventType.LinkOpen) {
-          // Markdown link Ctrl/Cmd-click + image-link button click both
-          // route here. window.open is unreliable inside Tauri webview, so
-          // delegate to plugin-opener which uses the system default browser.
-          openUrl(event.url).catch(() => {
-            // URL may be malformed or blocked — silent.
-          });
+          // Ctrl/Cmd-click on markdown link / wikilink / image link routes
+          // here. First try to resolve as an internal note (wikilink target
+          // or .md path); fall back to system browser for external URLs.
+          const internal = resolveInternalLink(event.url);
+          if (internal) {
+            useEditorStore.getState().loadDocument(internal.id, internal.title, internal.id);
+          } else {
+            openUrl(event.url).catch(() => {
+              // URL may be malformed or blocked — silent.
+            });
+          }
+        } else if (event.kind === EditorEventType.SlashTriggerChange) {
+          setSlashMatch(event.match.active ? event.match : null);
+        } else if (event.kind === EditorEventType.WikilinkTriggerChange) {
+          setWikilinkMatch(event.match.active ? event.match : null);
+        } else if (event.kind === EditorEventType.SelectionToolbarChange) {
+          setSelectionToolbarMatch(event.match.active ? event.match : null);
         }
       },
     });
@@ -500,6 +552,9 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
         onChange={handleFileInputChange}
       />
       <TableContextMenu state={tableMenuState} onOpenChange={handleTableMenuOpenChange} />
+      <SlashCommandPopover match={slashMatch} control={editorControl} />
+      <WikilinkPopover match={wikilinkMatch} control={editorControl} />
+      <SelectionToolbar match={selectionToolbarMatch} control={editorControl} />
     </>
   );
 }

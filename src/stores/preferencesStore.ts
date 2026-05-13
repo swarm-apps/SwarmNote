@@ -16,6 +16,9 @@ export const EDITOR_PLUGIN_IDS = [
   "blockImage",
   "rawHtml",
   "smartPaste",
+  "slash",
+  "wikilink",
+  "selectionToolbar",
 ] as const;
 
 export type EditorPluginId = (typeof EDITOR_PLUGIN_IDS)[number];

@@ -429,3 +429,85 @@ CM6 默认配置 + 暖色品牌系统会导致 selection 与 activeLine 撞色�
 - 取舍：用户失去"光标在哪行"的视觉锚点，依赖 caret 自身。Live Preview 模式下用户感知主要靠光标本身，可接受
 
 **相关文件**：`../swarmnote-editor/packages/editor-core/src/extensions/inlineRendering/addFormattingClasses.ts`、`../swarmnote-editor/packages/editor-core/src/extensions/inlineRendering/replaceFormatCharacters.ts`、`../swarmnote-editor/packages/editor-core/src/extensions/markdownDecorationExtension.ts`、`../swarmnote-editor/packages/editor-core/src/theme/createTheme.ts`
+
+## Interaction trigger 三类（v0.3 interaction trio）
+
+`add-editor-interaction-trio-v03`（v0.3）落地 slash / wikilink / selectionToolbar 三个内置 interaction plugin，把 v0.1 全部 `@unstable` SDK 表面提升 stable。
+
+### 抽象分家：CharTrigger family vs Selection family
+
+- **CharTrigger family**（slash / wikilink）共用 SDK 内部 helper `src/internal/charTriggerStateMachine.ts`：trigger char 检测 / IME 排除 / syntaxTree 排除 code/math/frontmatter / debounce 150ms / AbortSignal / query token 防 stale 结果。两个 plugin 各自传不同 trigger 序列 + commit 逻辑
+- **Selection family**（selectionToolbar）独立 ViewPlugin：监听 selectionSet + focusChanged + docChanged。100ms debounce dismiss + immediate dismiss on blur
+
+### Payload DOM-agnostic + screenRect 异步
+
+所有 `*TriggerMatch` payload 不含 `EditorView` / DOM 引用。anchor 走 CM document offset；`screenRect?` 由 web plugin 通过 `view.requestMeasure({ read, write })` 异步算（**不能** 在 update phase 直接调 `view.coordsAtPos`，否则 CM6 抛 "Reading the editor layout isn't allowed during an update"）。
+
+### SDK 表面 (stable since v0.3)
+
+```text
+ctx.registerSlashItems(provider)            ctx.on(event, listener)
+ctx.registerWikilinkItems(provider)         host.getSlashItems(query, signal)
+ctx.registerSelectionToolbarActions(arr)    host.getWikilinkItems(query, signal)
+                                            host.getSelectionToolbarActions?(selection)
+
+EditorEventType.SlashTriggerChange      payload: SlashTriggerMatch
+EditorEventType.WikilinkTriggerChange   payload: WikilinkTriggerMatch
+EditorEventType.SelectionToolbarChange  payload: SelectionToolbarMatch
+
+9 commands: slash.{next,prev,confirm,confirmAt,dismiss}
+            wikilink.{...}
+            selectionToolbar.dismiss
+```
+
+`SlashItem` / `WikilinkItem` / `SelectionToolbarAction` 类型主入口 re-export，第三方 plugin 可自由 import 使用。
+
+### execCommandFacet 接通 SlashItem.commandId
+
+createEditor 内部用 mutable ref pattern 把 `control.execCommand` 注入 `execCommandFacet`，plugin runtime 通过 `view.state.facet(execCommandFacet)` 调任意已注册命令。SlashItem 写 `{ commandId: 'toggleHeading' }` 即可在 popover 选中后调命令，避免每个 item 写 inline run。
+
+### 点击 popover 不工作的坑
+
+popover item 必须用 `<button onMouseDown>` 而**不**是 `<button onClick>`：
+
+- 编辑器 `blur` 在 `mouseup` 之前 fire
+- blur → 触发 `*TriggerChange { active: false }` → popover 立即 unmount
+- click 永远收不到
+
+修复：`onMouseDown` + `e.preventDefault()` 阻止焦点转移；调 `*.confirmAt(index)` 命令（**不**是 dispatch 多次 `next` + 一次 `confirm`，那样会因 React 重渲染抖动）。
+
+### Notion-style UX
+
+- 6 个内置 plugin（math/table/mermaid/codeBlock/blockImage/admonition）各自 `ctx.registerSlashItems` 注册自己的 `/math` `/table` `/code` 等 items
+- Host 端 `interactionProviders.ts` 注册 basic block items（Heading 1/2/3 / List / Quote / Divider / Date）+ Jump-to-note items
+- MRU localStorage（key `swarmnote.slash.mru`，上限 20）：host 给最近用过的 items 赋 `priority = 300+` + section `"Recent"`，popover 自然顶置
+
+### 第三方 plugin 注册示例
+
+```ts
+function myPlugin(): EditorPlugin {
+  return {
+    id: 'org.example.my',
+    setup(ctx) {
+      ctx.registerSlashItems({
+        id: 'my.builtin',
+        provide: () => [{
+          id: 'my.timestamp',
+          title: 'Timestamp',
+          icon: '🕒',
+          section: 'Insert',
+          keywords: ['time', '时间戳'],
+          // 二选一：commandId 引用已注册命令，或 run 自定义 commit
+          run: ({ view, range }) => {
+            view.dispatch({ changes: { from: range.from, insert: new Date().toISOString() } });
+          },
+        }],
+      });
+    },
+  };
+}
+```
+
+**相关文件**：
+- sibling: `../swarmnote-editor/packages/editor-core/src/internal/charTriggerStateMachine.ts`、`src/plugins/interactions/{slash,wikilink,selectionToolbar}/index.ts`、`src/pluginHost.ts`（facets + register* runtime）
+- host: `src/components/editor/{SlashCommandPopover,WikilinkPopover,SelectionToolbar,interactionProviders}.tsx`、`src/components/editor/NoteEditor.tsx`（onEvent 路由）
