@@ -28,7 +28,7 @@ import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "reac
 import * as Y from "yjs";
 import { openYDoc, reloadYDocConfirmed, saveMedia } from "@/commands/document";
 import { EditorContextMenu } from "@/components/editor/EditorContextMenu";
-import { getSlashItems } from "@/components/editor/interactionProviders";
+import { bumpSlashMru, getSlashItems } from "@/components/editor/interactionProviders";
 import { SlashCommandPopover } from "@/components/editor/SlashCommandPopover";
 import {
   initialTableContextMenuState,
@@ -63,7 +63,12 @@ function buildEditorPlugins(
   if (enabled.has("blockImage")) plugins.push(blockImagePlugin());
   if (enabled.has("rawHtml")) plugins.push(rawHtmlPlugin());
   if (enabled.has("smartPaste")) plugins.push(smartPastePlugin());
-  if (enabled.has("slash")) plugins.push(slashCommandPlugin());
+  if (enabled.has("slash"))
+    plugins.push(
+      slashCommandPlugin({
+        onItemConfirmed: (id) => bumpSlashMru(id),
+      }),
+    );
   return plugins;
 }
 
