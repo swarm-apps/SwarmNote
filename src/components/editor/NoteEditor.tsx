@@ -6,6 +6,7 @@ import {
   EditorEventType,
   type EditorPlugin,
   type EditorSettings,
+  type SelectionToolbarMatch,
   type SlashTriggerMatch,
   type WikilinkTriggerMatch,
 } from "@swarmnote/editor-core";
@@ -15,6 +16,7 @@ import {
   refreshBlockImagesEffect,
 } from "@swarmnote/editor-core/plugins/blockImage";
 import { codeBlockPlugin } from "@swarmnote/editor-core/plugins/codeBlock";
+import { selectionToolbarPlugin } from "@swarmnote/editor-core/plugins/interactions/selectionToolbar";
 import { slashCommandPlugin } from "@swarmnote/editor-core/plugins/interactions/slash";
 import { wikilinkPlugin } from "@swarmnote/editor-core/plugins/interactions/wikilink";
 import { mathPlugin } from "@swarmnote/editor-core/plugins/math";
@@ -35,6 +37,7 @@ import {
   getSlashItems,
   getWikilinkItems,
 } from "@/components/editor/interactionProviders";
+import { SelectionToolbar } from "@/components/editor/SelectionToolbar";
 import { SlashCommandPopover } from "@/components/editor/SlashCommandPopover";
 import {
   initialTableContextMenuState,
@@ -77,6 +80,7 @@ function buildEditorPlugins(
       }),
     );
   if (enabled.has("wikilink")) plugins.push(wikilinkPlugin());
+  if (enabled.has("selectionToolbar")) plugins.push(selectionToolbarPlugin());
   return plugins;
 }
 
@@ -187,6 +191,10 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
   const [slashMatch, setSlashMatch] = useState<SlashTriggerMatch | null>(null);
   // Wikilink popover state — driven by `WikilinkTriggerChange` events.
   const [wikilinkMatch, setWikilinkMatch] = useState<WikilinkTriggerMatch | null>(null);
+  // Selection toolbar state — driven by `SelectionToolbarChange` events.
+  const [selectionToolbarMatch, setSelectionToolbarMatch] = useState<SelectionToolbarMatch | null>(
+    null,
+  );
   const handleTableMenuOpenChange = useCallback((open: boolean) => {
     setTableMenuState((prev) => ({ ...prev, open }));
   }, []);
@@ -319,6 +327,8 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
           setSlashMatch(event.match.active ? event.match : null);
         } else if (event.kind === EditorEventType.WikilinkTriggerChange) {
           setWikilinkMatch(event.match.active ? event.match : null);
+        } else if (event.kind === EditorEventType.SelectionToolbarChange) {
+          setSelectionToolbarMatch(event.match.active ? event.match : null);
         }
       },
     });
@@ -531,6 +541,7 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
       <TableContextMenu state={tableMenuState} onOpenChange={handleTableMenuOpenChange} />
       <SlashCommandPopover match={slashMatch} control={editorControl} />
       <WikilinkPopover match={wikilinkMatch} control={editorControl} />
+      <SelectionToolbar match={selectionToolbarMatch} control={editorControl} />
     </>
   );
 }

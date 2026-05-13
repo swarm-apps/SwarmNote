@@ -9,6 +9,7 @@ import {
   Globe,
   Image as ImageIcon,
   Link as LinkIcon,
+  MousePointer,
   Palette,
   Puzzle,
   Sigma,
@@ -122,6 +123,12 @@ function GeneralSettingsPage() {
       icon: LinkIcon,
       label: t`Wikilink`,
       description: t`输入 [[ 触发笔记选择，插入 [[note-title]] 链接`,
+    },
+    {
+      id: "selectionToolbar",
+      icon: MousePointer,
+      label: t`Selection 工具栏`,
+      description: t`选中文字时浮出格式化工具栏（粗体 / 斜体 / 链接 等）`,
     },
   ];
 
