@@ -4,9 +4,20 @@ import {
   DEFAULT_SETTINGS,
   type EditorControl,
   EditorEventType,
+  type EditorPlugin,
   type EditorSettings,
-  refreshBlockImagesEffect,
 } from "@swarmnote/editor-core";
+import { admonitionPlugin } from "@swarmnote/editor-core/plugins/admonition";
+import {
+  blockImagePlugin,
+  refreshBlockImagesEffect,
+} from "@swarmnote/editor-core/plugins/blockImage";
+import { codeBlockPlugin } from "@swarmnote/editor-core/plugins/codeBlock";
+import { mathPlugin } from "@swarmnote/editor-core/plugins/math";
+import { mermaidPlugin } from "@swarmnote/editor-core/plugins/mermaid";
+import { rawHtmlPlugin } from "@swarmnote/editor-core/plugins/rawHtml";
+import { smartPastePlugin } from "@swarmnote/editor-core/plugins/smartPaste";
+import { tablePlugin } from "@swarmnote/editor-core/plugins/table";
 import { convertFileSrc, invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { confirm } from "@tauri-apps/plugin-dialog";
@@ -23,8 +34,33 @@ import {
 import { colorForDevice } from "@/lib/awareness-color";
 import { TauriYjsProvider } from "@/lib/TauriYjsProvider";
 import { useEditorStore } from "@/stores/editorStore";
+import { type EditorPluginId, usePreferencesStore } from "@/stores/preferencesStore";
 import { useUIStore } from "@/stores/uiStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
+
+/**
+ * 根据 preferencesStore 当前快照构造 `plugins[]` 数组。
+ *
+ * 由于 CM6 扩展集合在 `EditorState.create` 时一次性 freeze，本函数仅在
+ * editor 挂载时读取 snapshot —— 用户切换 plugin 启用状态后需要新开
+ * 编辑器（key remount）才能反映。
+ */
+function buildEditorPlugins(
+  enabledPluginIds: readonly EditorPluginId[],
+  codeBlockMode: "inline" | "auto" | "toggle",
+): EditorPlugin[] {
+  const enabled = new Set<EditorPluginId>(enabledPluginIds);
+  const plugins: EditorPlugin[] = [];
+  if (enabled.has("math")) plugins.push(mathPlugin());
+  if (enabled.has("table")) plugins.push(tablePlugin());
+  if (enabled.has("mermaid")) plugins.push(mermaidPlugin());
+  if (enabled.has("admonition")) plugins.push(admonitionPlugin());
+  if (enabled.has("codeBlock")) plugins.push(codeBlockPlugin({ mode: codeBlockMode }));
+  if (enabled.has("blockImage")) plugins.push(blockImagePlugin());
+  if (enabled.has("rawHtml")) plugins.push(rawHtmlPlugin());
+  if (enabled.has("smartPaste")) plugins.push(smartPastePlugin());
+  return plugins;
+}
 
 interface YjsContext {
   ydoc: Y.Doc;
@@ -182,8 +218,19 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
     [wsPath],
   );
 
+  // Upload handler: save a single dropped/pasted file to workspace media,
+  // returning the rel-path + alt for smartPaste plugin to insert as Markdown.
+  const uploadFile = useCallback(async (file: File): Promise<{ url: string; alt?: string }> => {
+    const rel = useEditorStore.getState().relPath;
+    if (!rel) throw new Error("no relPath");
+    const buffer = await file.arrayBuffer();
+    const bytes = Array.from(new Uint8Array(buffer));
+    const savedRel = await saveMedia(rel, file.name, bytes);
+    return { url: savedRel, alt: file.name };
+  }, []);
+
   // Mount the CM6 editor once per Y.Doc (collaboration mode).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: ydoc drives the editor lifecycle; resolvedTheme and imageResolver are applied reactively in sibling effects
+  // biome-ignore lint/correctness/useExhaustiveDependencies: ydoc drives the editor lifecycle; resolvedTheme / host capabilities / plugins are read from store snapshot at mount and don't trigger remount
   useEffect(() => {
     const parent = containerRef.current;
     if (!parent) return;
@@ -196,6 +243,12 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
       },
     };
 
+    // Read plugin enablement snapshot at mount. CM6 extensions are frozen at
+    // EditorState.create() time, so plugin toggles only take effect on the
+    // next editor mount (document switch or app reload).
+    const prefs = usePreferencesStore.getState();
+    const plugins = buildEditorPlugins(prefs.enabledPlugins, prefs.codeBlockMode);
+
     const control = createEditor(parent, {
       initialText: "",
       settings: initialSettings,
@@ -204,7 +257,16 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
         fragmentName: "document",
         awareness: provider.awareness,
       },
-      imageResolver,
+      host: {
+        resolveImage: imageResolver,
+        uploadFile,
+        openLink: (url) => {
+          openUrl(url).catch(() => {
+            // URL may be malformed or blocked — silent.
+          });
+        },
+      },
+      plugins,
       autofocus: true,
       onEvent: (event) => {
         if (event.kind === EditorEventType.Change) {

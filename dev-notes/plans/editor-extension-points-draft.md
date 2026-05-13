@@ -1,5 +1,17 @@
 # Editor Extension Points Draft
 
+> ⚠️ **SUPERSEDED（2026-05-12）**
+>
+> 本文档抽象出的"六类扩展点"已被具体的 `EditorPluginContext` 接口取代。**最终架构请见 [editor-plugin-architecture.md](./editor-plugin-architecture.md)**。
+>
+> 主要变化：
+>
+> - 六类抽象 → `registerCommands` / `registerCmExtensions` / `registerMarkdownRenderer` / `host` （stable）+ `registerSlashItems` / `registerTrigger` / `on` （@unstable）的具体接口
+> - "Phase A 应用内可扩展 → Phase B 包级扩展 → Phase C 运行时插件"路线 → 直接走 **Model B 全量**，内置 plugin 一步到位按 `EditorPlugin` 重写
+> - "EditorHostCapabilities 草案"已 finalize 并写入 plugin architecture 文档
+>
+> 本文档保留为思考过程（thinking trail），不再作为最终架构来源。
+
 ## 目的
 
 这份草案回答的问题是：

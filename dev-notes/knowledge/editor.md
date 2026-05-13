@@ -6,6 +6,21 @@
 
 调用链：`React (NoteEditor) → createEditor() → CM6 EditorView → ySync extension ↔ Y.Text`
 
+### Plugin SDK (v0.1)
+
+`@swarmnote/editor-core` v0.1 起以 plugin SDK 形式重构。8 个功能（math / table / mermaid / admonition / codeBlock / blockImage / rawHtml / smartPaste）**默认不启用**，宿主必须通过 `createEditor(..., { plugins: [...] })` 显式传入。
+
+**关键约束**：
+- Plugin 工厂从 subpath import：`@swarmnote/editor-core/plugins/<name>`，main 入口不再 re-export
+- 宿主能力（resolveImage / uploadFile / openLink）通过 `host: EditorHostCapabilities` 注入；旧顶层 `imageResolver` / `uploadFile` 已 `@deprecated`（仍工作但会桥接）
+- Plugin 启用状态在 `createEditor` 时 freeze，**切换 plugin 启用状态后必须新开文档 / 重启应用才能生效**
+- `refreshBlockImagesEffect` 从 main 入口下架，改从 `@swarmnote/editor-core/plugins/blockImage` 拿
+- `EditorFeatureToggles` 仅保留 5 个字段：`markdownHighlight` / `markdownDecorations` / `inlineRendering` / `search` / `collaboration`
+
+**宿主侧 plugin 配置**：`src/stores/preferencesStore.ts::enabledPlugins` + `codeBlockMode` 持久化用户启用状态；`migrateLegacyFeatures` 防御性处理 v0.0.x 旧 `features.*` key（idempotent）。
+
+**详见**：[dev-notes/plans/editor-plugin-architecture.md](../plans/editor-plugin-architecture.md)、`openspec/changes/add-editor-plugin-sdk-v01/`
+
 - 编辑器内核：`@swarmnote/editor-core`（独立仓 [`swarm-apps/swarmnote-editor`](https://github.com/swarm-apps/swarmnote-editor)，pnpm workspace monorepo），桌面端和移动端共享
 - 桌面端 React 容器：`src/components/editor/NoteEditor.tsx`
 - 文档大纲：`src/components/editor/DocumentOutline.tsx`（基于 `extractHeadings`）

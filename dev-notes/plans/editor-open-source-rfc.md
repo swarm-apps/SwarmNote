@@ -1,5 +1,7 @@
 # RFC: 将 SwarmNote 编辑器重构为可开箱即用的开源 Markdown 编辑器
 
+> **更新（2026-05-12）**：本 RFC 仍是顶层路线说明。具体的 plugin 架构、包边界、`EditorPluginContext` 形状、内置 plugin 清单与分阶段实施细节已在 [editor-plugin-architecture.md](./editor-plugin-architecture.md) 中收敛。下方"包结构建议"与"分阶段实施建议"两节按该决定对齐。
+
 ## 背景
 
 当前 SwarmNote 编辑器已经具备一套比较完整的能力：
@@ -261,6 +263,8 @@ graph TD
 ---
 
 ## 包结构建议
+
+> **2026-05-12 收敛**：v0.1 选择**单包 + subpath export** 路线——所有内置插件（math/table/mermaid 等）以 `@swarmnote/editor-core/plugins/<name>` 形式提供，未来抽成独立 npm 包仅需改 import 路径。`editor-react` / `editor-react-native` 仍作为后续 sibling 包推进。详见 [editor-plugin-architecture.md](./editor-plugin-architecture.md#subpath-export-策略)。
 
 第一阶段不一定立即拆成独立仓库，但建议先按以下逻辑收敛目录边界。
 
@@ -592,6 +596,8 @@ createEditor(parent, {
 
 ## 分阶段实施建议
 
+> **2026-05-12 收敛**：原 Phase 1-5 描述偏边界整理路线；实际选择走 **Model B 全量 + 内置 plugin 全部重写** 的更激进路线。最终 Phase 表见 [editor-plugin-architecture.md 后续路线](./editor-plugin-architecture.md#后续路线均为无破坏性扩展)。本节保留为思考记录。
+
 ### Phase 1：清理边界
 
 目标：先让 core / host / UI 的职责更干净。
@@ -674,9 +680,9 @@ createEditor(parent, {
 
 ## 开放问题
 
-1. `packages/editor` 是否继续沿用 submodule 形式，还是在开源前迁移为独立 monorepo/workspace？
-2. interaction core 是放进 `editor-core`，还是单独拆成 `editor-interactions`？
-3. React Web 默认 UI 是否要内置一套“官方工具栏/菜单”，还是只提供 hooks 与 headless 状态？
+1. ~~`packages/editor` 是否继续沿用 submodule 形式，还是在开源前迁移为独立 monorepo/workspace？~~ **已闭环**：迁移为 sibling 仓 `swarmnote-editor` 的 pnpm workspace monorepo（见 [README](../../../swarmnote-editor/README.md)）。
+2. ~~interaction core 是放进 `editor-core`，还是单独拆成 `editor-interactions`？~~ **已闭环（2026-05-12）**：作为 first-party plugin 留在 `editor-core/plugins/interactions/`，与第三方插件共用 `EditorPlugin` API。详见 [editor-plugin-architecture.md](./editor-plugin-architecture.md)。
+3. React Web 默认 UI 是否要内置一套"官方工具栏/菜单"，还是只提供 hooks 与 headless 状态？
 4. RN 端是否需要与 Web 保持相同交互形态，还是只共享语义、不共享视觉表现？
 5. collaboration 是否作为第一版开源能力公开，还是放到第二阶段？
 6. 是否需要在第一版就提供受控（controlled）模式与非受控（uncontrolled）模式两套 API？

@@ -1,5 +1,7 @@
 # Editor Core / Interaction / Host Boundary 清单
 
+> **更新（2026-05-12）**：本文档下方"interaction core"是否单独成包的问题已在 [editor-plugin-architecture.md](./editor-plugin-architecture.md) 中闭环——**interaction 作为 first-party plugin 留在 `editor-core/plugins/interactions/`**，与第三方插件共用同一 `EditorPlugin` API。本文档其余分层归类仍有效。
+
 ## 目的
 
 这份清单用于回答一个非常具体的问题：

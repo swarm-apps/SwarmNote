@@ -44,7 +44,7 @@ msgid "新建笔记"
 msgstr "New note"
 
 #. placeholder {0}: event.payload.relPath
-#: src/components/editor/NoteEditor.tsx:329
+#: src/components/editor/NoteEditor.tsx:425
 msgid "\"{0}\" 已被外部修改。是否重新加载？当前未保存的编辑将丢失。"
 msgstr "\"{0}\" was modified externally. Reload? Unsaved edits will be lost."
 
@@ -86,6 +86,22 @@ msgstr "{peerCount} devices online"
 msgid "{peerCount} 台设备在线 · 已同步"
 msgstr "{peerCount} devices online · synced"
 
+#: src/routes/settings/general.tsx:85
+msgid "Admonition"
+msgstr "Admonition"
+
+#: src/routes/settings/general.tsx:92
+msgid "fenced 代码块渲染与高亮"
+msgstr "Fenced code block rendering and highlighting"
+
+#: src/routes/settings/general.tsx:103
+msgid "HTML 渲染"
+msgstr "HTML rendering"
+
+#: src/routes/settings/general.tsx:79
+msgid "Mermaid 图表"
+msgstr "Mermaid diagrams"
+
 #: src/components/onboarding/WelcomeStep.tsx:25
 msgid "P2P 同步"
 msgstr "P2P Sync"
@@ -116,7 +132,7 @@ msgstr "Next"
 msgid "下载中..."
 msgstr "Downloading..."
 
-#: src/routes/settings/general.tsx:52
+#: src/routes/settings/general.tsx:136
 msgid "中文"
 msgstr "Chinese"
 
@@ -140,6 +156,10 @@ msgstr "Remove from list"
 #: src/routes/workspace-manager.tsx:272
 msgid "从已配对设备同步工作区到本地。{0} 台设备在线。"
 msgstr "Sync workspace from paired devices to local. {0} devices online."
+
+#: src/routes/settings/general.tsx:91
+msgid "代码块"
+msgstr "Code block"
 
 #: src/components/editor/EditorContextMenu.tsx:233
 msgid "任务列表"
@@ -185,6 +205,10 @@ msgstr "Closing P2P network will disconnect all devices and stop syncing notes."
 msgid "关闭网络"
 msgstr "Stop Network"
 
+#: src/routes/settings/general.tsx:208
+msgid "内联"
+msgstr "Inline"
+
 #. placeholder {0}: formatRelativeTime(device.lastSeen ?? null)
 #: src/components/pairing/PairedDeviceCard.tsx:41
 msgid "最后在线 {0}"
@@ -207,9 +231,25 @@ msgstr "Preparing to sync · {0} documents"
 msgid "准备就绪!"
 msgstr "Ready to Go!"
 
+#: src/routes/settings/general.tsx:210
+msgid "切换"
+msgstr "Toggle"
+
 #: src/lib/commands.ts:60
 msgid "切换侧边栏"
 msgstr "Toggle Sidebar"
+
+#: src/routes/settings/general.tsx:191
+msgid "切换插件启用状态后,需要重新打开文档或重启应用以生效。"
+msgstr "Plugin toggles take effect on next document open or app restart."
+
+#: src/components/editor/TableContextMenu.tsx:180
+msgid "切换源码"
+msgstr ""
+
+#: src/components/editor/TableContextMenu.tsx:126
+msgid "列"
+msgstr ""
 
 #: src/routes/workspace-manager.tsx:247
 msgid "创建"
@@ -228,9 +268,21 @@ msgstr "Create new workspace"
 msgid "删除"
 msgstr "Delete"
 
+#: src/components/editor/TableContextMenu.tsx:169
+msgid "删除列"
+msgstr ""
+
 #: src/components/editor/EditorContextMenu.tsx:201
 msgid "删除线"
 msgstr "Strikethrough"
+
+#: src/components/editor/TableContextMenu.tsx:118
+msgid "删除行"
+msgstr ""
+
+#: src/components/editor/TableContextMenu.tsx:189
+msgid "删除表格"
+msgstr ""
 
 #: src/routes/settings/devices.tsx:254
 msgid "刷新"
@@ -248,7 +300,7 @@ msgstr "Cut"
 msgid "加粗"
 msgstr "Bold"
 
-#: src/components/editor/NoteEditor.tsx:80
+#: src/components/editor/NoteEditor.tsx:122
 msgid "加载中..."
 msgstr "Loading..."
 
@@ -288,9 +340,13 @@ msgid "取消配对"
 msgstr "Unpair"
 
 #: src/components/editor/EditorContextMenu.tsx:284
-#: src/routes/settings/general.tsx:77
+#: src/routes/settings/general.tsx:161
 msgid "可读行宽"
 msgstr "Readable line width"
+
+#: src/components/editor/TableContextMenu.tsx:151
+msgid "右对齐"
+msgstr ""
 
 #: src/routes/workspace-manager.tsx:284
 msgid "同步"
@@ -339,7 +395,7 @@ msgstr "Start P2P network to sync workspaces"
 msgid "启动中..."
 msgstr "Starting..."
 
-#: src/routes/settings/general.tsx:94
+#: src/routes/settings/general.tsx:178
 msgid "启动时自动打开上次使用的工作区"
 msgstr "Automatically open the last-used workspace on startup"
 
@@ -347,7 +403,7 @@ msgstr "Automatically open the last-used workspace on startup"
 msgid "启动网络"
 msgstr "Start Network"
 
-#: src/routes/settings/general.tsx:88
+#: src/routes/settings/general.tsx:172
 msgid "启动行为"
 msgstr "Startup behavior"
 
@@ -355,9 +411,29 @@ msgstr "Startup behavior"
 msgid "命令面板"
 msgstr "Command palette"
 
+#: src/routes/settings/general.tsx:97
+msgid "图片渲染"
+msgstr "Image rendering"
+
+#: src/components/editor/TableContextMenu.tsx:106
+msgid "在上方新增行"
+msgstr ""
+
+#: src/components/editor/TableContextMenu.tsx:110
+msgid "在下方新增行"
+msgstr ""
+
 #: src/components/pairing/CodePairingCard.tsx:93
 msgid "在另一台设备输入此码"
 msgstr "Enter this code on another device"
+
+#: src/components/editor/TableContextMenu.tsx:134
+msgid "在右侧新增列"
+msgstr ""
+
+#: src/components/editor/TableContextMenu.tsx:130
+msgid "在左侧新增列"
+msgstr ""
 
 #: src/routes/workspace-manager.tsx:244
 msgid "在指定文件夹下创建一个新的工作区。"
@@ -375,11 +451,19 @@ msgstr "Add headings in your document to see the outline navigation"
 msgid "在线"
 msgstr "Online"
 
+#: src/components/editor/TableContextMenu.tsx:100
+msgid "在表头下方新增行"
+msgstr ""
+
 #: src/components/editor/EditorContextMenu.tsx:268
 #: src/components/pairing/CodePairingCard.tsx:101
 #: src/components/pairing/CodePairingCard.tsx:104
 msgid "复制"
 msgstr "Copy"
+
+#: src/components/editor/TableContextMenu.tsx:184
+msgid "复制为 Markdown"
+msgstr ""
 
 #: src/routes/workspace-manager.tsx:59
 msgid "复制路径"
@@ -389,8 +473,8 @@ msgstr "Copy path"
 msgid "复制配对码"
 msgstr "Copy Pairing Code"
 
-#: src/routes/settings/general.tsx:42
-#: src/routes/settings/general.tsx:59
+#: src/routes/settings/general.tsx:126
+#: src/routes/settings/general.tsx:143
 msgid "外观"
 msgstr "Appearance"
 
@@ -414,6 +498,10 @@ msgstr "Encrypted"
 msgid "完成"
 msgstr "Done"
 
+#: src/routes/settings/general.tsx:98
+msgid "将 Markdown 图片渲染为内联 / 块级 widget"
+msgstr "Render Markdown images as inline / block widgets"
+
 #: src/routes/workspace-manager.tsx:255
 msgid "将一个本地文件夹作为工作区打开。"
 msgstr "Open a local folder as a workspace."
@@ -431,6 +519,10 @@ msgstr "Share this code with the other device. It expires in {0}."
 msgid "局域网"
 msgstr "LAN"
 
+#: src/components/editor/TableContextMenu.tsx:145
+msgid "居中对齐"
+msgstr ""
+
 #: src/components/layout/TitleBar.tsx:77
 msgid "展开侧边栏"
 msgstr "Expand Sidebar"
@@ -442,6 +534,10 @@ msgstr "Workspace manager"
 #: src/components/workspace/WorkspacePopover.tsx:78
 msgid "工作区管理..."
 msgstr "Workspace manager..."
+
+#: src/components/editor/TableContextMenu.tsx:139
+msgid "左对齐"
+msgstr ""
 
 #. placeholder {0}: device.name ?? device.hostname
 #: src/components/pairing/NearbyDeviceCard.tsx:35
@@ -513,7 +609,7 @@ msgstr "Version {currentVersion} is no longer supported. Please update to {lates
 msgid "当前设备"
 msgstr "Current device"
 
-#: src/routes/settings/general.tsx:93
+#: src/routes/settings/general.tsx:177
 msgid "恢复上次工作区"
 msgstr "Restore last workspace"
 
@@ -571,6 +667,10 @@ msgstr "Hole-punch"
 msgid "找到设备"
 msgstr "Devices found"
 
+#: src/routes/settings/general.tsx:80
+msgid "把 mermaid 代码块渲染为 SVG"
+msgstr "Render mermaid code blocks as SVG"
+
 #: src/components/editor/EditorContextMenu.tsx:155
 msgid "插入"
 msgstr "Insert"
@@ -611,7 +711,11 @@ msgstr "Actions"
 msgid "收起侧边栏"
 msgstr "Collapse Sidebar"
 
-#: src/components/editor/NoteEditor.tsx:330
+#: src/routes/settings/general.tsx:67
+msgid "数学公式"
+msgstr "Math formulas"
+
+#: src/components/editor/NoteEditor.tsx:426
 msgid "文件已修改"
 msgstr "File Modified"
 
@@ -663,6 +767,10 @@ msgstr "Version {latestVersion} is available. Current version: {currentVersion}"
 #: src/components/editor/EditorContextMenu.tsx:231
 msgid "无序列表"
 msgstr "Bullet list"
+
+#: src/routes/settings/general.tsx:109
+msgid "智能粘贴"
+msgstr "Smart paste"
 
 #: src/components/settings/WorkspaceSyncList.tsx:112
 msgid "暂无工作区"
@@ -813,17 +921,25 @@ msgstr "No matching files"
 msgid "没有找到匹配的命令"
 msgstr "No matching commands found"
 
-#: src/routes/settings/general.tsx:68
+#: src/routes/settings/general.tsx:152
 msgid "浅色"
 msgstr "Light"
 
-#: src/routes/settings/general.tsx:69
+#: src/routes/settings/general.tsx:153
 msgid "深色"
 msgstr "Dark"
 
 #: src/components/onboarding/PathChoiceStep.tsx:57
 msgid "添加设备"
 msgstr "Add device"
+
+#: src/routes/settings/general.tsx:86
+msgid "渲染 GFM / Obsidian 风格的提示块"
+msgstr "Render GFM / Obsidian style admonitions"
+
+#: src/routes/settings/general.tsx:68
+msgid "渲染 KaTeX 数学公式 ($...$ / $$...$$)"
+msgstr "Render KaTeX math ($...$ / $$...$$)"
 
 #: src/routes/workspace-manager.tsx:235
 msgid "版本"
@@ -916,9 +1032,21 @@ msgstr "Waiting for connection..."
 msgid "等待设备连接"
 msgstr "Waiting for device to connect"
 
+#: src/routes/settings/general.tsx:74
+msgid "管道表格渲染为可视化卡片"
+msgstr "Render pipe tables as visual cards"
+
+#: src/routes/settings/general.tsx:110
+msgid "粘贴 URL 转链接，拖放 / 粘贴文件上传为图片"
+msgstr "Paste URLs as links; drag/paste files upload as images"
+
 #: src/routes/settings/devices.tsx:201
 msgid "编辑名称"
 msgstr "Edit name"
+
+#: src/routes/settings/general.tsx:188
+msgid "编辑器插件"
+msgstr "Editor plugins"
 
 #: src/routes/settings.tsx:27
 #: src/routes/settings/network.tsx:18
@@ -934,13 +1062,25 @@ msgstr "Network not started"
 msgid "网络设置"
 msgstr "Network settings"
 
+#: src/routes/settings/general.tsx:209
+msgid "自动"
+msgstr "Auto"
+
 #: src/components/settings/NetworkStatusCard.tsx:67
 msgid "节点启动失败"
 msgstr "Node failed to start"
 
+#: src/components/editor/TableContextMenu.tsx:95
+msgid "行"
+msgstr ""
+
 #: src/components/editor/EditorContextMenu.tsx:218
 msgid "行内代码"
 msgstr "Inline code"
+
+#: src/routes/settings/general.tsx:73
+msgid "表格"
+msgstr "Tables"
 
 #: src/routes/settings.tsx:28
 msgid "设备"
@@ -969,7 +1109,7 @@ msgstr "Device Management"
 msgid "设置"
 msgstr "Settings"
 
-#: src/routes/settings/general.tsx:46
+#: src/routes/settings/general.tsx:130
 msgid "语言"
 msgstr "Language"
 
@@ -981,7 +1121,7 @@ msgstr "Please enter a 6-digit pairing code"
 msgid "调整侧边栏宽度 (当前 {sidebarWidth} 像素)"
 msgstr "Adjust sidebar width (currently {sidebarWidth} pixels)"
 
-#: src/routes/settings/general.tsx:70
+#: src/routes/settings/general.tsx:154
 msgid "跟随系统"
 msgstr "System"
 
@@ -1062,18 +1202,22 @@ msgstr "Choose sync target folder"
 msgid "选择新工作区目录"
 msgstr "Choose new workspace folder"
 
-#: src/routes/settings/general.tsx:59
+#: src/routes/settings/general.tsx:143
 msgid "选择明亮或暗色主题"
 msgstr "Choose light or dark theme"
 
-#: src/routes/settings/general.tsx:46
+#: src/routes/settings/general.tsx:130
 msgid "选择界面显示语言"
 msgstr "Choose the interface language"
 
 #: src/routes/settings.tsx:26
-#: src/routes/settings/general.tsx:34
+#: src/routes/settings/general.tsx:118
 msgid "通用"
 msgstr "General"
+
+#: src/routes/settings/general.tsx:104
+msgid "通过 DOMPurify 渲染嵌入的原生 HTML"
+msgstr "Render embedded HTML via DOMPurify"
 
 #: src/components/pairing/NearbyDeviceCard.tsx:59
 msgid "配对"
@@ -1125,7 +1269,7 @@ msgstr "Error"
 msgid "附近设备"
 msgstr "Nearby Devices"
 
-#: src/routes/settings/general.tsx:78
+#: src/routes/settings/general.tsx:162
 msgid "限制编辑器内容宽度以提升阅读体验"
 msgstr "Limit editor content width for a more comfortable reading experience"
 
@@ -1136,3 +1280,7 @@ msgstr "Update Required"
 #: src/components/editor/EditorContextMenu.tsx:209
 msgid "高亮"
 msgstr "Highlight"
+
+#: src/components/editor/TableContextMenu.tsx:157
+msgid "默认对齐"
+msgstr ""
