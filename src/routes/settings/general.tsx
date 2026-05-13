@@ -8,6 +8,7 @@ import {
   FolderOpen,
   Globe,
   Image as ImageIcon,
+  Link as LinkIcon,
   Palette,
   Puzzle,
   Sigma,
@@ -115,6 +116,12 @@ function GeneralSettingsPage() {
       icon: Command,
       label: t`Slash 命令`,
       description: t`输入 / 触发候选菜单，快速插入或跳转笔记`,
+    },
+    {
+      id: "wikilink",
+      icon: LinkIcon,
+      label: t`Wikilink`,
+      description: t`输入 [[ 触发笔记选择，插入 [[note-title]] 链接`,
     },
   ];
 

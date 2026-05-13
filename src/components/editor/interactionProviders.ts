@@ -1,4 +1,4 @@
-import type { SlashItem } from "@swarmnote/editor-core";
+import type { SlashItem, WikilinkItem } from "@swarmnote/editor-core";
 import type { FileTreeNode } from "@/commands/fs";
 import { useEditorStore } from "@/stores/editorStore";
 import { useFileTreeStore } from "@/stores/fileTreeStore";
@@ -210,6 +210,37 @@ export async function getSlashItems(query: string, signal: AbortSignal): Promise
       }
     }
   }
+
+  if (signal.aborted) return [];
+  return items;
+}
+
+/**
+ * Host implementation of `EditorHostCapabilities.getWikilinkItems`.
+ *
+ * Returns matching note titles from `fileTreeStore`. Empty query returns
+ * the first 8 notes (lets users browse without typing).
+ */
+export async function getWikilinkItems(
+  query: string,
+  signal: AbortSignal,
+): Promise<WikilinkItem[]> {
+  if (signal.aborted) return [];
+
+  const trimmed = query.trim().toLowerCase();
+  const tree = useFileTreeStore.getState().tree;
+  const allNotes = flattenNotes(tree);
+  const matched = trimmed
+    ? allNotes.filter((n) => basename(n.id).toLowerCase().includes(trimmed))
+    : allNotes.slice(0, MAX_NOTE_JUMP_ITEMS);
+
+  const items: WikilinkItem[] = matched.slice(0, MAX_NOTE_JUMP_ITEMS).map((note) => ({
+    id: note.id,
+    title: basename(note.id),
+    description: note.id,
+    icon: "📄",
+    commit: "replaceWithLink" as const,
+  }));
 
   if (signal.aborted) return [];
   return items;

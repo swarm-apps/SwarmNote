@@ -7,6 +7,7 @@ import {
   type EditorPlugin,
   type EditorSettings,
   type SlashTriggerMatch,
+  type WikilinkTriggerMatch,
 } from "@swarmnote/editor-core";
 import { admonitionPlugin } from "@swarmnote/editor-core/plugins/admonition";
 import {
@@ -15,6 +16,7 @@ import {
 } from "@swarmnote/editor-core/plugins/blockImage";
 import { codeBlockPlugin } from "@swarmnote/editor-core/plugins/codeBlock";
 import { slashCommandPlugin } from "@swarmnote/editor-core/plugins/interactions/slash";
+import { wikilinkPlugin } from "@swarmnote/editor-core/plugins/interactions/wikilink";
 import { mathPlugin } from "@swarmnote/editor-core/plugins/math";
 import { mermaidPlugin } from "@swarmnote/editor-core/plugins/mermaid";
 import { rawHtmlPlugin } from "@swarmnote/editor-core/plugins/rawHtml";
@@ -28,13 +30,18 @@ import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "reac
 import * as Y from "yjs";
 import { openYDoc, reloadYDocConfirmed, saveMedia } from "@/commands/document";
 import { EditorContextMenu } from "@/components/editor/EditorContextMenu";
-import { bumpSlashMru, getSlashItems } from "@/components/editor/interactionProviders";
+import {
+  bumpSlashMru,
+  getSlashItems,
+  getWikilinkItems,
+} from "@/components/editor/interactionProviders";
 import { SlashCommandPopover } from "@/components/editor/SlashCommandPopover";
 import {
   initialTableContextMenuState,
   TableContextMenu,
   type TableContextMenuState,
 } from "@/components/editor/TableContextMenu";
+import { WikilinkPopover } from "@/components/editor/WikilinkPopover";
 import { colorForDevice } from "@/lib/awareness-color";
 import { TauriYjsProvider } from "@/lib/TauriYjsProvider";
 import { useEditorStore } from "@/stores/editorStore";
@@ -69,6 +76,7 @@ function buildEditorPlugins(
         onItemConfirmed: (id) => bumpSlashMru(id),
       }),
     );
+  if (enabled.has("wikilink")) plugins.push(wikilinkPlugin());
   return plugins;
 }
 
@@ -177,6 +185,8 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
 
   // Slash command popover state — driven by `SlashTriggerChange` events.
   const [slashMatch, setSlashMatch] = useState<SlashTriggerMatch | null>(null);
+  // Wikilink popover state — driven by `WikilinkTriggerChange` events.
+  const [wikilinkMatch, setWikilinkMatch] = useState<WikilinkTriggerMatch | null>(null);
   const handleTableMenuOpenChange = useCallback((open: boolean) => {
     setTableMenuState((prev) => ({ ...prev, open }));
   }, []);
@@ -279,6 +289,7 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
           });
         },
         getSlashItems,
+        getWikilinkItems,
       },
       plugins,
       autofocus: true,
@@ -306,6 +317,8 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
           });
         } else if (event.kind === EditorEventType.SlashTriggerChange) {
           setSlashMatch(event.match.active ? event.match : null);
+        } else if (event.kind === EditorEventType.WikilinkTriggerChange) {
+          setWikilinkMatch(event.match.active ? event.match : null);
         }
       },
     });
@@ -517,6 +530,7 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
       />
       <TableContextMenu state={tableMenuState} onOpenChange={handleTableMenuOpenChange} />
       <SlashCommandPopover match={slashMatch} control={editorControl} />
+      <WikilinkPopover match={wikilinkMatch} control={editorControl} />
     </>
   );
 }
