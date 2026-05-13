@@ -16,6 +16,7 @@ export const EDITOR_PLUGIN_IDS = [
   "blockImage",
   "rawHtml",
   "smartPaste",
+  "slash",
 ] as const;
 
 export type EditorPluginId = (typeof EDITOR_PLUGIN_IDS)[number];

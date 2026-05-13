@@ -6,6 +6,7 @@ import {
   EditorEventType,
   type EditorPlugin,
   type EditorSettings,
+  type SlashTriggerMatch,
 } from "@swarmnote/editor-core";
 import { admonitionPlugin } from "@swarmnote/editor-core/plugins/admonition";
 import {
@@ -13,6 +14,7 @@ import {
   refreshBlockImagesEffect,
 } from "@swarmnote/editor-core/plugins/blockImage";
 import { codeBlockPlugin } from "@swarmnote/editor-core/plugins/codeBlock";
+import { slashCommandPlugin } from "@swarmnote/editor-core/plugins/interactions/slash";
 import { mathPlugin } from "@swarmnote/editor-core/plugins/math";
 import { mermaidPlugin } from "@swarmnote/editor-core/plugins/mermaid";
 import { rawHtmlPlugin } from "@swarmnote/editor-core/plugins/rawHtml";
@@ -26,6 +28,8 @@ import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "reac
 import * as Y from "yjs";
 import { openYDoc, reloadYDocConfirmed, saveMedia } from "@/commands/document";
 import { EditorContextMenu } from "@/components/editor/EditorContextMenu";
+import { getSlashItems } from "@/components/editor/interactionProviders";
+import { SlashCommandPopover } from "@/components/editor/SlashCommandPopover";
 import {
   initialTableContextMenuState,
   TableContextMenu,
@@ -59,6 +63,7 @@ function buildEditorPlugins(
   if (enabled.has("blockImage")) plugins.push(blockImagePlugin());
   if (enabled.has("rawHtml")) plugins.push(rawHtmlPlugin());
   if (enabled.has("smartPaste")) plugins.push(smartPastePlugin());
+  if (enabled.has("slash")) plugins.push(slashCommandPlugin());
   return plugins;
 }
 
@@ -164,6 +169,9 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
   const [tableMenuState, setTableMenuState] = useState<TableContextMenuState>(
     initialTableContextMenuState,
   );
+
+  // Slash command popover state — driven by `SlashTriggerChange` events.
+  const [slashMatch, setSlashMatch] = useState<SlashTriggerMatch | null>(null);
   const handleTableMenuOpenChange = useCallback((open: boolean) => {
     setTableMenuState((prev) => ({ ...prev, open }));
   }, []);
@@ -265,6 +273,7 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
             // URL may be malformed or blocked — silent.
           });
         },
+        getSlashItems,
       },
       plugins,
       autofocus: true,
@@ -290,6 +299,8 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
           openUrl(event.url).catch(() => {
             // URL may be malformed or blocked — silent.
           });
+        } else if (event.kind === EditorEventType.SlashTriggerChange) {
+          setSlashMatch(event.match.active ? event.match : null);
         }
       },
     });
@@ -500,6 +511,7 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
         onChange={handleFileInputChange}
       />
       <TableContextMenu state={tableMenuState} onOpenChange={handleTableMenuOpenChange} />
+      <SlashCommandPopover match={slashMatch} control={editorControl} />
     </>
   );
 }
