@@ -226,6 +226,14 @@ graph TD
 
 ## 二、建议抽成 interaction core 的内容
 
+> **已落实于 OpenSpec change `add-editor-interaction-trio-v03`**（v0.3，
+> 2026-05-13）：slash / wikilink / selectionToolbar 三个 interaction
+> plugin 都已升级为真实 runtime（plugins/interactions/{slash,wikilink,
+> selectionToolbar}），SDK 表面（registerSlashItems / registerWikilinkItems /
+> registerSelectionToolbarActions / on / host.get*）全部 stable。
+> CharTrigger family 抽象（slash + wikilink 共用 helper）见
+> `../knowledge/editor.md` 的「Interaction trigger 三类」节。
+
 这部分当前还没有完整抽出，但从后续目标看，应该独立收束。
 
 ### 1. slash command trigger
