@@ -1,5 +1,7 @@
 # EditorEventType 演进草案
 
+> **更新（2026-05-12）**：v0.1 采纳本文提出的"三层分类"路线。最终类型形态、`MermaidZoomRequest` 归类、`SlashTriggerChange` / `WikiLinkTriggerChange` / `SelectionToolbarChange` 三个 interaction event 的 `@unstable` 标记，均已在 [editor-plugin-architecture.md #editor-event-三层分类-v01](./editor-plugin-architecture.md#editorevent-三层分类v01) 中收敛。本文档保留为推导过程。
+
 ## 目的
 
 这份草案回答的问题是：
@@ -464,8 +466,9 @@ type SelectionPopoverAnchorEvent = {
 | `SearchStateChange` | Core Event | 保留 |
 | `CollaborationUpdate` | Core Event | 保留 |
 | `LinkOpen` | Core Event | 保留 |
-| `Remove` | Core Event / 待确认 | 需要确认长期定位 |
+| `Remove` | Platform Convenience Event | 2026-05-12 定位：作为 platform convenience |
 | `TableContextMenu` | Platform Convenience Event | 不建议当成核心协议代表 |
+| `MermaidZoomRequest` | Platform Convenience Event | 2026-05-12 补：携带 `renderedSvg: string` HTML，Web 假设强，跨端不稳定 |
 
 ---
 
