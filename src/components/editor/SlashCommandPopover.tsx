@@ -96,6 +96,9 @@ export function SlashCommandPopover({ match, control }: SlashCommandPopoverProps
                 items={sectionItems}
                 activeIndex={activeIndex}
                 allItems={items}
+                onPick={(absoluteIndex) => {
+                  controlRef.current?.execCommand("slash.confirmAt", absoluteIndex);
+                }}
               />
             ))}
           </div>
@@ -110,9 +113,10 @@ interface SlashSectionProps {
   items: SlashTriggerMatch["items"];
   activeIndex: number;
   allItems: SlashTriggerMatch["items"];
+  onPick: (absoluteIndex: number) => void;
 }
 
-function SlashSection({ label, items, activeIndex, allItems }: SlashSectionProps) {
+function SlashSection({ label, items, activeIndex, allItems, onPick }: SlashSectionProps) {
   return (
     <>
       {label ? (
@@ -122,12 +126,19 @@ function SlashSection({ label, items, activeIndex, allItems }: SlashSectionProps
         const absoluteIndex = allItems.indexOf(item);
         const active = absoluteIndex === activeIndex;
         return (
-          <div
+          <button
+            type="button"
             key={item.id}
             data-active={active || undefined}
+            // mousedown 而非 click：mousedown 在 blur 之前 fire，避免编辑器先失焦
+            // 导致 trigger 在 click 到达前已被 dismiss。preventDefault 防失焦。
+            onMouseDown={(e) => {
+              e.preventDefault();
+              onPick(absoluteIndex);
+            }}
             className={cn(
-              "flex items-start gap-2 rounded-sm px-2 py-1.5 text-sm",
-              "cursor-default select-none",
+              "flex items-start gap-2 rounded-sm px-2 py-1.5 text-sm text-left w-full",
+              "cursor-pointer select-none",
               active ? "bg-accent text-accent-foreground" : "hover:bg-muted",
             )}
           >
@@ -142,7 +153,7 @@ function SlashSection({ label, items, activeIndex, allItems }: SlashSectionProps
                 <div className="truncate text-xs text-muted-foreground">{item.description}</div>
               ) : null}
             </div>
-          </div>
+          </button>
         );
       })}
     </>
