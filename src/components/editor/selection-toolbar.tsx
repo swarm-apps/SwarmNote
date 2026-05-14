@@ -5,11 +5,23 @@ import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import { cn } from "@/lib/utils";
 
 interface SelectionToolbarProps {
+  /**
+   * Current selection toolbar match. Host typically owns this state via
+   * `createEditor({ onEvent })` SelectionToolbarChange listener; pass `null`
+   * (or match with `active: false`) to hide.
+   */
   match: SelectionToolbarMatch | null;
+  /** Editor control, used for command dispatch on button click. */
   control: EditorControl | null;
+  /**
+   * Optional icon registry override. Defaults to lucide-react bold / italic /
+   * strikethrough / code / link icons. Add custom keys (matching `action.icon`
+   * strings) to render additional plugin-contributed actions.
+   */
+  iconRegistry?: Record<string, LucideIcon>;
 }
 
-const ICON_REGISTRY: Record<string, LucideIcon> = {
+const DEFAULT_ICON_REGISTRY: Record<string, LucideIcon> = {
   bold: Bold,
   italic: Italic,
   strikethrough: Strikethrough,
@@ -18,14 +30,21 @@ const ICON_REGISTRY: Record<string, LucideIcon> = {
 };
 
 /**
- * Floating toolbar above the current text selection. Subscribes to
- * `SelectionToolbarChange` and renders the merged action buttons; each
- * button dispatches `action.commandId` via `editorControl.execCommand`.
+ * Floating toolbar above the current text selection.
  *
- * Uses onMouseDown + preventDefault so the editor selection isn't lost
- * when the button is pressed.
+ * Distributed via shadcn registry — consumers run `shadcn add selection-toolbar`
+ * and own the source. Renders each action as a button; click dispatches
+ * `action.commandId` via `control.execCommand`. `onMouseDown` + `preventDefault`
+ * prevents the editor's selection from being lost when the button is pressed.
+ *
+ * Plugin-contributed actions can declare custom icon strings; extend
+ * `iconRegistry` prop to render them.
  */
-export function SelectionToolbar({ match, control }: SelectionToolbarProps) {
+export function SelectionToolbar({
+  match,
+  control,
+  iconRegistry = DEFAULT_ICON_REGISTRY,
+}: SelectionToolbarProps) {
   const open = match?.active ?? false;
   const actions = useMemo(() => match?.actions ?? [], [match]);
   const screenRect = match?.screenRect;
@@ -57,14 +76,17 @@ export function SelectionToolbar({ match, control }: SelectionToolbarProps) {
         className="flex flex-row items-center gap-0.5 p-1 w-auto"
         onOpenAutoFocus={(e) => e.preventDefault()}
         onCloseAutoFocus={(e) => e.preventDefault()}
+        role="toolbar"
+        aria-label="Selection formatting"
       >
         {actions.map((action) => {
-          const Icon = ICON_REGISTRY[action.icon];
+          const Icon = iconRegistry[action.icon];
           return (
             <button
               type="button"
               key={action.id}
               title={action.title}
+              aria-label={action.title}
               onMouseDown={(e) => {
                 e.preventDefault();
                 controlRef.current?.execCommand(action.commandId);

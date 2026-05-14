@@ -65,14 +65,16 @@ export function bumpSlashMru(id: string): void {
 }
 
 // ---------------------------------------------------------------------------
-// Basic block catalog — module-level since SlashItem.run closures only look up
-// editorControl lazily through the store; no per-call captured state.
+// Basic block catalog — module-level static data (no captured state, no
+// closures). Items use `commandId` + `commandArgs` exclusively so the same
+// shape works on both desktop and RN (RN's Comlink can't serialize `run`
+// closures). Only "date.today" uses `run` because it computes a value.
 // ---------------------------------------------------------------------------
 
 const HEADING_LEVELS: ReadonlyArray<{ level: 1 | 2 | 3; icon: string; description: string }> = [
-  { level: 1, icon: "H₁", description: "Top-level section heading" },
-  { level: 2, icon: "H₂", description: "Section heading" },
-  { level: 3, icon: "H₃", description: "Subsection heading" },
+  { level: 1, icon: "heading-1", description: "Top-level section heading" },
+  { level: 2, icon: "heading-2", description: "Section heading" },
+  { level: 3, icon: "heading-3", description: "Subsection heading" },
 ];
 
 const BASIC_BLOCK_ITEMS: readonly SlashItem[] = [
@@ -84,16 +86,15 @@ const BASIC_BLOCK_ITEMS: readonly SlashItem[] = [
       icon,
       keywords: [`h${level}`, "heading", "标题"],
       section: "Basic",
-      run: () => {
-        useEditorStore.getState().editorControl?.execCommand("toggleHeading", level);
-      },
+      commandId: "toggleHeading",
+      commandArgs: [level],
     }),
   ),
   {
     id: "list.bulleted",
     title: "Bulleted list",
     description: "Insert an unordered list",
-    icon: "•",
+    icon: "list",
     keywords: ["list", "bullet", "unordered", "无序列表"],
     section: "Basic",
     commandId: "toggleUnorderedList",
@@ -102,7 +103,7 @@ const BASIC_BLOCK_ITEMS: readonly SlashItem[] = [
     id: "list.numbered",
     title: "Numbered list",
     description: "Insert an ordered list",
-    icon: "1.",
+    icon: "list-ordered",
     keywords: ["list", "ordered", "numbered", "有序列表"],
     section: "Basic",
     commandId: "toggleOrderedList",
@@ -111,7 +112,7 @@ const BASIC_BLOCK_ITEMS: readonly SlashItem[] = [
     id: "list.check",
     title: "Check list",
     description: "Insert a todo / checkbox list",
-    icon: "☐",
+    icon: "list-todo",
     keywords: ["check", "todo", "task", "任务", "复选"],
     section: "Basic",
     commandId: "toggleCheckList",
@@ -120,7 +121,7 @@ const BASIC_BLOCK_ITEMS: readonly SlashItem[] = [
     id: "quote",
     title: "Quote",
     description: "Insert a blockquote",
-    icon: "❝",
+    icon: "quote",
     keywords: ["quote", "blockquote", "引用"],
     section: "Basic",
     commandId: "toggleBlockquote",
@@ -129,7 +130,7 @@ const BASIC_BLOCK_ITEMS: readonly SlashItem[] = [
     id: "divider",
     title: "Divider",
     description: "Insert a horizontal rule",
-    icon: "—",
+    icon: "minus",
     keywords: ["divider", "hr", "separator", "分割线"],
     section: "Basic",
     commandId: "insertHorizontalRule",
@@ -138,7 +139,7 @@ const BASIC_BLOCK_ITEMS: readonly SlashItem[] = [
     id: "date.today",
     title: "Today's date",
     description: "Insert YYYY-MM-DD at cursor",
-    icon: "📅",
+    icon: "calendar",
     keywords: ["date", "today", "日期", "今天"],
     section: "Basic",
     run: ({ view, range }) => {
@@ -178,7 +179,7 @@ export async function getSlashItems(query: string, signal: AbortSignal): Promise
       id: `jump:${note.id}`,
       title: `Jump to: ${title}`,
       description: note.id,
-      icon: "📄",
+      icon: "file-text",
       section: "Notes",
       run: () => {
         useEditorStore.getState().loadDocument(note.id, title, note.id);
@@ -212,7 +213,7 @@ export async function getWikilinkItems(
     id: note.id,
     title: basename(note.id),
     description: note.id,
-    icon: "📄",
+    icon: "file-text",
     commit: "replaceWithLink",
   }));
 

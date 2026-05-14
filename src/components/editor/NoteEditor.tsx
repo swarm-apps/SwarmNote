@@ -38,14 +38,15 @@ import {
   getWikilinkItems,
   resolveInternalLink,
 } from "@/components/editor/interactionProviders";
-import { SelectionToolbar } from "@/components/editor/SelectionToolbar";
-import { SlashCommandPopover } from "@/components/editor/SlashCommandPopover";
+
+import { SelectionToolbar } from "@/components/editor/selection-toolbar";
+import { SlashPopover } from "@/components/editor/slash-popover";
 import {
   initialTableContextMenuState,
   TableContextMenu,
   type TableContextMenuState,
 } from "@/components/editor/TableContextMenu";
-import { WikilinkPopover } from "@/components/editor/WikilinkPopover";
+import { WikilinkPopover } from "@/components/editor/wikilink-popover";
 import { colorForDevice } from "@/lib/awareness-color";
 import { TauriYjsProvider } from "@/lib/TauriYjsProvider";
 import { useEditorStore } from "@/stores/editorStore";
@@ -552,7 +553,7 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
         onChange={handleFileInputChange}
       />
       <TableContextMenu state={tableMenuState} onOpenChange={handleTableMenuOpenChange} />
-      <SlashCommandPopover match={slashMatch} control={editorControl} />
+      <SlashPopover match={slashMatch} control={editorControl} />
       <WikilinkPopover match={wikilinkMatch} control={editorControl} />
       <SelectionToolbar match={selectionToolbarMatch} control={editorControl} />
     </>

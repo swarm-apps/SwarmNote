@@ -510,4 +510,108 @@ function myPlugin(): EditorPlugin {
 
 **相关文件**：
 - sibling: `../swarmnote-editor/packages/editor-core/src/internal/charTriggerStateMachine.ts`、`src/plugins/interactions/{slash,wikilink,selectionToolbar}/index.ts`、`src/pluginHost.ts`（facets + register* runtime）
-- host: `src/components/editor/{SlashCommandPopover,WikilinkPopover,SelectionToolbar,interactionProviders}.tsx`、`src/components/editor/NoteEditor.tsx`（onEvent 路由）
+- host: `src/components/editor/{slash-popover,WikilinkPopover,SelectionToolbar,interactionProviders}.tsx`、`src/components/editor/NoteEditor.tsx`（onEvent 路由）
+
+## sibling v0.4 — shadcn 分发架构（spike 已落雏形）
+
+v0.4 sibling 大改造经历过一次方向 pivot。最终方向：**编辑器 UI primitives 不进 sibling npm 包**，改走 shadcn-style copy-to-host registry 分发。
+
+### 决策回顾
+
+**Phase 1（已 sunset）—— headless + styled 双层方案**
+- 新建 `@swarmnote/editor-headless` vanilla TS state store 包，桌面 / 移动 / Vue 通过 thin adapter 消费
+- 技术上完整跑通：vitest 13 通过、桌面 + RN feature flag prototype、Vue 8 行 adapter demo
+- **被否决** 的原因：用户判断"消费者一般都要样式，少数定制化场景用 shadcn copy 更合适，headless 那一层抽象收益小"
+- 撤回完整：删除 `editor-headless` 包、`examples/vue-demo`、桌面 / RN bridge 文件、host feature flag 代码
+
+**Phase 2（当前）—— shadcn registry 分发**
+- 编辑器 UI primitives（trio popover / selection toolbar / context menu / editor toolbar）以**源码**而非 npm install 分发
+- consumer 用 `shadcn add @swarmnote/slash-popover` 把代码 copy 到自己的 `src/components/editor/`
+- npm 仍保留 4 个包（`editor-core`、`editor-web`、`editor-react`、`editor-react-native`），但 React/RN 包**瘦身为 plumbing-only**（`EditorView` / `useEditorBridge` / `I18nProvider`），UI 全移出
+- registry 自 host 在 sibling 仓 `registry/` 目录，GitHub raw URL 分发
+
+### 包结构
+
+```
+@swarmnote/                                  npm
+├── editor-core           CM6 引擎 + plugins
+├── editor-web            WebView runtime
+├── editor-react          EditorView + I18n (v0.4 后)
+└── editor-react-native   useEditorBridge + adapter (现状)
+
+swarmnote-editor/registry/                   shadcn registry
+├── registry.json
+├── react/                                   Web (shadcn)
+│   ├── components/slash-popover.tsx
+│   └── lib/use-slash-keyboard.ts
+└── react-native/                            RN (react-native-reusables)
+    └── components/slash-sheet.tsx
+```
+
+### Web / RN 不共享 UI 代码
+
+spike 验证：Web 端 `use-slash-keyboard.ts`（订阅 `control.view.contentDOM` keydown，dispatch `slash.next` 等命令）与 RN 移动端形态（tap-to-pick，无键盘）几乎无可共享逻辑。两个平台各 own 一份。**共享 layer 在 npm**：两端都依赖 `@swarmnote/editor-core` 的 `SlashTriggerMatch` / `SlashItem` 等类型，匹配状态由 host 通过 `useState` / `useStore` 维护。
+
+### registry 雏形 (spike)
+
+仅 2 个 item 已落（`slash-popover` Web + `slash-sheet` RN 雏形）。完整 v0.4 trio + toolbar + context menu 等 ~7 个 Web + ~5 个 RN 留正式 v0.4 change 实施。spike `registry/registry.json` 使用 shadcn 标准 schema：
+
+```jsonc
+{
+  "name": "slash-popover",
+  "type": "registry:component",
+  "registryDependencies": ["popover"],     // shadcn primitive
+  "dependencies": ["@swarmnote/editor-core"],  // npm peer
+  "files": [
+    { "path": "registry/react/components/slash-popover.tsx",
+      "target": "components/editor/slash-popover.tsx" },
+    { "path": "registry/react/lib/use-slash-keyboard.ts",
+      "target": "lib/use-slash-keyboard.ts" }
+  ]
+}
+```
+
+### Phase 1 教训（写给未来）
+
+- "npm publishable 组件库"≠ "可被定制"。定制化的真实路径是 copy-to-host，不是 headless 抽象
+- 抽象层的代价不只是代码量，还有"消费者要学一套新的 mental model"。shadcn 的赢点正是无新模型
+- pivot 是合法的 spike 产出：探索完整方向 + 给出否决判断比"不做"信息量大
+
+### v0.4 实际落地状态（正式 change `sibling-v04-shadcn-distribution`）
+
+实施完成度 ~62 / 72 task（剩 user 手测 + git tag + PR 等机械步骤）。
+
+**Sibling 仓 `registry/`**：
+
+- registry.json 索引 12 个 item（6 Web + 6 RN）
+- Web：slash-popover / wikilink-popover / selection-toolbar / editor-context-menu / editor-toolbar / document-outline
+- RN：slash-sheet / wikilink-sheet / selection-toolbar-float / editor-toolbar / heading-sheet / markdown-editor
+- 共享 lib：use-trigger-keyboard.ts（slash + wikilink 共用）
+
+**npm 包**：4 个全部 bump 到 0.4.0
+- `editor-react` 删除 EditorToolbar export（迁到 registry，**breaking**）
+- `editor-web/contracts.ts` 补 SlashTriggerChange / WikilinkTriggerChange / SelectionToolbarChange 类型（typing gap 闭合）
+
+**SwarmNote 桌面 migration**：
+- 拉 slash-popover / wikilink-popover / selection-toolbar / document-outline 4 个组件到 host
+- 删除 CharTriggerPopover / WikilinkPopover / SelectionToolbar / DocumentOutline 4 个旧组件
+- EditorContextMenu **保留 host 自定义版**（深度集成 Lingui i18n，shadcn 模式允许 host own）
+
+**SwarmNote-RN migration**：
+- 拉 slash-sheet / wikilink-sheet / selection-toolbar-float 3 个**新** UI 到 host（trio 首次接入移动端）
+- MarkdownEditor / EditorToolbar / EditorHeadingSheet 保留 host 自定义版（高度业务集成）
+- MarkdownEditor 内部 wire trio event → match → sheet UI
+
+**migration 模式学到的**：
+
+- "全 copy 替换"vs "保留 host 自定义"是 shadcn 模式下的合法二选一。深度业务集成（i18n / theme tokens / 业务 store）的组件保留 host 版本，纯 UI primitive 拉 registry 版本
+- "registry 是 starting point"——consumer 可以照搬，也可以重写一遍仅参考架构。两种都是合法消费方式
+- editor-web/contracts.ts 必须随 editor-core 事件类型同步增长，否则 RN host 看不到类型
+
+### 相关文件
+
+- sibling: `../swarmnote-editor/registry/`（12 个 item + lib + README + CHANGELOG）
+- host 桌面: `src/components/editor/{slash-popover,wikilink-popover,selection-toolbar,document-outline}.tsx`、`src/lib/use-trigger-keyboard.ts`
+- host RN: `src/components/editor/{slash-sheet,wikilink-sheet,selection-toolbar-float}.tsx`、`MarkdownEditor.tsx`（trio wire-up）
+- archive: `openspec/changes/archive/2026-05-13-spike-editor-sibling-v04-cross-platform-trio/`
+- v0.4 change: `openspec/changes/sibling-v04-shadcn-distribution/`

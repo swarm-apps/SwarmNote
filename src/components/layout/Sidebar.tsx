@@ -2,11 +2,12 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { FilePlus, FolderPlus, Search, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { DocumentOutline } from "@/components/editor/DocumentOutline";
+import { DocumentOutline } from "@/components/editor/document-outline";
 import { FileTree } from "@/components/filetree/FileTree";
 import { SyncStatusBar } from "@/components/layout/SyncStatusBar";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useEditorStore } from "@/stores/editorStore";
 import { useFileTreeStore } from "@/stores/fileTreeStore";
 import { SIDEBAR_WIDTH_MAX, SIDEBAR_WIDTH_MIN, useUIStore } from "@/stores/uiStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
@@ -18,6 +19,8 @@ export function Sidebar() {
   const setSidebarWidth = useUIStore((s) => s.setSidebarWidth);
   const sidebarTab = useUIStore((s) => s.sidebarTab);
   const workspace = useWorkspaceStore((s) => s.workspace);
+  const editorControl = useEditorStore((s) => s.editorControl);
+  const editorChangeTick = useEditorStore((s) => s.editorChangeTick);
   const rescan = useFileTreeStore((s) => s.rescan);
   const createAndOpenFile = useFileTreeStore((s) => s.createAndOpenFile);
   const createDir = useFileTreeStore((s) => s.createDir);
@@ -172,7 +175,13 @@ export function Sidebar() {
               searchTerm={searchTerm || undefined}
             />
           ) : (
-            <DocumentOutline height={treeHeight} />
+            <DocumentOutline
+              control={editorControl}
+              changeTick={editorChangeTick}
+              height={treeHeight}
+              emptyEditorLabel={t`打开文档以查看大纲`}
+              emptyHeadingsLabel={t`在文档中添加标题即可看到大纲导航`}
+            />
           )}
         </div>
 

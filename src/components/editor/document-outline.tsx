@@ -1,16 +1,27 @@
-import { Trans } from "@lingui/react/macro";
-import { extractHeadings, type HeadingItem } from "@swarmnote/editor-core";
+import { type EditorControl, extractHeadings, type HeadingItem } from "@swarmnote/editor-core";
 import { ListTree } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-
 import { cn } from "@/lib/utils";
-import { useEditorStore } from "@/stores/editorStore";
 
 const OUTLINE_DEBOUNCE_MS = 300;
 const SCROLL_THROTTLE_MS = 16;
 
 interface DocumentOutlineProps {
+  /** Editor control. Pass `null` while editor is mounting; outline shows empty state. */
+  control: EditorControl | null;
+  /**
+   * Tick value that increments on every editor change. Host typically maintains
+   * this via `createEditor({ onEvent: e => e.kind === 'change' && setTick(t+1) })`
+   * or any similar mechanism. The outline re-extracts headings (debounced 300ms)
+   * whenever this value changes.
+   */
+  changeTick: number;
+  /** Outline navigation height in px (passed to the scrollable container). */
   height: number;
+  /** Optional override of the "no editor" placeholder text. */
+  emptyEditorLabel?: string;
+  /** Optional override of the "no headings" placeholder text. */
+  emptyHeadingsLabel?: string;
 }
 
 function findActiveHeadingIndex(
@@ -19,12 +30,11 @@ function findActiveHeadingIndex(
   offsetToTop: Map<number, number>,
 ): number {
   if (headings.length === 0) return -1;
-  // Find the last heading whose line top is at or above the current scroll.
   let active = -1;
   for (let i = 0; i < headings.length; i++) {
     const top = offsetToTop.get(headings[i].offset);
     if (top === undefined) continue;
-    if (top <= scrollTop + 4 /* small tolerance */) {
+    if (top <= scrollTop + 4) {
       active = i;
     } else {
       break;
@@ -33,49 +43,58 @@ function findActiveHeadingIndex(
   return active === -1 ? 0 : active;
 }
 
-export function DocumentOutline({ height }: DocumentOutlineProps) {
-  const editorControl = useEditorStore((s) => s.editorControl);
-  const changeTick = useEditorStore((s) => s.editorChangeTick);
-
+/**
+ * Document outline panel — scrollable list of editor headings with auto-highlight
+ * of the section currently at the top of the viewport. Clicking a heading scrolls
+ * the editor to that position and places the cursor at the heading line.
+ *
+ * Distributed via shadcn registry — consumers run `shadcn add document-outline`
+ * and own the source. Useful as a sidebar / second-pane navigation widget.
+ */
+export function DocumentOutline({
+  control,
+  changeTick,
+  height,
+  emptyEditorLabel = "Open a document to see the outline",
+  emptyHeadingsLabel = "Add headings to your document to see the outline",
+}: DocumentOutlineProps) {
   const [headings, setHeadings] = useState<HeadingItem[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const isScrollingRef = useRef(false);
 
   // Re-extract headings on content change (debounced).
-  // biome-ignore lint/correctness/useExhaustiveDependencies: changeTick is the trigger signal; its value is intentionally unread in the body
+  // biome-ignore lint/correctness/useExhaustiveDependencies: changeTick is the trigger signal; intentionally unread
   useEffect(() => {
-    if (!editorControl) {
+    if (!control) {
       setHeadings([]);
       return;
     }
     let cancelled = false;
     const timer = window.setTimeout(() => {
       if (cancelled) return;
-      setHeadings(extractHeadings(editorControl.view.state));
+      setHeadings(extractHeadings(control.view.state));
     }, OUTLINE_DEBOUNCE_MS);
     return () => {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [editorControl, changeTick]);
+  }, [control, changeTick]);
 
   // Initial extraction (no debounce) when the editor becomes available.
   useEffect(() => {
-    if (!editorControl) return;
-    setHeadings(extractHeadings(editorControl.view.state));
-  }, [editorControl]);
+    if (!control) return;
+    setHeadings(extractHeadings(control.view.state));
+  }, [control]);
 
   // Track active heading via scroll position.
   useEffect(() => {
-    if (!editorControl || headings.length === 0) {
+    if (!control || headings.length === 0) {
       setActiveIndex(0);
       return;
     }
-    const view = editorControl.view;
+    const view = control.view;
     const scroller = view.scrollDOM;
 
-    // Pre-compute each heading's line-top in absolute document coordinates.
-    // Must recompute whenever headings change (new/removed lines shift positions).
     const offsetToTop = new Map<number, number>();
     for (const h of headings) {
       try {
@@ -103,11 +122,10 @@ export function DocumentOutline({ height }: DocumentOutlineProps) {
       scroller.removeEventListener("scroll", onScroll);
       if (throttleTimer !== null) window.clearTimeout(throttleTimer);
     };
-  }, [editorControl, headings]);
+  }, [control, headings]);
 
   const handleClick = useCallback(
     (index: number) => {
-      const control = editorControl;
       const heading = headings[index];
       if (!control || !heading) return;
 
@@ -116,30 +134,25 @@ export function DocumentOutline({ height }: DocumentOutlineProps) {
 
       const view = control.view;
       const block = view.lineBlockAt(heading.offset);
-      // Scroll such that the heading sits roughly 1/4 from the top of the viewport.
       const scroller = view.scrollDOM;
       const scrollTargetOffset = scroller.clientHeight / 4;
       scroller.scrollTo({ top: Math.max(0, block.top - scrollTargetOffset), behavior: "smooth" });
 
-      view.dispatch({
-        selection: { anchor: heading.offset },
-      });
+      view.dispatch({ selection: { anchor: heading.offset } });
       view.focus();
 
       window.setTimeout(() => {
         isScrollingRef.current = false;
       }, 500);
     },
-    [editorControl, headings],
+    [control, headings],
   );
 
-  if (!editorControl) {
+  if (!control) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
         <ListTree className="h-8 w-8 opacity-30" />
-        <p className="text-xs">
-          <Trans>打开文档以查看大纲</Trans>
-        </p>
+        <p className="text-xs">{emptyEditorLabel}</p>
       </div>
     );
   }
@@ -148,9 +161,7 @@ export function DocumentOutline({ height }: DocumentOutlineProps) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground">
         <ListTree className="h-8 w-8 opacity-30" />
-        <p className="px-4 text-center text-xs">
-          <Trans>在文档中添加标题即可看到大纲导航</Trans>
-        </p>
+        <p className="px-4 text-center text-xs">{emptyHeadingsLabel}</p>
       </div>
     );
   }
