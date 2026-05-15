@@ -28,16 +28,7 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - name: Clone editor-core sibling
-        run: git clone --depth=1 https://github.com/swarm-apps/swarmnote-editor.git ${{ github.workspace }}/../swarmnote-editor
-
-      - name: Build editor-core sibling
-        working-directory: ${{ github.workspace }}/../swarmnote-editor
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm -r build
-
-      - name: Install host deps (link override resolves to sibling)
+      - name: Install host deps
         run: pnpm install --frozen-lockfile
 
       - name: Biome CI

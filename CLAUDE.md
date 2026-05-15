@@ -20,13 +20,8 @@ SwarmNote is a decentralized, local-first, peer-to-peer note-taking app built wi
 ## Development Commands
 
 ```bash
-# First-time setup: clone with submodule (libs/core), build sibling editor-core, then install host
+# First-time setup: clone with submodules (libs/core) then install host (editor pulled from npm)
 git submodule update --init --recursive
-
-# Editor core lives in a separate sibling repo, linked via pnpm.overrides → ../swarmnote-editor
-git clone https://github.com/swarm-apps/swarmnote-editor.git ../swarmnote-editor
-(cd ../swarmnote-editor && pnpm install && pnpm -r build)
-
 pnpm install
 
 # Launch full Tauri desktop app (starts frontend + Rust backend)

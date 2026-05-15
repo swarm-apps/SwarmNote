@@ -40,45 +40,58 @@ sibling 仓 `swarm-apps/swarmnote-editor` 现在包含 4 个包，按职责分�
 
 详见 OpenSpec change [`split-editor-react-packages`](../../openspec/changes/split-editor-react-packages/design.md) D12 决策。
 
-## @swarmnote/editor-core 是外部 sibling 仓 + pnpm link
+## @swarmnote/editor-core / editor-react 走 npm 发包
 
-`@swarmnote/editor-core` 不再是主仓的 submodule，而是独立 repo `swarm-apps/swarmnote-editor`。本地通过 `pnpm.overrides` 把包名解析到 sibling 路径 `../swarmnote-editor/packages/editor-core`，所以 sibling 必须 clone 到与 SwarmNote 同级目录。v0.2 起新增 3 个 sibling 包（editor-web / editor-react / editor-react-native）同样走 `pnpm.overrides` link。
+`@swarmnote/editor-core` 和 `@swarmnote/editor-react` 是独立 repo `swarm-apps/swarmnote-editor` 内的两个包，**正式以 npm 包形式分发**。主仓 `package.json` 直接写版本号（当前 `^0.1.1`），CI / Release workflow 都通过 `pnpm install` 拉 npm registry，不再 clone sibling 仓。
 
-### Local development with editor-core
+### Local development with editor-core（需要改内核源码时）
 
-修改编辑器内核代码的流程：
+只有当你需要同时改 `@swarmnote/editor-core` 源码 + 在主仓即时验证时，才走 pnpm link 路径。**临时**在主仓 `package.json` 加 `pnpm.overrides`：
+
+```jsonc
+{
+  "pnpm": {
+    "overrides": {
+      "@swarmnote/editor-core": "link:../swarmnote-editor/packages/editor-core",
+      "@swarmnote/editor-react": "link:../swarmnote-editor/packages/editor-react"
+    }
+  }
+}
+```
+
+然后：
 
 ```bash
-# 1. 在 sibling 仓启动 watch（每次改源码自动 rebuild dist）
-cd ../swarmnote-editor
-pnpm dev    # tsdown --watch on @swarmnote/editor-core
+# sibling 仓 clone 到主仓同级目录 + watch
+git clone https://github.com/swarm-apps/swarmnote-editor.git ../swarmnote-editor
+(cd ../swarmnote-editor && pnpm install && pnpm dev)   # tsdown --watch
 
-# 2. 主仓另开终端跑 dev，dist 变化会自动反映
-cd ../SwarmNote
+# 主仓重新 install + 跑 dev
+pnpm install
 pnpm tauri dev
 ```
 
 提交流程：
 
 ```bash
-# 1. 在 sibling 仓内分支提交、push、开 PR
+# 1. sibling 仓内分支提交、push、开 PR、合并、打 tag → npm publish
 cd ../swarmnote-editor
-git checkout -b feat/...
-git add . && git commit -m "feat: ..."
-git push -u origin feat/...
-# → swarm-apps/swarmnote-editor PR
+# ... feature branch + PR ...
+# → 发新版本到 npm
 
-# 2. sibling PR 合并后，主仓的 link target 即指向新版 main，无需主仓任何改动
-#    （未来 npm 化后，主仓 package.json 改版本号 + 删除 pnpm.overrides 即可切换）
+# 2. 主仓 bump 版本号（不是改 overrides）
+#    package.json: "@swarmnote/editor-core": "^0.1.2"
+#    pnpm install 刷新 lockfile
+#    提交主仓 commit
 ```
 
 **关键注意**：
 
-- sibling 必须 clone 到 `../swarmnote-editor`（package.json 的 `pnpm.overrides` 锚定该相对路径）
-- 主仓不再有 submodule 链路——把"先 push submodule 再 bump 主仓 pointer"那套规则忘掉
-- CI 通过 `git clone` 把 sibling 拉到 `${{ github.workspace }}/../swarmnote-editor` 然后 build；主仓 install 自动用 link
+- 主仓提交里**不能**包含 `pnpm.overrides`——CI 是裸 `pnpm install`，看不到 sibling 仓
+- sibling 必须发到 npm 主仓才能升级；不能再依赖 link 兜底 CI
+- 如果只是消费现成的发行版本，连 sibling 仓都不用 clone
 
-**相关文件**：主仓 `package.json::pnpm.overrides`、`.github/workflows/ci.yml`、sibling 仓 `packages/editor-core/`
+**相关文件**：主仓 `package.json::dependencies`、`.github/workflows/ci.yml`、sibling 仓 `packages/editor-core/`、`packages/editor-react/`
 
 ## Y.Doc 关键约束
 

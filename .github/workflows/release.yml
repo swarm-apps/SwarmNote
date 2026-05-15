@@ -77,17 +77,6 @@ jobs:
         with:
           workspaces: './src-tauri -> target'
 
-      - name: Clone editor-core sibling
-        shell: bash
-        run: git clone --depth=1 https://github.com/swarm-apps/swarmnote-editor.git ${{ github.workspace }}/../swarmnote-editor
-
-      - name: Build editor-core sibling
-        shell: bash
-        working-directory: ${{ github.workspace }}/../swarmnote-editor
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm -r build
-
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 

@@ -195,7 +195,7 @@ graph TB
 | 层级 | 技术 |
 |------|------|
 | 前端 | React 19 · TypeScript 5.8 · Vite 7 |
-| 编辑器 | CodeMirror 6 + `@codemirror/lang-markdown` + `y-codemirror.next` + KaTeX（封装在独立仓 [`@swarmnote/editor-core`](https://github.com/swarm-apps/swarmnote-editor) 包，本地通过 pnpm link 接入） |
+| 编辑器 | CodeMirror 6 + `@codemirror/lang-markdown` + `y-codemirror.next` + KaTeX（封装在独立仓 [`@swarmnote/editor-core`](https://github.com/swarm-apps/swarmnote-editor) 包，从 npm 安装） |
 | UI 组件 | shadcn/ui · Radix · Tailwind CSS 4 · Lucide |
 | 状态管理 | Zustand 5（9 个 Store · 部分通过 `tauri-plugin-store` 持久化） |
 | 路由 | TanStack Router（文件系统路由） |
@@ -224,8 +224,8 @@ swarmnote/
 ├── libs/core/                 # swarm-p2p-core (Git submodule —— P2P 网络层)
 └── docs/                      # Astro + Starlight 文档站
 
-# 编辑器核心是独立仓，通过 pnpm link --global 接入：
-../swarmnote-editor/           # @swarmnote/editor-core (https://github.com/swarm-apps/swarmnote-editor)
+# 编辑器内核作为 npm 包发布（独立仓 https://github.com/swarm-apps/swarmnote-editor）
+# 通过 package.json dependencies 安装：@swarmnote/editor-core、@swarmnote/editor-react
 ```
 
 </details>
@@ -245,11 +245,7 @@ swarmnote/
 git clone --recurse-submodules https://github.com/swarm-apps/SwarmNote.git
 cd SwarmNote
 
-# 2. 在同级目录 clone & 构建 swarmnote-editor（编辑器内核）
-git clone https://github.com/swarm-apps/swarmnote-editor.git ../swarmnote-editor
-(cd ../swarmnote-editor && pnpm install && pnpm -r build)
-
-# 3. 安装主仓依赖（`pnpm.overrides` 已经把 @swarmnote/editor-core 指向 sibling 仓的 dist）
+# 2. 安装依赖（@swarmnote/editor-core / editor-react 自动从 npm 拉取）
 pnpm install
 
 # 桌面端开发（前端 + Rust 后端）
@@ -265,15 +261,32 @@ cd src-tauri && cargo clippy -- -D warnings
 
 ### 编辑器联调（开发 swarmnote-editor 同时运行主仓）
 
-```bash
-# 在 swarmnote-editor 仓启动 watch（每次改源码自动重建 dist）
-(cd ../swarmnote-editor && pnpm dev)
+如果需要本地改 `@swarmnote/editor-core` 源码并立刻在主仓看到效果，临时在主仓 `package.json` 加上 `pnpm.overrides`：
 
-# 主仓另开终端跑 dev（Vite HMR 会因 dist 变化自动 reload）
+```jsonc
+{
+  "pnpm": {
+    "overrides": {
+      "@swarmnote/editor-core": "link:../swarmnote-editor/packages/editor-core",
+      "@swarmnote/editor-react": "link:../swarmnote-editor/packages/editor-react"
+    }
+  }
+}
+```
+
+然后：
+
+```bash
+# 1. 同级目录 clone sibling 并 build
+git clone https://github.com/swarm-apps/swarmnote-editor.git ../swarmnote-editor
+(cd ../swarmnote-editor && pnpm install && pnpm dev)   # watch + 自动重建 dist
+
+# 2. 主仓重新 install（解析 overrides）+ dev
+pnpm install
 pnpm tauri dev
 ```
 
-主仓 `package.json` 的 `pnpm.overrides` 把 `@swarmnote/editor-core` 锚定到 `../swarmnote-editor/packages/editor-core`——所以 sibling 必须 clone 到主仓同级目录。未来 `@swarmnote/editor-core` 发到 npm 后会移除这条 override，改用版本号。
+调试完成、提交代码前**记得移除 overrides**——CI 和正式发版都走 npm 版本号。
 
 ## Swarm 生态
 
