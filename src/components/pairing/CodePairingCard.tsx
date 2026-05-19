@@ -1,10 +1,9 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Copy, KeyRound, Timer, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import type { PairingCodeInfo } from "@/commands/pairing";
-import { generatePairingCode } from "@/commands/pairing";
 import { Button } from "@/components/ui/button";
+import { usePairingCodeStore } from "@/stores/pairingCodeStore";
 
 function formatSeconds(secs: number): string {
   const m = Math.floor(secs / 60);
@@ -14,43 +13,35 @@ function formatSeconds(secs: number): string {
 
 export function CodePairingCard() {
   const { t } = useLingui();
-  const [codeInfo, setCodeInfo] = useState<PairingCodeInfo | null>(null);
+  const codeInfo = usePairingCodeStore((s) => s.codeInfo);
+  const generating = usePairingCodeStore((s) => s.generating);
+  const ensure = usePairingCodeStore((s) => s.ensure);
+  const regenerate = usePairingCodeStore((s) => s.regenerate);
+  const clear = usePairingCodeStore((s) => s.clear);
+
   const [remaining, setRemaining] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const clearTimer = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-  }, []);
-
-  const reset = useCallback(() => {
-    clearTimer();
-    setCodeInfo(null);
-    setRemaining(0);
-  }, [clearTimer]);
-
+  // 仅用于 UI 倒计时显示；过期续生由 store timer 负责
   useEffect(() => {
-    if (!codeInfo) return;
-
-    const updateRemaining = () => {
+    if (!codeInfo) {
+      setRemaining(0);
+      return;
+    }
+    const tick = () => {
       const left = Math.max(
         0,
         Math.floor((new Date(codeInfo.expiresAt).getTime() - Date.now()) / 1000),
       );
       setRemaining(left);
-      if (left <= 0) reset();
     };
-
-    updateRemaining();
-    intervalRef.current = setInterval(updateRemaining, 1000);
-    return clearTimer;
-  }, [codeInfo, clearTimer, reset]);
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [codeInfo]);
 
   async function handleGenerate() {
     try {
-      setCodeInfo(await generatePairingCode(300));
+      await ensure();
     } catch {
       toast.error(t`生成配对码失败`);
     }
@@ -67,7 +58,7 @@ export function CodePairingCard() {
       <div className="group/code relative flex min-h-15 items-center justify-between rounded-lg border border-primary bg-primary/5 px-3.5 py-2.5">
         <button
           type="button"
-          onClick={reset}
+          onClick={clear}
           className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-muted text-muted-foreground/70 opacity-0 shadow-sm transition-all hover:bg-destructive/15 hover:text-destructive group-hover/code:opacity-100"
           title={t`关闭`}
         >
@@ -94,15 +85,26 @@ export function CodePairingCard() {
             </span>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="flex shrink-0 items-center gap-1 rounded border px-2 py-1 text-[11px] text-muted-foreground hover:bg-muted"
-          title={t`复制`}
-        >
-          <Copy className="h-3 w-3" />
-          <Trans>复制</Trans>
-        </button>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => void regenerate()}
+            disabled={generating}
+            className="flex shrink-0 items-center gap-1 rounded border px-2 py-1 text-[11px] text-muted-foreground hover:bg-muted disabled:opacity-50"
+            title={t`重新生成`}
+          >
+            <Trans>刷新</Trans>
+          </button>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="flex shrink-0 items-center gap-1 rounded border px-2 py-1 text-[11px] text-muted-foreground hover:bg-muted"
+            title={t`复制`}
+          >
+            <Copy className="h-3 w-3" />
+            <Trans>复制</Trans>
+          </button>
+        </div>
       </div>
     );
   }
@@ -120,7 +122,7 @@ export function CodePairingCard() {
           <Trans>生成 6 位配对码，在另一台设备输入即可配对</Trans>
         </p>
       </div>
-      <Button size="sm" onClick={handleGenerate}>
+      <Button size="sm" onClick={handleGenerate} disabled={generating}>
         <Trans>生成</Trans>
       </Button>
     </div>

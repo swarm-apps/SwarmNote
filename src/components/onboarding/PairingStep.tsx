@@ -2,14 +2,14 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { listen } from "@tauri-apps/api/event";
 import { Copy, Loader2, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PairingCodeInfo } from "@/commands/pairing";
-import { generatePairingCode, getDeviceByCode, requestPairing } from "@/commands/pairing";
+import { getDeviceByCode, requestPairing } from "@/commands/pairing";
 import { NearbyDeviceCard } from "@/components/pairing/NearbyDeviceCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
 import { useNetworkStore } from "@/stores/networkStore";
 import { useOnboardingStore } from "@/stores/onboardingStore";
+import { usePairingCodeStore } from "@/stores/pairingCodeStore";
 import { setupPairingListeners, usePairingStore } from "@/stores/pairingStore";
 
 type CodeMode = "idle" | "generate" | "input";
@@ -35,12 +35,16 @@ export function PairingStep() {
 
   // Code pairing state
   const [codeMode, setCodeMode] = useState<CodeMode>("idle");
-  const [codeInfo, setCodeInfo] = useState<PairingCodeInfo | null>(null);
   const [remaining, setRemaining] = useState(0);
   const [inputCode, setInputCode] = useState("");
   const { loading: codeLoading, error: codeError, run, setError, clearError } = useAsyncAction();
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const pollRef = useRef<number | null>(null);
+
+  // 全局码 store —— 跨 onboarding/设置页持久化，过期/被消耗自动续生
+  const codeInfo = usePairingCodeStore((s) => s.codeInfo);
+  const ensureCode = usePairingCodeStore((s) => s.ensure);
+  const regenerateCode = usePairingCodeStore((s) => s.regenerate);
 
   const clearCountdown = useCallback(() => {
     if (countdownRef.current) {
@@ -52,10 +56,10 @@ export function PairingStep() {
   const resetCode = useCallback(() => {
     clearCountdown();
     setCodeMode("idle");
-    setCodeInfo(null);
     setRemaining(0);
     setInputCode("");
     clearError();
+    // 注意：不清 store 的 codeInfo —— 配对码全局持久化，由 store timer 管生命周期
   }, [clearCountdown, clearError]);
 
   // Auto-start P2P node on mount
@@ -89,7 +93,7 @@ export function PairingStep() {
     };
   }, [loadNearbyDevices]);
 
-  // Countdown for pairing code
+  // 倒计时仅展示用；过期续生由 pairingCodeStore 内 timer 负责，UI 不主动 reset
   useEffect(() => {
     if (codeMode !== "generate" || !codeInfo) return;
 
@@ -99,12 +103,11 @@ export function PairingStep() {
         Math.floor((new Date(codeInfo.expiresAt).getTime() - Date.now()) / 1000),
       );
       setRemaining(left);
-      if (left <= 0) resetCode();
     };
     update();
     countdownRef.current = setInterval(update, 1000);
     return clearCountdown;
-  }, [codeMode, codeInfo, clearCountdown, resetCode]);
+  }, [codeMode, codeInfo, clearCountdown]);
 
   // Listen for successful pairing → auto-advance
   useEffect(() => {
@@ -120,8 +123,8 @@ export function PairingStep() {
   async function handleGenerate() {
     clearError();
     try {
-      const info = await generatePairingCode(300);
-      setCodeInfo(info);
+      // 首次进入生成模式：ensure（已有有效码就复用）；用户主动点"刷新"按钮：regenerate
+      await (codeMode === "generate" ? regenerateCode() : ensureCode());
       setCodeMode("generate");
     } catch {
       setError(t`生成配对码失败`);
