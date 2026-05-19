@@ -1,7 +1,6 @@
-import { invoke } from "@tauri-apps/api/core";
 import { Awareness, applyAwarenessUpdate, encodeAwarenessUpdate } from "y-protocols/awareness";
 import type * as Y from "yjs";
-import { applyYDocUpdate, closeYDoc } from "@/commands/document";
+import { commands } from "@/lib/bindings";
 
 const REMOTE_AWARENESS_ORIGIN = "remote-awareness";
 
@@ -33,7 +32,7 @@ export class TauriYjsProvider {
     if (this._destroying) return;
     if (origin === "remote") return;
 
-    applyYDocUpdate(this._docUuid, Array.from(update)).catch((err) => {
+    commands.applyYdocUpdate(this._docUuid, Array.from(update)).catch((err) => {
       console.error("Failed to send yjs update to backend:", err);
     });
   };
@@ -47,10 +46,7 @@ export class TauriYjsProvider {
     const changedClients = [...changed.added, ...changed.updated, ...changed.removed];
     if (changedClients.length === 0) return;
     const payload = encodeAwarenessUpdate(this.awareness, changedClients);
-    invoke("broadcast_awareness", {
-      docUuid: this._docUuid,
-      update: Array.from(payload),
-    }).catch((err) => {
+    commands.broadcastAwareness(this._docUuid, Array.from(payload)).catch((err) => {
       console.error("Failed to broadcast awareness:", err);
     });
   };
@@ -74,7 +70,7 @@ export class TauriYjsProvider {
     this.awareness.off("update", this._onAwarenessUpdate);
     this.awareness.destroy();
 
-    closeYDoc(this._docUuid).catch((err) => {
+    commands.closeYdoc(this._docUuid).catch((err) => {
       console.error("Failed to close ydoc:", err);
     });
   }

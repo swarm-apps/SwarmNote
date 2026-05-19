@@ -1,7 +1,5 @@
-import { listen } from "@tauri-apps/api/event";
 import { create } from "zustand";
-import type { Device } from "@/commands/pairing";
-import { getNearbyDevices, listDevices } from "@/commands/pairing";
+import { commands, type Device, events } from "@/lib/bindings";
 
 interface PairingState {
   pairedDevices: Device[];
@@ -22,7 +20,7 @@ export const usePairingStore = create<PairingState & PairingActions>()((set, get
 
   async loadPairedDevices() {
     try {
-      const result = await listDevices("paired");
+      const result = await commands.listDevices("paired");
       set({ pairedDevices: result.devices });
     } catch (e) {
       console.error("Failed to load paired devices:", e);
@@ -31,7 +29,7 @@ export const usePairingStore = create<PairingState & PairingActions>()((set, get
 
   async loadNearbyDevices() {
     try {
-      const devices = await getNearbyDevices();
+      const devices = await commands.getNearbyDevices();
       set({ nearbyDevices: devices });
     } catch (e) {
       console.error("Failed to load nearby devices:", e);
@@ -51,15 +49,15 @@ export function setupPairingListeners() {
   if (listenersSetup) return;
   listenersSetup = true;
 
-  listen("paired-device-added", () => {
+  events.pairedDeviceAdded.listen(() => {
     usePairingStore.getState().refresh();
   });
 
-  listen("paired-device-removed", () => {
+  events.pairedDeviceRemoved.listen(() => {
     usePairingStore.getState().refresh();
   });
 
-  listen("devices-changed", () => {
+  events.devicesChanged.listen(() => {
     usePairingStore.getState().loadNearbyDevices();
     usePairingStore.getState().loadPairedDevices();
   });

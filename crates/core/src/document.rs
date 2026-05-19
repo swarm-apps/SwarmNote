@@ -31,6 +31,7 @@ pub fn title_from_rel_path(rel_path: &str) -> String {
 /// Input for [`DocumentCrud::upsert_document`]. Preserves the Tauri IPC wire
 /// shape (see `src/commands/document.ts`).
 #[derive(Debug, Clone, serde::Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct UpsertDocumentInput {
     pub id: Option<Uuid>,
     pub workspace_id: Uuid,
@@ -42,6 +43,7 @@ pub struct UpsertDocumentInput {
 
 /// Input for [`DocumentCrud::create_folder`].
 #[derive(Debug, Clone, serde::Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct CreateFolderInput {
     pub workspace_id: Uuid,
     pub parent_folder_id: Option<Uuid>,

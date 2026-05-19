@@ -1,12 +1,7 @@
-import { listen } from "@tauri-apps/api/event";
+import { Channel } from "@tauri-apps/api/core";
 import { create } from "zustand";
 
-import {
-  getWorkspaceInfo,
-  type HydrateProgress,
-  hydrateWorkspace,
-  type WorkspaceInfo,
-} from "@/commands/workspace";
+import { commands, events, type HydrateProgress, type WorkspaceInfo } from "@/lib/bindings";
 import { useEditorStore } from "@/stores/editorStore";
 import { useFileTreeStore } from "@/stores/fileTreeStore";
 import { useNetworkStore } from "@/stores/networkStore";
@@ -49,11 +44,13 @@ async function runHydrate(workspaceId: string) {
   const gen = ++hydrateGeneration;
   useWorkspaceStore.setState({ hydrating: true, hydrateProgress: null });
   try {
-    await hydrateWorkspace(workspaceId, (progress) => {
+    const channel = new Channel<HydrateProgress>();
+    channel.onmessage = (progress) => {
       if (gen === hydrateGeneration) {
         useWorkspaceStore.setState({ hydrateProgress: progress });
       }
-    });
+    };
+    await commands.hydrateWorkspace(workspaceId, channel);
   } catch (e) {
     console.warn("hydrate_workspace failed:", e);
   } finally {
@@ -75,17 +72,17 @@ export const useWorkspaceStore = create<WorkspaceState & WorkspaceActions>()((se
     try {
       // 先注册事件监听，再调用 get_workspace_info，避免新建窗口场景下事件丢失。
       // 工作区的打开路径统一经由 Rust 的 open_workspace_window 命令，
-      // Rust 负责在绑定完成后发 "workspace:ready" 事件（对新窗口和
+      // Rust 负责在绑定完成后发 "workspace-ready" 事件（对新窗口和
       // fullscreen picker 的 bind-to-caller 场景都适用）。
       let unlistenFn: (() => void) | null = null;
-      const unlistenPromise = listen<WorkspaceInfo>("workspace:ready", (event) => {
+      const unlistenPromise = events.workspaceReady.listen((event) => {
         set({ workspace: event.payload });
         clearDependentStores();
         maybeAutoStartP2P();
         runHydrate(event.payload.id);
         unlistenFn?.();
       });
-      const info = await getWorkspaceInfo();
+      const info = await commands.getWorkspaceInfo();
       unlistenFn = await unlistenPromise;
       if (info) {
         // auto-restore 或新建窗口（Rust 已在建窗口前完成绑定）场景：直接拿到数据
@@ -96,7 +93,7 @@ export const useWorkspaceStore = create<WorkspaceState & WorkspaceActions>()((se
         unlistenFn();
       }
       // info 为 null 时（全新启动无历史工作区）：保留监听，
-      // 等待用户从 WorkspacePicker 选择后触发 "workspace:ready"。
+      // 等待用户从 WorkspacePicker 选择后触发 "workspace-ready"。
     } catch (e) {
       set({ error: String(e) });
     } finally {

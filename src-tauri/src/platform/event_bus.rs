@@ -1,12 +1,20 @@
-//! `EventBus` impl that forwards `AppEvent` variants to the Tauri IPC layer
-//! via `app.emit(topic, payload)` broadcasts. The frontend subscribes to the
-//! specific topic names (preserved from the pre-refactor event surface) and
-//! filters the payload by `doc_id` / `workspace_id` / `peer_id` as needed.
+//! `EventBus` impl —— 把 `AppEvent` 翻译成 tauri-specta 类型化事件。
+//!
+//! 通过 [`crate::events`] 中的 newtype + `tauri_specta::Event` derive 直接
+//! `XxxEvent { ... }.emit(&app)`,前端通过 `events.xxx.listen()` 接收,双方
+//! 共享同一份 TS 类型(`src/lib/bindings.ts`)。
 
-use serde_json::json;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
+use tauri_specta::Event;
 
 use swarmnote_core::{AppEvent, EventBus};
+
+use crate::events::{
+    DevicesChanged, DocFlushed, ExternalAwarenessUpdate, ExternalConflict, ExternalUpdate,
+    FileTreeChanged, NetworkStatusChanged, NodeStarted, NodeStopped, PairedDeviceAdded,
+    PairedDeviceRemoved, PairingRequestReceived, SyncCompleted, SyncProgress, SyncResult,
+    SyncStarted,
+};
 
 /// `EventBus` implementation backed by Tauri's `AppHandle::emit`. Broadcasts
 /// to all windows — the frontend filters by the business keys in the payload
@@ -23,52 +31,39 @@ impl TauriEventBus {
 
 impl EventBus for TauriEventBus {
     fn emit(&self, event: AppEvent) {
-        // Each arm translates a core event into one or more Tauri topic emits
-        // preserving the frontend-visible event name + payload shape.
         match event {
             // ── YDoc / fs ──
             AppEvent::DocFlushed { doc_id } => {
-                let _ = self
-                    .app
-                    .emit("yjs:flushed", json!({ "docUuid": doc_id.to_string() }));
+                let _ = DocFlushed { doc_uuid: doc_id }.emit(&self.app);
             }
             AppEvent::ExternalUpdate { doc_id, update } => {
-                let _ = self.app.emit(
-                    "yjs:external-update",
-                    json!({
-                        "docUuid": doc_id.to_string(),
-                        "update": update,
-                    }),
-                );
+                let _ = ExternalUpdate {
+                    doc_uuid: doc_id,
+                    update,
+                }
+                .emit(&self.app);
             }
             AppEvent::ExternalAwarenessUpdate { doc_id, update } => {
-                let _ = self.app.emit(
-                    "yjs:awareness-update",
-                    json!({
-                        "docUuid": doc_id.to_string(),
-                        "update": update,
-                    }),
-                );
+                let _ = ExternalAwarenessUpdate {
+                    doc_uuid: doc_id,
+                    update,
+                }
+                .emit(&self.app);
             }
             AppEvent::ExternalConflict { doc_id, rel_path } => {
-                let _ = self.app.emit(
-                    "yjs:external-conflict",
-                    json!({
-                        "docUuid": doc_id.to_string(),
-                        "relPath": rel_path,
-                    }),
-                );
+                let _ = ExternalConflict {
+                    doc_uuid: doc_id,
+                    rel_path,
+                }
+                .emit(&self.app);
             }
             AppEvent::FileTreeChanged { workspace_id } => {
-                let _ = self.app.emit(
-                    "fs:tree-changed",
-                    json!({ "workspaceId": workspace_id.to_string() }),
-                );
+                let _ = FileTreeChanged { workspace_id }.emit(&self.app);
             }
 
             // ── Devices ──
             AppEvent::DevicesChanged { devices } => {
-                let _ = self.app.emit("devices-changed", devices);
+                let _ = DevicesChanged(devices).emit(&self.app);
             }
 
             // ── Pairing ──
@@ -79,24 +74,20 @@ impl EventBus for TauriEventBus {
                 method,
                 expires_at,
             } => {
-                let _ = self.app.emit(
-                    "pairing-request-received",
-                    json!({
-                        "pendingId": pending_id,
-                        "peerId": peer_id,
-                        "osInfo": os_info,
-                        "method": method,
-                        "expiresAt": expires_at,
-                    }),
-                );
+                let _ = PairingRequestReceived {
+                    pending_id,
+                    peer_id,
+                    os_info,
+                    method,
+                    expires_at,
+                }
+                .emit(&self.app);
             }
             AppEvent::PairedDeviceAdded { info } => {
-                let _ = self.app.emit("paired-device-added", info);
+                let _ = PairedDeviceAdded(info).emit(&self.app);
             }
             AppEvent::PairedDeviceRemoved { peer_id } => {
-                let _ = self
-                    .app
-                    .emit("paired-device-removed", json!({ "peerId": peer_id }));
+                let _ = PairedDeviceRemoved { peer_id }.emit(&self.app);
             }
 
             // ── Network ──
@@ -104,19 +95,17 @@ impl EventBus for TauriEventBus {
                 nat_status,
                 public_addr,
             } => {
-                let _ = self.app.emit(
-                    "network-status-changed",
-                    json!({
-                        "natStatus": nat_status,
-                        "publicAddr": public_addr,
-                    }),
-                );
+                let _ = NetworkStatusChanged {
+                    nat_status,
+                    public_addr,
+                }
+                .emit(&self.app);
             }
             AppEvent::NodeStarted => {
-                let _ = self.app.emit("node-started", ());
+                let _ = NodeStarted.emit(&self.app);
             }
             AppEvent::NodeStopped => {
-                let _ = self.app.emit("node-stopped", ());
+                let _ = NodeStopped.emit(&self.app);
             }
 
             // ── Sync ──
@@ -124,13 +113,11 @@ impl EventBus for TauriEventBus {
                 workspace_id,
                 peer_id,
             } => {
-                let _ = self.app.emit(
-                    "sync-started",
-                    json!({
-                        "workspaceUuid": workspace_id.to_string(),
-                        "peerId": peer_id,
-                    }),
-                );
+                let _ = SyncStarted {
+                    workspace_uuid: workspace_id,
+                    peer_id,
+                }
+                .emit(&self.app);
             }
             AppEvent::SyncProgress {
                 workspace_id,
@@ -138,15 +125,13 @@ impl EventBus for TauriEventBus {
                 completed,
                 total,
             } => {
-                let _ = self.app.emit(
-                    "sync-progress",
-                    json!({
-                        "workspaceUuid": workspace_id.to_string(),
-                        "peerId": peer_id,
-                        "completed": completed,
-                        "total": total,
-                    }),
-                );
+                let _ = SyncProgress {
+                    workspace_uuid: workspace_id,
+                    peer_id,
+                    completed,
+                    total,
+                }
+                .emit(&self.app);
             }
             AppEvent::SyncCompleted {
                 workspace_id,
@@ -155,21 +140,19 @@ impl EventBus for TauriEventBus {
                 error,
             } => {
                 let result = if cancelled {
-                    "cancelled"
+                    SyncResult::Cancelled
                 } else if error.is_some() {
-                    "error"
+                    SyncResult::Error
                 } else {
-                    "success"
+                    SyncResult::Success
                 };
-                let _ = self.app.emit(
-                    "sync-completed",
-                    json!({
-                        "workspaceUuid": workspace_id.to_string(),
-                        "peerId": peer_id,
-                        "result": result,
-                        "error": error,
-                    }),
-                );
+                let _ = SyncCompleted {
+                    workspace_uuid: workspace_id,
+                    peer_id,
+                    result,
+                    error,
+                }
+                .emit(&self.app);
             }
         }
     }

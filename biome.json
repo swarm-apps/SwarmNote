@@ -41,6 +41,12 @@
       "assist": { "enabled": false }
     },
     {
+      "includes": ["src/lib/bindings.ts"],
+      "linter": { "enabled": false },
+      "formatter": { "enabled": false },
+      "assist": { "enabled": false }
+    },
+    {
       "includes": ["src/components/ui/**"],
       "linter": {
         "rules": {

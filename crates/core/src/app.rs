@@ -14,7 +14,9 @@ use tokio::sync::Mutex;
 use tracing::info;
 use uuid::Uuid;
 
-use crate::config::{apply_workspace_update, load_or_create_config, GlobalConfigState, RecentWorkspace};
+use crate::config::{
+    apply_workspace_update, load_or_create_config, GlobalConfigState, RecentWorkspace,
+};
 use crate::error::{AppError, AppResult};
 use crate::events::{AppEvent, EventBus};
 use crate::fs::{FileSystem, FileWatcher, LocalFs};

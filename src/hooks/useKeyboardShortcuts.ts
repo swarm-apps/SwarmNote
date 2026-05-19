@@ -1,7 +1,7 @@
 import { i18n } from "@lingui/core";
 import { useEffect } from "react";
-import { openSettingsWindow } from "@/commands/workspace";
 import { OPEN_COMMAND_PALETTE } from "@/components/layout/CommandPalette";
+import { commands } from "@/lib/bindings";
 import { isMac } from "@/lib/utils";
 import { useFileTreeStore } from "@/stores/fileTreeStore";
 import { useUIStore } from "@/stores/uiStore";
@@ -40,7 +40,7 @@ export function useKeyboardShortcuts() {
           break;
         case ",":
           e.preventDefault();
-          openSettingsWindow("general");
+          commands.openSettingsWindow("general");
           break;
       }
     }

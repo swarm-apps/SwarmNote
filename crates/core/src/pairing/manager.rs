@@ -47,6 +47,7 @@ struct PendingInbound {
 
 /// 已配对设备信息，同时用于运行时缓存和 Tauri Event payload。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct PairedDeviceInfo {
     pub peer_id: String,

@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 /// Device operating system + user-facing name, embedded in the
 /// `agent_version` string libp2p advertises via Identify.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct OsInfo {
     /// User-set device name, propagated via the `agent_version` `name=` field.
     pub name: Option<String>,

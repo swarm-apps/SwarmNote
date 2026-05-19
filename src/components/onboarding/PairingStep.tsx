@@ -1,12 +1,11 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { listen } from "@tauri-apps/api/event";
 import { Copy, Loader2, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getDeviceByCode, requestPairing } from "@/commands/pairing";
 import { NearbyDeviceCard } from "@/components/pairing/NearbyDeviceCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { commands, events } from "@/lib/bindings";
 import { useNetworkStore } from "@/stores/networkStore";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 import { usePairingCodeStore } from "@/stores/pairingCodeStore";
@@ -111,7 +110,7 @@ export function PairingStep() {
 
   // Listen for successful pairing → auto-advance
   useEffect(() => {
-    const unlisten = listen("paired-device-added", () => {
+    const unlisten = events.pairedDeviceAdded.listen(() => {
       setPairedInOnboarding(true);
       setTimeout(() => nextStep(), 500);
     });
@@ -137,8 +136,8 @@ export function PairingStep() {
       return;
     }
     await run(async () => {
-      const deviceInfo = await getDeviceByCode(inputCode);
-      const resp = await requestPairing(
+      const deviceInfo = await commands.getDeviceByCode(inputCode);
+      const resp = await commands.requestPairing(
         deviceInfo.peerId,
         { type: "Code", code: inputCode },
         deviceInfo.osInfo,

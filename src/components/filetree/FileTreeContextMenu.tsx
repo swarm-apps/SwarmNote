@@ -1,7 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { FilePlus, FolderPlus, Pencil, Trash2 } from "lucide-react";
 import type { NodeApi } from "react-arborist";
-import type { FileTreeNode } from "@/commands/fs";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -9,6 +8,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import type { FileTreeNode_Serialize as FileTreeNode } from "@/lib/bindings";
 
 interface FileTreeContextMenuProps {
   node: NodeApi<FileTreeNode> | null;

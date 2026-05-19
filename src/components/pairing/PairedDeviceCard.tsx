@@ -1,8 +1,8 @@
 import { useLingui } from "@lingui/react/macro";
 import { Unlink } from "lucide-react";
 import { useState } from "react";
-import type { Device } from "@/commands/pairing";
 import { ConnectionBadge } from "@/components/pairing/ConnectionBadge";
+import type { Device } from "@/lib/bindings";
 import { formatRelativeTime } from "@/lib/dateUtils";
 import { cn } from "@/lib/utils";
 import { DeviceAvatar } from "./DeviceAvatar";

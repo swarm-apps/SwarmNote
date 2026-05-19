@@ -1,5 +1,7 @@
-import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import type { UnlistenFn } from "@tauri-apps/api/event";
 import { create } from "zustand";
+
+import { events, type SyncResult } from "@/lib/bindings";
 
 // ── Types ──
 
@@ -9,8 +11,6 @@ interface ActiveSync {
   completed: number;
   total: number;
 }
-
-type SyncResult = "success" | "cancelled" | "error" | "partial";
 
 interface LastSyncResult {
   lastSyncedAt: number;
@@ -27,26 +27,6 @@ interface SyncState {
 interface SyncActions {
   /** 清除所有状态（节点停止时调用） */
   reset: () => void;
-}
-
-// ── Event Payloads ──
-
-interface SyncStartedPayload {
-  peerId: string;
-  workspaceUuid: string;
-}
-
-interface SyncProgressPayload {
-  peerId: string;
-  workspaceUuid: string;
-  completed: number;
-  total: number;
-}
-
-interface SyncCompletedPayload {
-  peerId: string;
-  workspaceUuid: string;
-  result: SyncResult;
 }
 
 // ── Store ──
@@ -69,7 +49,7 @@ function syncKey(workspaceUuid: string, peerId: string) {
 export async function setupSyncListeners() {
   await cleanupSyncListeners();
 
-  const u1 = await listen<SyncStartedPayload>("sync-started", (event) => {
+  const u1 = await events.syncStarted.listen((event) => {
     const { peerId, workspaceUuid } = event.payload;
     const key = syncKey(workspaceUuid, peerId);
     useSyncStore.setState((state) => ({
@@ -80,7 +60,7 @@ export async function setupSyncListeners() {
     }));
   });
 
-  const u2 = await listen<SyncProgressPayload>("sync-progress", (event) => {
+  const u2 = await events.syncProgress.listen((event) => {
     const { peerId, workspaceUuid, completed, total } = event.payload;
     const key = syncKey(workspaceUuid, peerId);
     useSyncStore.setState((state) => {
@@ -94,7 +74,7 @@ export async function setupSyncListeners() {
     });
   });
 
-  const u3 = await listen<SyncCompletedPayload>("sync-completed", (event) => {
+  const u3 = await events.syncCompleted.listen((event) => {
     const { peerId, workspaceUuid, result } = event.payload;
     const key = syncKey(workspaceUuid, peerId);
     useSyncStore.setState((state) => {

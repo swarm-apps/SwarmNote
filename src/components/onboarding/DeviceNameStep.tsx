@@ -1,9 +1,9 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Monitor } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getDeviceInfo, setDeviceName } from "@/commands/identity";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { commands } from "@/lib/bindings";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 
 export function DeviceNameStep() {
@@ -14,7 +14,7 @@ export function DeviceNameStep() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    getDeviceInfo().then((info) => {
+    commands.getDeviceInfo().then((info) => {
       setName(info.device_name);
       setIsLoading(false);
     });
@@ -23,7 +23,7 @@ export function DeviceNameStep() {
   async function handleNext() {
     const trimmed = name.trim();
     if (!trimmed) return;
-    await setDeviceName(trimmed);
+    await commands.setDeviceName(trimmed);
     nextStep();
   }
 

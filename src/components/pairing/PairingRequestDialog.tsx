@@ -8,18 +8,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import type { PairingRequestReceived } from "@/lib/bindings";
 import { DeviceInfoCard } from "./DeviceInfoCard";
 
-interface PairingRequestPayload {
-  pendingId: number;
-  peerId: string;
-  osInfo: { name?: string; hostname: string; os: string; platform: string; arch: string };
-  method: { type: "Direct" } | { type: "Code"; code: string };
-  expiresAt: string;
-}
-
 interface PairingRequestDialogProps {
-  data: PairingRequestPayload;
+  data: PairingRequestReceived;
   responding: boolean;
   onAccept: () => void;
   onReject: () => void;
@@ -59,7 +52,7 @@ export function PairingRequestDialog({
         </DialogHeader>
 
         <DeviceInfoCard
-          name={data.osInfo.name}
+          name={data.osInfo.name ?? undefined}
           hostname={data.osInfo.hostname}
           os={data.osInfo.os}
           platform={data.osInfo.platform}

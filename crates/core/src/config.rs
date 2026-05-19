@@ -61,6 +61,7 @@ pub struct GlobalConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct RecentWorkspace {
     pub path: String,
     pub name: String,

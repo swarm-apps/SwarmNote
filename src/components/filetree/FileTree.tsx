@@ -4,7 +4,7 @@ import { SearchX } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { NodeApi } from "react-arborist";
 import { Tree, type TreeApi } from "react-arborist";
-import type { FileTreeNode } from "@/commands/fs";
+import type { FileTreeNode_Serialize as FileTreeNode } from "@/lib/bindings";
 import { useEditorStore } from "@/stores/editorStore";
 import { useFileTreeStore } from "@/stores/fileTreeStore";
 import { EmptyTreeState } from "./EmptyTreeState";

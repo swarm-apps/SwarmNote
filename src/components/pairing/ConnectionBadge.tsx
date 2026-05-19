@@ -1,6 +1,6 @@
 import { useLingui } from "@lingui/react/macro";
 import { RadioTower, Wifi, Zap } from "lucide-react";
-import type { ConnectionType } from "@/commands/pairing";
+import type { ConnectionType } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 
 const connectionConfig: Record<
@@ -26,7 +26,7 @@ const connectionConfig: Record<
 
 interface ConnectionBadgeProps {
   type: ConnectionType;
-  latency?: number;
+  latency?: number | null;
   className?: string;
 }
 
@@ -49,7 +49,7 @@ export function ConnectionBadge({ type, latency, className }: ConnectionBadgePro
     >
       <Icon className="h-3 w-3" />
       {typeLabels[type]}
-      {latency !== undefined && <span className="opacity-70">{latency}ms</span>}
+      {latency != null && <span className="opacity-70">{latency}ms</span>}
     </span>
   );
 }

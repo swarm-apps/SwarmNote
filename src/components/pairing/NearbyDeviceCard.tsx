@@ -1,9 +1,8 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { toast } from "sonner";
-import type { Device } from "@/commands/pairing";
-import { requestPairing } from "@/commands/pairing";
 import { Button } from "@/components/ui/button";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { commands, type Device } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import { ConnectionBadge } from "./ConnectionBadge";
 import { DeviceAvatar } from "./DeviceAvatar";
@@ -20,7 +19,7 @@ export function NearbyDeviceCard({ device, onPaired, isLast }: NearbyDeviceCardP
 
   async function handlePair() {
     await run(async () => {
-      const resp = await requestPairing(
+      const resp = await commands.requestPairing(
         device.peerId,
         { type: "Direct" },
         {

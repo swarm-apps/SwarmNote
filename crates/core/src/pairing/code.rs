@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 
 /// 配对码信息，包含生成的 6 位数字码及其有效期。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct PairingCodeInfo {
     pub code: String,

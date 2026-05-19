@@ -27,6 +27,7 @@ use crate::error::{AppError, AppResult};
 /// Matches the shape emitted to the frontend — do not change field names
 /// without coordinating with `src/commands/fs.ts` and the file-tree store.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct FileTreeNode {
     /// Workspace-relative path (stable ID in the frontend tree).
     pub id: String,

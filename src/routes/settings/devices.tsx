@@ -4,7 +4,6 @@ import { Check, Link, Loader2, Radio, RefreshCw, X } from "lucide-react";
 import type * as React from "react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { type DeviceInfo, getDeviceInfo, setDeviceName } from "@/commands/identity";
 import { CodePairingCard } from "@/components/pairing/CodePairingCard";
 import { DeviceAvatar } from "@/components/pairing/DeviceAvatar";
 import { FoundDeviceDialog } from "@/components/pairing/FoundDeviceDialog";
@@ -13,6 +12,7 @@ import { NearbyDeviceCard } from "@/components/pairing/NearbyDeviceCard";
 import { PairedDeviceCard } from "@/components/pairing/PairedDeviceCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { commands, type DeviceInfo, type OsInfo } from "@/lib/bindings";
 import { setupPairingListeners, usePairingStore } from "@/stores/pairingStore";
 
 function EmptyState({
@@ -125,7 +125,7 @@ function DevicesPage() {
   const [inputCodeOpen, setInputCodeOpen] = useState(false);
   const [foundDevice, setFoundDevice] = useState<{
     peerId: string;
-    osInfo: { name?: string; hostname: string; os: string; platform: string; arch: string };
+    osInfo: OsInfo;
     code: string;
   } | null>(null);
 
@@ -135,7 +135,8 @@ function DevicesPage() {
   }, [refresh]);
 
   useEffect(() => {
-    getDeviceInfo()
+    commands
+      .getDeviceInfo()
       .then(setMyDevice)
       .catch(() => null);
   }, []);
@@ -166,7 +167,7 @@ function DevicesPage() {
                 currentName={myDevice?.device_name ?? ""}
                 onSave={async (name) => {
                   try {
-                    await setDeviceName(name);
+                    await commands.setDeviceName(name);
                     setMyDevice((prev) => (prev ? { ...prev, device_name: name } : prev));
                     setIsEditing(false);
                     toast.success(t`设备名称已更新，网络身份已同步`);

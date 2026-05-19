@@ -11,13 +11,13 @@ import {
   Square,
   X,
 } from "lucide-react";
-import { openSettingsWindow } from "@/commands/workspace";
 import { PresenceAvatars } from "@/components/editor/PresenceAvatars";
 import { OPEN_COMMAND_PALETTE } from "@/components/layout/CommandPalette";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspacePopover } from "@/components/workspace/WorkspacePopover";
+import { commands } from "@/lib/bindings";
 import { isMac, modKey } from "@/lib/utils";
 import { useEditorStore } from "@/stores/editorStore";
 import { type SidebarTab, useUIStore } from "@/stores/uiStore";
@@ -118,7 +118,11 @@ export function TitleBar() {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon-xs" onClick={() => openSettingsWindow("general")}>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              onClick={() => commands.openSettingsWindow("general")}
+            >
               <Settings className="h-3.5 w-3.5" />
             </Button>
           </TooltipTrigger>

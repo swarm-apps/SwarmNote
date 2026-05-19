@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 
 /// 连接类型
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub enum ConnectionType {
     Lan,
@@ -21,6 +22,7 @@ pub enum ConnectionType {
 
 /// 设备状态
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub enum DeviceStatus {
     Online,
@@ -29,6 +31,7 @@ pub enum DeviceStatus {
 
 /// 统一的设备输出类型（发送给前端）
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct Device {
     pub peer_id: String,
@@ -47,6 +50,7 @@ pub struct Device {
 
 /// 设备列表查询结果
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceListResult {
     pub devices: Vec<Device>,

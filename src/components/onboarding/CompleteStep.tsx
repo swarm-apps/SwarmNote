@@ -1,9 +1,8 @@
 import { Trans } from "@lingui/react/macro";
 import { CheckCircle, Fingerprint, Monitor } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getDeviceInfo } from "@/commands/identity";
-import { finishOnboarding } from "@/commands/workspace";
 import { Button } from "@/components/ui/button";
+import { commands } from "@/lib/bindings";
 import { useOnboardingStore } from "@/stores/onboardingStore";
 
 export function CompleteStep() {
@@ -14,7 +13,7 @@ export function CompleteStep() {
   const [peerId, setPeerId] = useState("");
 
   useEffect(() => {
-    getDeviceInfo().then((info) => {
+    commands.getDeviceInfo().then((info) => {
       setDeviceName(info.device_name);
       setPeerId(info.peer_id.slice(0, 8));
     });
@@ -23,7 +22,7 @@ export function CompleteStep() {
   async function handleFinish() {
     // 先持久化 onboarding 完成状态，再由 Rust 端处理窗口切换
     complete();
-    await finishOnboarding();
+    await commands.finishOnboarding();
   }
 
   const isAddDevice = userPath === "add-device";

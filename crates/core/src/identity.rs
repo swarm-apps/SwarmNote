@@ -17,6 +17,7 @@ use crate::keychain::KeychainProvider;
 /// Runtime device identity + OS metadata. Returned to the frontend by
 /// `get_device_info`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct DeviceInfo {
     pub peer_id: String,
     pub device_name: String,

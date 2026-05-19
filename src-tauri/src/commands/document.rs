@@ -5,9 +5,8 @@
 //! Every command resolves its workspace through the [`WorkspaceMap`] bound
 //! to the window label.
 
-use std::path::PathBuf;
-
-use entity::workspace::{documents, folders};
+use chrono::{DateTime, Utc};
+use entity::workspace::folders;
 use serde::{Deserialize, Serialize};
 use swarmnote_core::{AppEvent, CreateFolderInput, UpsertDocumentInput};
 use tauri::{State, Window};
@@ -23,27 +22,52 @@ async fn workspace_from_label(
     map.get(label).await.ok_or(AppError::NoWorkspaceOpen)
 }
 
-#[tauri::command]
-pub async fn db_get_documents(
-    window: Window,
-    workspace_id: Uuid,
-    ws_map: State<'_, WorkspaceMap>,
-) -> AppResult<Vec<documents::Model>> {
-    let ws = workspace_from_label(&ws_map, window.label()).await?;
-    ws.documents().list_documents(workspace_id).await
+/// 文件夹行 —— `db_create_folder` / `db_get_folders` 的 IPC 返回类型。
+///
+/// `entity::folders::Model` 的 struct 名硬编码为 `Model`,与 `documents::Model`
+/// 撞名后会在 TS bindings 里冲突。这里定义投影 DTO 解耦 sea-orm relation 字段。
+#[derive(Debug, Clone, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct FolderRow {
+    pub id: Uuid,
+    pub workspace_id: Uuid,
+    pub parent_folder_id: Option<Uuid>,
+    pub name: String,
+    pub rel_path: String,
+    pub created_by: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+impl From<folders::Model> for FolderRow {
+    fn from(m: folders::Model) -> Self {
+        Self {
+            id: m.id,
+            workspace_id: m.workspace_id,
+            parent_folder_id: m.parent_folder_id,
+            name: m.name,
+            rel_path: m.rel_path,
+            created_by: m.created_by,
+            created_at: m.created_at,
+            updated_at: m.updated_at,
+        }
+    }
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn db_upsert_document(
     window: Window,
     input: UpsertDocumentInput,
     ws_map: State<'_, WorkspaceMap>,
-) -> AppResult<documents::Model> {
+) -> AppResult<()> {
     let ws = workspace_from_label(&ws_map, window.label()).await?;
-    ws.documents().upsert_document(input).await
+    ws.documents().upsert_document(input).await?;
+    Ok(())
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn delete_document_by_rel_path(
     window: Window,
     rel_path: String,
@@ -53,7 +77,8 @@ pub async fn delete_document_by_rel_path(
     ws.documents().delete_document_by_rel_path(&rel_path).await
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct RenameDocumentInput {
     pub old_rel_path: String,
     pub new_rel_path: String,
@@ -61,6 +86,7 @@ pub struct RenameDocumentInput {
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn rename_document(
     window: Window,
     input: RenameDocumentInput,
@@ -82,6 +108,7 @@ pub async fn rename_document(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn delete_documents_by_prefix(
     window: Window,
     prefix: String,
@@ -92,26 +119,30 @@ pub async fn delete_documents_by_prefix(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn db_get_folders(
     window: Window,
     workspace_id: Uuid,
     ws_map: State<'_, WorkspaceMap>,
-) -> AppResult<Vec<folders::Model>> {
+) -> AppResult<Vec<FolderRow>> {
     let ws = workspace_from_label(&ws_map, window.label()).await?;
-    ws.documents().list_folders(workspace_id).await
+    let rows = ws.documents().list_folders(workspace_id).await?;
+    Ok(rows.into_iter().map(Into::into).collect())
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn db_create_folder(
     window: Window,
     input: CreateFolderInput,
     ws_map: State<'_, WorkspaceMap>,
-) -> AppResult<folders::Model> {
+) -> AppResult<FolderRow> {
     let ws = workspace_from_label(&ws_map, window.label()).await?;
-    ws.documents().create_folder(input).await
+    Ok(ws.documents().create_folder(input).await?.into())
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn db_delete_folder(
     window: Window,
     id: Uuid,
@@ -123,7 +154,8 @@ pub async fn db_delete_folder(
 
 // ── Move document/folder ──
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct MoveDocumentInput {
     /// 源路径（文件或目录），相对工作区根。
     pub from_rel_path: String,
@@ -131,7 +163,8 @@ pub struct MoveDocumentInput {
     pub to_rel_path: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct MoveDocumentResult {
     pub new_rel_path: String,
     pub is_dir: bool,
@@ -142,6 +175,7 @@ pub struct MoveDocumentResult {
 /// Uses [`swarmnote_core::fs::ops::move_node`] for the physical move, then
 /// rebases DB rows + in-memory YDocManager entries accordingly.
 #[tauri::command]
+#[specta::specta]
 pub async fn move_document(
     window: Window,
     input: MoveDocumentInput,
@@ -185,10 +219,6 @@ pub async fn move_document(
     ws.event_bus().emit(AppEvent::FileTreeChanged {
         workspace_id: ws.info().id,
     });
-
-    // Silence unused import when the module compiles without it — PathBuf is
-    // part of the public API contract even if the current body doesn't need it.
-    let _: Option<PathBuf> = None;
 
     Ok(MoveDocumentResult {
         new_rel_path: to_rel,

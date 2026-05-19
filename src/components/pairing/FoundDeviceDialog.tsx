@@ -1,6 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { Link } from "lucide-react";
-import { requestPairing } from "@/commands/pairing";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,13 +11,14 @@ import {
 } from "@/components/ui/dialog";
 import { ErrorMessage } from "@/components/ui/error-message";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { commands, type OsInfo } from "@/lib/bindings";
 import { DeviceInfoCard } from "./DeviceInfoCard";
 
 interface FoundDeviceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   peerId: string;
-  osInfo: { name?: string; hostname: string; os: string; platform: string; arch: string };
+  osInfo: OsInfo;
   code: string;
   onSuccess: () => void;
 }
@@ -36,7 +36,7 @@ export function FoundDeviceDialog({
 
   async function handleConfirm() {
     await run(async () => {
-      const resp = await requestPairing(peerId, { type: "Code", code }, osInfo);
+      const resp = await commands.requestPairing(peerId, { type: "Code", code }, osInfo);
       if (resp.status === "Success") {
         onSuccess();
       } else {
@@ -55,7 +55,7 @@ export function FoundDeviceDialog({
         </DialogHeader>
 
         <DeviceInfoCard
-          name={osInfo.name}
+          name={osInfo.name ?? undefined}
           hostname={osInfo.hostname}
           os={osInfo.os}
           platform={osInfo.platform}

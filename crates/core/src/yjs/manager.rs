@@ -45,6 +45,7 @@ const FALLBACK_TICK_MS: u64 = 500;
 
 /// Returned by [`YDocManager::open_doc`] so the frontend knows the stable UUID.
 #[derive(Debug, Clone, serde::Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct OpenDocResult {
     /// Stable document UUID (database primary key).
     pub doc_uuid: Uuid,

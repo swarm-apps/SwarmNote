@@ -1,15 +1,9 @@
 import { Trans } from "@lingui/react/macro";
 import { ArrowUpRight, Check, Settings2 } from "lucide-react";
 import { useEffect, useState } from "react";
-
-import {
-  getRecentWorkspaces,
-  openWorkspaceManagerWindow,
-  openWorkspaceWindow,
-  type RecentWorkspace,
-} from "@/commands/workspace";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { commands, type RecentWorkspace } from "@/lib/bindings";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
 interface WorkspacePopoverProps {
@@ -23,18 +17,18 @@ export function WorkspacePopover({ children, side = "bottom" }: WorkspacePopover
   const workspace = useWorkspaceStore((s) => s.workspace);
   useEffect(() => {
     if (open) {
-      getRecentWorkspaces().then(setRecents);
+      commands.getRecentWorkspaces().then(setRecents);
     }
   }, [open]);
 
   async function handleSelect(path: string) {
-    await openWorkspaceWindow(path);
+    await commands.openWorkspaceWindow(path, null, null);
     setOpen(false);
   }
 
   async function handleManage() {
     setOpen(false);
-    await openWorkspaceManagerWindow();
+    await commands.openWorkspaceManagerWindow();
   }
 
   return (

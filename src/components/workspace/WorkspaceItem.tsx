@@ -1,6 +1,6 @@
 import { FolderOpen } from "lucide-react";
 
-import type { RecentWorkspace } from "@/commands/workspace";
+import type { RecentWorkspace } from "@/lib/bindings";
 import { formatRelativeTime } from "@/lib/dateUtils";
 
 interface WorkspaceItemProps {

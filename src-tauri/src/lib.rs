@@ -1,8 +1,12 @@
 mod commands;
 pub mod error;
+pub mod events;
 mod platform;
+mod setup;
 #[cfg(desktop)]
 pub mod tray;
+
+pub use setup::specta_builder;
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -26,6 +30,10 @@ pub fn run() {
         )
         .init();
 
+    // TS bindings 导出走专用测试 `cargo test --test specta_export`,避免每次
+    // `pnpm tauri dev` 启动都重写 `src/lib/bindings.ts` 触发 Vite reload。
+    let specta = setup::specta_builder();
+
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::new().build())
@@ -40,66 +48,7 @@ pub fn run() {
     }
 
     builder
-        .invoke_handler(tauri::generate_handler![
-            // 设备身份
-            commands::identity::get_device_info,
-            commands::identity::set_device_name,
-            // 工作区管理
-            commands::workspace::open_workspace,
-            commands::workspace::get_workspace_info,
-            commands::workspace::get_recent_workspaces,
-            commands::workspace::open_workspace_window,
-            commands::workspace::finish_onboarding,
-            commands::workspace::remove_recent_workspace,
-            commands::workspace::open_workspace_manager_window,
-            commands::workspace::open_settings_window,
-            commands::workspace::create_workspace_for_sync,
-            // 文档 & 文件夹
-            commands::document::db_get_documents,
-            commands::document::db_upsert_document,
-            commands::document::delete_document_by_rel_path,
-            commands::document::delete_documents_by_prefix,
-            commands::document::rename_document,
-            commands::document::move_document,
-            commands::document::db_get_folders,
-            commands::document::db_create_folder,
-            commands::document::db_delete_folder,
-            // 文件系统
-            commands::fs::scan_workspace_tree,
-            commands::fs::fs_create_file,
-            commands::fs::fs_create_dir,
-            commands::fs::fs_delete_file,
-            commands::fs::fs_delete_dir,
-            commands::fs::fs_rename,
-            commands::fs::load_document,
-            commands::fs::save_document,
-            commands::fs::save_media,
-            // P2P 网络
-            commands::network::start_p2p_node,
-            commands::network::stop_p2p_node,
-            commands::network::get_network_status,
-            commands::network::get_connected_peers,
-            // 配对管理
-            commands::pairing::generate_pairing_code,
-            commands::pairing::get_device_by_code,
-            commands::pairing::request_pairing,
-            commands::pairing::respond_pairing_request,
-            commands::pairing::get_paired_devices,
-            commands::pairing::unpair_device,
-            commands::pairing::get_nearby_devices,
-            commands::pairing::list_devices,
-            commands::pairing::get_remote_workspaces,
-            // Y.Doc 管理
-            commands::yjs::open_ydoc,
-            commands::yjs::apply_ydoc_update,
-            commands::yjs::broadcast_awareness,
-            commands::yjs::close_ydoc,
-            commands::yjs::rename_ydoc,
-            commands::yjs::reload_ydoc_confirmed,
-            commands::yjs::hydrate_workspace,
-            // 同步
-            commands::sync::trigger_workspace_sync,
-        ])
+        .invoke_handler(specta.invoke_handler())
         .on_window_event(|window, event| {
             #[cfg(desktop)]
             {
@@ -133,7 +82,11 @@ pub fn run() {
                 }
             }
         })
-        .setup(|app| {
+        .setup(move |app| {
+            // tauri-specta events —— 在 setup 内 mount,这样 Event 的 listen()
+            // 才能接收到 emit。须在 manage app_core 之前调用避免漏接首批事件。
+            specta.mount_events(app);
+
             // Bootstrap the platform-independent core.
             let app_data_dir = swarmnote_global_dir()?;
             let keychain = Arc::new(platform::DesktopKeychain::new());

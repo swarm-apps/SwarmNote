@@ -1,24 +1,12 @@
-import { invoke } from "@tauri-apps/api/core";
-import { listen, type UnlistenFn } from "@tauri-apps/api/event";
+import type { UnlistenFn } from "@tauri-apps/api/event";
 import { create } from "zustand";
 
-import type { Device } from "@/commands/pairing";
+import { commands, type Device, events } from "@/lib/bindings";
 
 // ── Types ──
 
-interface NetworkStatus {
-  natStatus: string | null;
-  publicAddr: string | null;
-}
-
 /** Matches Rust `network::NodeStatus` — single source of truth */
 export type NodeStatus = "stopped" | "running" | "error";
-
-/** Rust serializes NodeStatus as `{ kind: "stopped" }` or `{ kind: "error", message: "..." }` */
-interface NodeStatusPayload {
-  kind: NodeStatus;
-  message?: string;
-}
 
 interface NetworkState {
   status: NodeStatus;
@@ -59,7 +47,7 @@ export const useNetworkStore = create<NetworkState & NetworkActions>()((set, get
 
     set({ loading: true, error: null, userManuallyStopped: false });
     try {
-      await invoke("start_p2p_node");
+      await commands.startP2pNode();
       set({ status: "running", error: null });
     } catch (e) {
       set({ status: "error", error: String(e) });
@@ -71,7 +59,7 @@ export const useNetworkStore = create<NetworkState & NetworkActions>()((set, get
   stopNode: async (manual = false) => {
     set({ loading: true });
     try {
-      await invoke("stop_p2p_node");
+      await commands.stopP2pNode();
       set({ status: "stopped", devices: [], natStatus: null });
       if (manual) {
         set({ userManuallyStopped: true });
@@ -85,7 +73,7 @@ export const useNetworkStore = create<NetworkState & NetworkActions>()((set, get
 
   refreshDevices: async () => {
     try {
-      const result = await invoke<{ devices: Device[] }>("list_devices", { filter: "all" });
+      const result = await commands.listDevices("all");
       set({ devices: result.devices });
     } catch {
       // Node might not be running
@@ -105,20 +93,20 @@ export async function setupNetworkListeners() {
   await cleanupNetworkListeners();
 
   // 统一设备列表更新（替代旧的 peer-connected / peer-disconnected）
-  const u1 = await listen<Device[]>("devices-changed", (event) => {
+  const u1 = await events.devicesChanged.listen((event) => {
     useNetworkStore.setState({ devices: event.payload });
   });
 
-  const u2 = await listen<NetworkStatus>("network-status-changed", (event) => {
+  const u2 = await events.networkStatusChanged.listen((event) => {
     useNetworkStore.setState({ natStatus: event.payload.natStatus });
   });
 
   // Events from backend — used to sync other windows
-  const u3 = await listen("node-started", () => {
+  const u3 = await events.nodeStarted.listen(() => {
     useNetworkStore.setState({ status: "running", error: null, loading: false });
   });
 
-  const u4 = await listen("node-stopped", () => {
+  const u4 = await events.nodeStopped.listen(() => {
     useNetworkStore.setState({
       status: "stopped",
       devices: [],
@@ -131,7 +119,7 @@ export async function setupNetworkListeners() {
 
   // Sync initial status from backend (handles page refresh / new window)
   try {
-    const payload = await invoke<NodeStatusPayload>("get_network_status");
+    const payload = await commands.getNetworkStatus();
     if (payload.kind === "running") {
       useNetworkStore.setState({ status: "running", error: null });
       // 初始化时也拉取一次设备列表

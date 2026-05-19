@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronRight, FileText, Folder, FolderOpen } from "lucide-react";
 import type { NodeRendererProps } from "react-arborist";
-import type { FileTreeNode as FileTreeNodeData } from "@/commands/fs";
+import type { FileTreeNode_Serialize as FileTreeNodeData } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 
 function RenameInput({ node }: { node: NodeRendererProps<FileTreeNodeData>["node"] }) {

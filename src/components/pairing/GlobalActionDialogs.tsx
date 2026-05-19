@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import { respondPairingRequest } from "@/commands/pairing";
+import { commands } from "@/lib/bindings";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { PairingRequestDialog } from "./PairingRequestDialog";
 
@@ -17,7 +17,7 @@ export function GlobalActionDialogs() {
   const handlePairingRespond = useCallback(
     (pendingId: number, accept: boolean) => {
       setResponding(true);
-      respondPairingRequest(pendingId, accept).catch(() => {
+      commands.respondPairingRequest(pendingId, accept).catch(() => {
         toast.error(accept ? "接受配对失败" : "拒绝配对失败");
       });
       dismiss();
@@ -28,8 +28,7 @@ export function GlobalActionDialogs() {
   if (!current) return null;
 
   if (current.type === "pairing-request") {
-    // biome-ignore lint/suspicious/noExplicitAny: payload type is validated by event source
-    const data = current.payload as any;
+    const data = current.payload;
     return (
       <PairingRequestDialog
         data={data}

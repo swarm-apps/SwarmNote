@@ -164,3 +164,26 @@ impl Serialize for AppError {
 }
 
 pub type AppResult<T> = Result<T, AppError>;
+
+// ── specta TS bindings ────────────────────────────────────────────
+//
+// AppError 的 Serialize impl 写出 `{ kind, message }`,但 specta 看不到这
+// 形状(thiserror enum 的字段千差万别),手写 `Type` impl 喂一个等价投影。
+// `inline` 让它不在 TS 里 export 名字 —— Throw 模式下错误从不出现在
+// commands 签名,这个 payload 只是 schema 占位。
+
+#[cfg(feature = "specta")]
+#[derive(specta::Type)]
+#[specta(inline)]
+#[allow(dead_code)]
+struct AppErrorPayload {
+    kind: String,
+    message: String,
+}
+
+#[cfg(feature = "specta")]
+impl specta::Type for AppError {
+    fn definition(types: &mut specta::Types) -> specta::datatype::DataType {
+        <AppErrorPayload as specta::Type>::definition(types)
+    }
+}

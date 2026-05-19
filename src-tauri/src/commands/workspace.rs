@@ -14,10 +14,12 @@ use chrono::Utc;
 use serde::Serialize;
 use swarmnote_core::config::{save_config, RecentWorkspace};
 use swarmnote_core::{AppCore, WorkspaceInfo};
-use tauri::{AppHandle, Emitter, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use tauri::{AppHandle, Manager, State, WebviewUrl, WebviewWindow, WebviewWindowBuilder};
+use tauri_specta::Event;
 use uuid::Uuid;
 
 use crate::error::{AppError, AppResult};
+use crate::events::{Navigate, WorkspaceReady};
 use crate::platform::{workspace_map::start_core_workspace, SyncPendingMap, WorkspaceMap};
 
 /// 应用平台相关的窗口装饰配置。
@@ -41,7 +43,7 @@ fn with_platform_decorations<'a, R: tauri::Runtime, M: tauri::Manager<R>>(
     builder
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, specta::Type)]
 #[serde(rename_all = "snake_case", tag = "kind")]
 pub enum OpenWorkspaceWindowResult {
     BoundToCaller { info: WorkspaceInfo },
@@ -150,6 +152,7 @@ pub async fn cleanup_window(app: &AppHandle, label: &str) {
 
 /// Idempotently open / create a workspace and bind it to the invoking window.
 #[tauri::command]
+#[specta::specta]
 pub async fn open_workspace(
     window: tauri::Window,
     path: String,
@@ -167,6 +170,7 @@ pub async fn open_workspace(
 
 /// Return info for the workspace currently bound to this window.
 #[tauri::command]
+#[specta::specta]
 pub async fn get_workspace_info(
     window: tauri::Window,
     ws_map: State<'_, WorkspaceMap>,
@@ -175,6 +179,7 @@ pub async fn get_workspace_info(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn get_recent_workspaces(
     core: State<'_, Arc<AppCore>>,
 ) -> AppResult<Vec<RecentWorkspace>> {
@@ -204,6 +209,7 @@ async fn find_label_for_path(ws_map: &WorkspaceMap, path: &str) -> Option<String
 
 /// Open a workspace window: reuse existing / bind to caller / create new.
 #[tauri::command]
+#[specta::specta]
 pub async fn open_workspace_window(
     app: AppHandle,
     path: String,
@@ -251,9 +257,9 @@ pub async fn open_workspace_window(
             let info = bind_workspace_to_window(&app, caller_label, &ws_path, core.inner()).await?;
 
             if let Some(win) = caller_window {
-                if let Err(e) = win.emit("workspace:ready", &info) {
+                if let Err(e) = WorkspaceReady(info.clone()).emit_to(&app, caller_label) {
                     log::warn!(
-                        "Failed to emit workspace:ready to caller window '{caller_label}': {e}"
+                        "Failed to emit workspace-ready to caller window '{caller_label}': {e}"
                     );
                 }
                 let _ = win.set_focus();
@@ -277,8 +283,8 @@ pub async fn open_workspace_window(
     .build()
     .map_err(|e| AppError::InvalidPath(format!("failed to create window: {e}")))?;
 
-    if let Err(e) = new_window.emit("workspace:ready", &info) {
-        log::warn!("Failed to emit workspace:ready to window '{label}': {e}");
+    if let Err(e) = WorkspaceReady(info.clone()).emit_to(&app, &label) {
+        log::warn!("Failed to emit workspace-ready to window '{label}': {e}");
     }
 
     bind_window_cleanup(&new_window, &app, &label);
@@ -289,6 +295,7 @@ pub async fn open_workspace_window(
 
 /// Create a workspace for sync (no window, pre-assigned UUID).
 #[tauri::command]
+#[specta::specta]
 pub async fn create_workspace_for_sync(
     uuid: String,
     name: String,
@@ -385,6 +392,7 @@ pub fn create_onboarding_window(app: &AppHandle) -> AppResult<()> {
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn finish_onboarding(app: AppHandle) -> AppResult<()> {
     open_workspace_manager_window(app.clone()).await?;
     if let Some(win) = app.get_webview_window("onboarding") {
@@ -394,6 +402,7 @@ pub async fn finish_onboarding(app: AppHandle) -> AppResult<()> {
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn remove_recent_workspace(
     app: AppHandle,
     path: String,
@@ -414,6 +423,7 @@ pub async fn remove_recent_workspace(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn open_workspace_manager_window(app: AppHandle) -> AppResult<()> {
     if let Some(win) = app.get_webview_window("main") {
         let _ = win.show();
@@ -434,6 +444,7 @@ pub async fn open_workspace_manager_window(app: AppHandle) -> AppResult<()> {
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn open_settings_window(app: AppHandle, route: Option<String>) -> AppResult<()> {
     let target_route = format!(
         "/settings/{}",
@@ -442,7 +453,7 @@ pub async fn open_settings_window(app: AppHandle, route: Option<String>) -> AppR
 
     if let Some(win) = app.get_webview_window("settings") {
         let _ = win.set_focus();
-        let _ = win.emit("navigate", &target_route);
+        let _ = Navigate(target_route.clone()).emit_to(&app, "settings");
         return Ok(());
     }
 

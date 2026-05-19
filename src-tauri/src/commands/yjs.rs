@@ -27,6 +27,7 @@ fn parse_doc_uuid(doc_uuid: &str) -> AppResult<Uuid> {
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn open_ydoc(
     window: Window,
     rel_path: String,
@@ -38,6 +39,7 @@ pub async fn open_ydoc(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn apply_ydoc_update(
     window: Window,
     doc_uuid: String,
@@ -58,6 +60,7 @@ pub async fn apply_ydoc_update(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn broadcast_awareness(
     window: Window,
     doc_uuid: String,
@@ -72,6 +75,7 @@ pub async fn broadcast_awareness(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn close_ydoc(
     window: Window,
     doc_uuid: String,
@@ -83,6 +87,7 @@ pub async fn close_ydoc(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn rename_ydoc(
     window: Window,
     doc_uuid: String,
@@ -96,6 +101,7 @@ pub async fn rename_ydoc(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn reload_ydoc_confirmed(
     window: Window,
     doc_uuid: String,
@@ -107,6 +113,7 @@ pub async fn reload_ydoc_confirmed(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn hydrate_workspace(
     workspace_uuid: Uuid,
     on_progress: Channel<HydrateProgress>,

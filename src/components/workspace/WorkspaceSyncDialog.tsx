@@ -3,13 +3,6 @@ import { documentDir } from "@tauri-apps/api/path";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { CheckCircle, Circle, Loader2, XCircle } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-
-import { getRemoteWorkspaces, type RemoteWorkspaceInfo } from "@/commands/pairing";
-import {
-  createWorkspaceForSync,
-  openWorkspaceWindow,
-  triggerWorkspaceSync,
-} from "@/commands/workspace";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { commands, type RemoteWorkspaceInfo } from "@/lib/bindings";
 import { useSyncStore } from "@/stores/syncStore";
 
 // ── Types ──
@@ -165,7 +159,7 @@ export function WorkspaceSyncDialog({ open, onOpenChange }: WorkspaceSyncDialogP
     setLoadError(null);
     try {
       const [data, defaultPath] = await Promise.all([
-        getRemoteWorkspaces(),
+        commands.getRemoteWorkspaces(),
         resolveDefaultBasePath(),
       ]);
       setBasePath(defaultPath);
@@ -225,12 +219,12 @@ export function WorkspaceSyncDialog({ open, onOpenChange }: WorkspaceSyncDialogP
       setSyncItems([...updatedItems]);
 
       try {
-        const localPath = await createWorkspaceForSync(
+        const localPath = await commands.createWorkspaceForSync(
           updatedItems[i].ws.uuid,
           updatedItems[i].ws.name,
           basePath,
         );
-        await triggerWorkspaceSync(updatedItems[i].ws.uuid, updatedItems[i].ws.peerId);
+        await commands.triggerWorkspaceSync(updatedItems[i].ws.uuid, updatedItems[i].ws.peerId);
         updatedItems[i] = { ...updatedItems[i], status: "done", localPath };
       } catch (e) {
         updatedItems[i] = { ...updatedItems[i], status: "error", error: String(e) };
@@ -243,7 +237,7 @@ export function WorkspaceSyncDialog({ open, onOpenChange }: WorkspaceSyncDialogP
   }
 
   async function handleOpenSyncedWorkspace(path: string) {
-    await openWorkspaceWindow(path);
+    await commands.openWorkspaceWindow(path, null, null);
     onOpenChange(false);
   }
 

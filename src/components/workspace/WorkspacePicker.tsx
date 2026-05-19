@@ -2,16 +2,11 @@ import { Trans, useLingui } from "@lingui/react/macro";
 import { open } from "@tauri-apps/plugin-dialog";
 import { FolderOpen, FolderPlus, Plus, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
-
-import {
-  getRecentWorkspaces,
-  openWorkspaceWindow,
-  type RecentWorkspace,
-} from "@/commands/workspace";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { WorkspaceItem } from "@/components/workspace/WorkspaceItem";
 import { WorkspaceSyncDialog } from "@/components/workspace/WorkspaceSyncDialog";
+import { commands, type RecentWorkspace } from "@/lib/bindings";
 import { useNetworkStore } from "@/stores/networkStore";
 
 interface WorkspacePickerProps {
@@ -30,12 +25,12 @@ export function WorkspacePicker({ open: dialogOpen, onOpenChange }: WorkspacePic
 
   useEffect(() => {
     if (dialogOpen) {
-      getRecentWorkspaces().then(setRecents);
+      commands.getRecentWorkspaces().then(setRecents);
     }
   }, [dialogOpen]);
 
   async function openPath(path: string) {
-    await openWorkspaceWindow(path);
+    await commands.openWorkspaceWindow(path, null, null);
     onOpenChange?.(false);
   }
 

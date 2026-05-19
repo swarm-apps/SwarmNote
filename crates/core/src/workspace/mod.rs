@@ -32,6 +32,7 @@ use crate::yjs::manager::YDocManager;
 /// `get_workspace_info`-style commands; held by [`WorkspaceCore`] as its
 /// own metadata snapshot.
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct WorkspaceInfo {
     pub id: Uuid,
     pub name: String,

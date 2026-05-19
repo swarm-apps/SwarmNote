@@ -1,11 +1,11 @@
 import { create } from "zustand";
 
-export interface ActionNotification {
+import type { PairingRequestReceived } from "@/lib/bindings";
+
+export type ActionNotification = {
   id: string;
-  type: string;
-  payload: unknown;
   timestamp: number;
-}
+} & { type: "pairing-request"; payload: PairingRequestReceived };
 
 interface NotificationState {
   queue: ActionNotification[];

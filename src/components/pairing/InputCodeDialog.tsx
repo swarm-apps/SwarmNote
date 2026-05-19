@@ -2,7 +2,6 @@ import { Trans } from "@lingui/react/macro";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { Search } from "lucide-react";
 import { useState } from "react";
-import { getDeviceByCode } from "@/commands/pairing";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,15 +14,12 @@ import {
 import { ErrorMessage } from "@/components/ui/error-message";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useAsyncAction } from "@/hooks/useAsyncAction";
+import { commands, type OsInfo } from "@/lib/bindings";
 
 interface InputCodeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onDeviceFound: (
-    peerId: string,
-    osInfo: { hostname: string; os: string; platform: string; arch: string },
-    code: string,
-  ) => void;
+  onDeviceFound: (peerId: string, osInfo: OsInfo, code: string) => void;
 }
 
 export function InputCodeDialog({ open, onOpenChange, onDeviceFound }: InputCodeDialogProps) {
@@ -38,7 +34,7 @@ export function InputCodeDialog({ open, onOpenChange, onDeviceFound }: InputCode
   async function handleSearch() {
     if (code.length < 6) return;
     await run(async () => {
-      const result = await getDeviceByCode(code);
+      const result = await commands.getDeviceByCode(code);
       onDeviceFound(result.peerId, result.osInfo, code);
     });
   }

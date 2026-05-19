@@ -2,16 +2,14 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
-import { listen } from "@tauri-apps/api/event";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-
-import { getRecentWorkspaces } from "@/commands/workspace";
 import { CommandPalette } from "@/components/layout/CommandPalette";
 import { GlobalActionDialogs } from "@/components/pairing/GlobalActionDialogs";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ForceUpdateDialog, PromptUpdateDialog } from "@/components/upgrade";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { commands, events } from "@/lib/bindings";
 import { useEditorStore, waitForEditorHydration } from "@/stores/editorStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { waitForOnboardingHydration } from "@/stores/onboardingStore";
@@ -37,7 +35,7 @@ function RootComponent() {
       .then(async () => {
         // Prune recentDocs for workspaces that no longer exist in the recent list.
         try {
-          const recents = await getRecentWorkspaces();
+          const recents = await commands.getRecentWorkspaces();
           const validIds = new Set(recents.map((w) => w.uuid).filter((id): id is string => !!id));
           useEditorStore.getState().pruneRecentDocs(validIds);
         } catch (err) {
@@ -66,7 +64,7 @@ function RootComponent() {
 
   // Listen for pairing request events from the Tauri backend
   useEffect(() => {
-    const unlisten = listen("pairing-request-received", (event) => {
+    const unlisten = events.pairingRequestReceived.listen((event) => {
       useNotificationStore.getState().push({
         id: `pairing-${Date.now()}`,
         type: "pairing-request",

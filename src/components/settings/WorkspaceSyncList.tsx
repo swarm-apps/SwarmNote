@@ -1,14 +1,13 @@
 import { Trans } from "@lingui/react/macro";
 import { CheckCircle2, Circle, FolderSync, Loader2, WifiOff } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { RecentWorkspace } from "@/commands/workspace";
-import { getRecentWorkspaces } from "@/commands/workspace";
 import { useSyncDisplayState } from "@/hooks/useSyncDisplayState";
+import { commands, type RecentWorkspace } from "@/lib/bindings";
 import { cn } from "@/lib/utils";
 import { useNetworkStore } from "@/stores/networkStore";
 
 function WorkspaceSyncItem({ workspace }: { workspace: RecentWorkspace }) {
-  const syncState = useSyncDisplayState(workspace.uuid);
+  const syncState = useSyncDisplayState(workspace.uuid ?? undefined);
 
   if (syncState.status === "syncing") {
     const completed = syncState.completed ?? 0;
@@ -85,7 +84,8 @@ export function WorkspaceSyncList() {
   const [recentWorkspaces, setRecentWorkspaces] = useState<RecentWorkspace[]>([]);
 
   useEffect(() => {
-    getRecentWorkspaces()
+    commands
+      .getRecentWorkspaces()
       .then(setRecentWorkspaces)
       .catch(() => null);
   }, []);

@@ -11,10 +11,7 @@ import {
   type WikilinkTriggerMatch,
 } from "@swarmnote/editor-core";
 import { admonitionPlugin } from "@swarmnote/editor-core/plugins/admonition";
-import {
-  blockImagePlugin,
-  refreshBlockImagesEffect,
-} from "@swarmnote/editor-core/plugins/blockImage";
+import { blockImagePlugin } from "@swarmnote/editor-core/plugins/blockImage";
 import { codeBlockPlugin } from "@swarmnote/editor-core/plugins/codeBlock";
 import { selectionToolbarPlugin } from "@swarmnote/editor-core/plugins/interactions/selectionToolbar";
 import { slashCommandPlugin } from "@swarmnote/editor-core/plugins/interactions/slash";
@@ -24,13 +21,11 @@ import { mermaidPlugin } from "@swarmnote/editor-core/plugins/mermaid";
 import { rawHtmlPlugin } from "@swarmnote/editor-core/plugins/rawHtml";
 import { smartPastePlugin } from "@swarmnote/editor-core/plugins/smartPaste";
 import { tablePlugin } from "@swarmnote/editor-core/plugins/table";
-import { convertFileSrc, invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { confirm } from "@tauri-apps/plugin-dialog";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
 import * as Y from "yjs";
-import { openYDoc, reloadYDocConfirmed, saveMedia } from "@/commands/document";
 import { EditorContextMenu } from "@/components/editor/EditorContextMenu";
 import {
   bumpSlashMru,
@@ -38,7 +33,6 @@ import {
   getWikilinkItems,
   resolveInternalLink,
 } from "@/components/editor/interactionProviders";
-
 import { SelectionToolbar } from "@/components/editor/selection-toolbar";
 import { SlashPopover } from "@/components/editor/slash-popover";
 import {
@@ -48,6 +42,7 @@ import {
 } from "@/components/editor/TableContextMenu";
 import { WikilinkPopover } from "@/components/editor/wikilink-popover";
 import { colorForDevice } from "@/lib/awareness-color";
+import { commands, events } from "@/lib/bindings";
 import { TauriYjsProvider } from "@/lib/TauriYjsProvider";
 import { useEditorStore } from "@/stores/editorStore";
 import { type EditorPluginId, usePreferencesStore } from "@/stores/preferencesStore";
@@ -111,7 +106,7 @@ export function NoteEditor() {
     const wsId = workspace.id;
 
     async function init() {
-      const result = await openYDoc(relPath, wsId);
+      const result = await commands.openYdoc(relPath, wsId);
 
       if (cancelled) return;
 
@@ -212,7 +207,7 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
       if (!file.type.startsWith("image/")) continue;
       const buffer = await file.arrayBuffer();
       const bytes = Array.from(new Uint8Array(buffer));
-      const savedRel = await saveMedia(rel, file.name, bytes);
+      const savedRel = await commands.saveMedia(rel, file.name, bytes);
       control.execCommand("insertImage", savedRel, file.name);
     }
   }, []);
@@ -258,7 +253,7 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
     if (!rel) throw new Error("no relPath");
     const buffer = await file.arrayBuffer();
     const bytes = Array.from(new Uint8Array(buffer));
-    const savedRel = await saveMedia(rel, file.name, bytes);
+    const savedRel = await commands.saveMedia(rel, file.name, bytes);
     return { url: savedRel, alt: file.name };
   }, []);
 
@@ -350,7 +345,8 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
     // Seed awareness with our identity. y-codemirror.next reads `user.name`
     // and `user.color` to render remote caret labels. Color is derived from
     // peer_id so it stays stable across sessions.
-    invoke<{ peer_id: string; device_name: string }>("get_device_info")
+    commands
+      .getDeviceInfo()
       .then((info) => {
         provider.awareness.setLocalStateField("user", {
           name: info.device_name,
@@ -413,7 +409,7 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
     const uuid = docUuid;
 
     let cancelled = false;
-    const unlistenPromise = listen<{ docUuid: string }>("yjs:flushed", (event) => {
+    const unlistenPromise = events.docFlushed.listen((event) => {
       if (!cancelled && event.payload.docUuid === uuid) {
         useEditorStore.getState().markFlushed(new Date());
       }
@@ -430,13 +426,10 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
     if (!docUuid) return;
     const uuid = docUuid;
     let cancelled = false;
-    const unlistenPromise = listen<{ docUuid: string; update: number[] }>(
-      "yjs:awareness-update",
-      (event) => {
-        if (cancelled || event.payload.docUuid !== uuid) return;
-        provider.applyRemoteAwarenessUpdate(new Uint8Array(event.payload.update));
-      },
-    );
+    const unlistenPromise = events.externalAwarenessUpdate.listen((event) => {
+      if (cancelled || event.payload.docUuid !== uuid) return;
+      provider.applyRemoteAwarenessUpdate(new Uint8Array(event.payload.update));
+    });
     return () => {
       cancelled = true;
       unlistenPromise.then((unlisten) => unlisten());
@@ -449,14 +442,11 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
     const uuid = docUuid;
 
     let cancelled = false;
-    const unlistenPromise = listen<{ docUuid: string; update: number[] }>(
-      "yjs:external-update",
-      (event) => {
-        if (!cancelled && event.payload.docUuid === uuid) {
-          Y.applyUpdate(ydoc, new Uint8Array(event.payload.update), "remote");
-        }
-      },
-    );
+    const unlistenPromise = events.externalUpdate.listen((event) => {
+      if (!cancelled && event.payload.docUuid === uuid) {
+        Y.applyUpdate(ydoc, new Uint8Array(event.payload.update), "remote");
+      }
+    });
 
     return () => {
       cancelled = true;
@@ -470,19 +460,16 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
     const uuid = docUuid;
 
     let cancelled = false;
-    const unlistenPromise = listen<{ docUuid: string; relPath: string }>(
-      "yjs:external-conflict",
-      async (event) => {
-        if (cancelled || event.payload.docUuid !== uuid) return;
-        const confirmed = await confirm(
-          t`"${event.payload.relPath}" 已被外部修改。是否重新加载？当前未保存的编辑将丢失。`,
-          { title: t`文件已修改`, kind: "warning" },
-        );
-        if (confirmed && !cancelled) {
-          await reloadYDocConfirmed(event.payload.docUuid);
-        }
-      },
-    );
+    const unlistenPromise = events.externalConflict.listen(async (event) => {
+      if (cancelled || event.payload.docUuid !== uuid) return;
+      const confirmed = await confirm(
+        t`"${event.payload.relPath}" 已被外部修改。是否重新加载？当前未保存的编辑将丢失。`,
+        { title: t`文件已修改`, kind: "warning" },
+      );
+      if (confirmed && !cancelled) {
+        await commands.reloadYdocConfirmed(event.payload.docUuid);
+      }
+    });
 
     return () => {
       cancelled = true;
@@ -490,21 +477,7 @@ function NoteEditorInner({ ydoc, provider }: { ydoc: Y.Doc; provider: TauriYjsPr
     };
   }, [docUuid, t]);
 
-  // Asset refresh: rebuild image widgets when media files are synced from P2P.
-  useEffect(() => {
-    let cancelled = false;
-    const unlistenPromise = listen("yjs:assets-updated", () => {
-      if (cancelled) return;
-      const control = controlRef.current;
-      if (!control) return;
-      control.view.dispatch({ effects: refreshBlockImagesEffect.of(null) });
-    });
-
-    return () => {
-      cancelled = true;
-      unlistenPromise.then((unlisten) => unlisten());
-    };
-  }, []);
+  // NOTE: 后端不再发送 "assets-updated" 事件；图片刷新由 yjs 同步驱动。
 
   // Drag/drop + clipboard paste for image uploads.
   useEffect(() => {

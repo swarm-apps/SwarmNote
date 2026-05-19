@@ -1,11 +1,9 @@
 import { useLingui } from "@lingui/react/macro";
 import { Settings } from "lucide-react";
-
-import type { Device } from "@/commands/pairing";
-import { openSettingsWindow } from "@/commands/workspace";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useSyncDisplayState } from "@/hooks/useSyncDisplayState";
+import { commands, type Device } from "@/lib/bindings";
 import { computeSyncDisplay, type SyncDisplayLabel, syncDotClass } from "@/lib/syncDisplay";
 import { useNetworkStore } from "@/stores/networkStore";
 
@@ -100,7 +98,7 @@ function PeerListContent({ onlineDevices }: { onlineDevices: Device[] }) {
         <button
           type="button"
           className="flex w-full items-center gap-1.5 rounded-sm px-1 py-1 text-xs text-muted-foreground hover:bg-accent"
-          onClick={() => openSettingsWindow("network")}
+          onClick={() => commands.openSettingsWindow("network")}
         >
           <Settings className="h-3 w-3" />
           {t`网络设置`}

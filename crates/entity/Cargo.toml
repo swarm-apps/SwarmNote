@@ -9,3 +9,10 @@ serde = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
 async-trait = { workspace = true }
+
+# Optional: tauri-specta TS bindings — 仅桌面 src-tauri 启用,移动端走 uniffi 不开。
+specta = { version = "=2.0.0-rc.25", features = ["derive", "uuid", "chrono"], optional = true }
+
+[features]
+default = []
+specta = ["dep:specta"]

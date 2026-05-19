@@ -11,6 +11,7 @@ use crate::error::{AppError, AppResult};
 use crate::platform::SyncPendingMap;
 
 #[tauri::command]
+#[specta::specta]
 pub async fn trigger_workspace_sync(
     workspace_uuid: String,
     peer_id: String,

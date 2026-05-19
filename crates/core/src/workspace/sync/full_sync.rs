@@ -322,9 +322,7 @@ async fn run_full_sync(
         });
     }
 
-    info!(
-        "Full sync with {peer_id} for workspace {workspace_uuid} actions: {completed}/{total}"
-    );
+    info!("Full sync with {peer_id} for workspace {workspace_uuid} actions: {completed}/{total}");
 
     Ok(())
 }

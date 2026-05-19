@@ -26,14 +26,14 @@ tauri-plugin-mcp-bridge = "0.10"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
 
-# Core (platform-independent business logic)
-swarmnote-core = { path = "../crates/core" }
+# Core (platform-independent business logic) — 启用 specta feature 给所有 IPC 类型生成 TS bindings。
+swarmnote-core = { path = "../crates/core", features = ["specta"] }
 
 # libp2p keypair types surface through here for pairing commands
 swarm-p2p-core = { path = "../libs/core" }
 
-# Sibling crates
-entity = { path = "../crates/entity" }
+# Sibling crates — entity 也启用 specta feature (Model 直接当 IPC payload)。
+entity = { path = "../crates/entity", features = ["specta"] }
 
 # Platform-specific: keychain (DesktopKeychain) + file watcher (notify)
 keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
@@ -54,6 +54,11 @@ tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 uuid = { workspace = true }
+
+# tauri-specta — 收集 commands/events 并导出 TS bindings (开发期写到 src/lib/bindings.ts)。
+specta = { version = "=2.0.0-rc.25", features = ["derive", "uuid", "chrono", "serde_json"] }
+specta-typescript = "=0.0.12"
+tauri-specta = { version = "=2.0.0-rc.25", features = ["typescript", "derive"] }
 
 [dev-dependencies]
 tempfile = "3"

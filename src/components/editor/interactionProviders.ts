@@ -1,5 +1,5 @@
 import type { SlashItem, WikilinkItem } from "@swarmnote/editor-core";
-import type { FileTreeNode } from "@/commands/fs";
+import type { FileTreeNode_Serialize as FileTreeNode } from "@/lib/bindings";
 import { useEditorStore } from "@/stores/editorStore";
 import { useFileTreeStore } from "@/stores/fileTreeStore";
 

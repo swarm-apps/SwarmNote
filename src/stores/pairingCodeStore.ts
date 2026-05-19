@@ -10,10 +10,8 @@
  * paired-device-added 时续生。
  */
 
-import { listen } from "@tauri-apps/api/event";
 import { create } from "zustand";
-import type { PairingCodeInfo } from "@/commands/pairing";
-import { generatePairingCode } from "@/commands/pairing";
+import { commands, events, type PairingCodeInfo } from "@/lib/bindings";
 
 const TTL_SECS = 300; // 与 SwarmNote 原 CodePairingCard 一致
 
@@ -54,7 +52,7 @@ function isExpired(info: PairingCodeInfo): boolean {
 async function doGenerate(): Promise<void> {
   usePairingCodeStore.setState({ generating: true, error: null });
   try {
-    const info = await generatePairingCode(TTL_SECS);
+    const info = await commands.generatePairingCode(TTL_SECS);
     usePairingCodeStore.setState({
       codeInfo: info,
       generating: false,
@@ -101,12 +99,12 @@ let listenerSetup = false;
 function setupListener() {
   if (listenerSetup) return;
   listenerSetup = true;
-  void listen("paired-device-added", () => {
+  void events.pairedDeviceAdded.listen(() => {
     if (usePairingCodeStore.getState().codeInfo !== null) {
       void doGenerate();
     }
   });
-  void listen("node-stopped", () => {
+  void events.nodeStopped.listen(() => {
     usePairingCodeStore.getState().clear();
   });
 }

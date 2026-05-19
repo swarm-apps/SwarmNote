@@ -14,6 +14,7 @@ use crate::error::AppResult;
 
 /// 启动 P2P 节点。
 #[tauri::command]
+#[specta::specta]
 pub async fn start_p2p_node(app: AppHandle, core: State<'_, Arc<AppCore>>) -> AppResult<()> {
     let core = core.inner().clone();
     core.start_network().await?;
@@ -32,6 +33,7 @@ pub async fn start_p2p_node(app: AppHandle, core: State<'_, Arc<AppCore>>) -> Ap
 
 /// 停止 P2P 节点。
 #[tauri::command]
+#[specta::specta]
 pub async fn stop_p2p_node(app: AppHandle, core: State<'_, Arc<AppCore>>) -> AppResult<()> {
     core.stop_network().await?;
 
@@ -48,12 +50,14 @@ pub async fn stop_p2p_node(app: AppHandle, core: State<'_, Arc<AppCore>>) -> App
 
 /// 查询 P2P 节点当前运行状态。
 #[tauri::command]
+#[specta::specta]
 pub async fn get_network_status(core: State<'_, Arc<AppCore>>) -> AppResult<NodeStatus> {
     Ok(core.network_status().await)
 }
 
 /// 获取已连接的设备列表。
 #[tauri::command]
+#[specta::specta]
 pub async fn get_connected_peers(core: State<'_, Arc<AppCore>>) -> AppResult<Vec<Device>> {
     match core.devices().await {
         Ok(dm) => Ok(dm.get_devices(DeviceFilter::Connected)),

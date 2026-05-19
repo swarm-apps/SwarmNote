@@ -1,6 +1,5 @@
 import { Trans, useLingui } from "@lingui/react/macro";
 import { createFileRoute, Outlet, useLocation, useRouter } from "@tanstack/react-router";
-import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Globe, Info, Minus, MonitorSmartphone, Settings, X } from "lucide-react";
 import { useEffect } from "react";
@@ -15,6 +14,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
 } from "@/components/ui/sidebar";
+import { events } from "@/lib/bindings";
 import { isMac } from "@/lib/utils";
 
 function SettingsLayout() {
@@ -30,7 +30,7 @@ function SettingsLayout() {
   ] as const;
 
   useEffect(() => {
-    const unlisten = listen<string>("navigate", (event) => {
+    const unlisten = events.navigate.listen((event) => {
       router.navigate({ to: event.payload });
     });
     return () => {

@@ -10,6 +10,7 @@ use crate::error::AppResult;
 
 /// Return current device info.
 #[tauri::command]
+#[specta::specta]
 pub fn get_device_info(core: State<'_, Arc<AppCore>>) -> AppResult<DeviceInfo> {
     core.identity().device_info()
 }
@@ -17,6 +18,7 @@ pub fn get_device_info(core: State<'_, Arc<AppCore>>) -> AppResult<DeviceInfo> {
 /// Update device name and persist to config; restart P2P node if running
 /// so the new name propagates via libp2p Identify agent_version.
 #[tauri::command]
+#[specta::specta]
 pub async fn set_device_name(name: String, core: State<'_, Arc<AppCore>>) -> AppResult<()> {
     // In-memory identity snapshot.
     core.identity().set_device_name(name.clone())?;

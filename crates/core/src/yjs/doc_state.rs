@@ -25,6 +25,7 @@ pub type HydrateProgressFn = Arc<dyn Fn(HydrateProgress) + Send + Sync + 'static
 
 /// Progress tick emitted during hydration.
 #[derive(Debug, Clone, serde::Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct HydrateProgress {
     pub current: usize,
     pub total: usize,
@@ -32,6 +33,7 @@ pub struct HydrateProgress {
 
 /// Summary returned when hydration completes.
 #[derive(Debug, Clone, serde::Serialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct HydrateResult {
     pub generated: usize,
     pub merged: usize,

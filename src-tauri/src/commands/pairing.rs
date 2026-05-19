@@ -25,7 +25,7 @@ use swarmnote_core::protocol::{
 };
 
 /// `get_device_by_code` 的类型化返回值。
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct DeviceByCodeResult {
     pub peer_id: String,
@@ -35,6 +35,7 @@ pub struct DeviceByCodeResult {
 // ── 配对命令 ──
 
 #[tauri::command]
+#[specta::specta]
 pub async fn generate_pairing_code(
     core: State<'_, Arc<AppCore>>,
     expires_in_secs: Option<u64>,
@@ -46,6 +47,7 @@ pub async fn generate_pairing_code(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn get_device_by_code(
     core: State<'_, Arc<AppCore>>,
     code: String,
@@ -58,6 +60,7 @@ pub async fn get_device_by_code(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn request_pairing(
     core: State<'_, Arc<AppCore>>,
     peer_id: String,
@@ -80,6 +83,7 @@ pub async fn request_pairing(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn respond_pairing_request(
     core: State<'_, Arc<AppCore>>,
     pending_id: u64,
@@ -99,6 +103,7 @@ pub async fn respond_pairing_request(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn get_paired_devices(core: State<'_, Arc<AppCore>>) -> AppResult<Vec<PairedDeviceInfo>> {
     match core.pairing().await {
         Ok(pairing) => Ok(pairing.get_paired_devices()),
@@ -107,6 +112,7 @@ pub async fn get_paired_devices(core: State<'_, Arc<AppCore>>) -> AppResult<Vec<
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn unpair_device(core: State<'_, Arc<AppCore>>, peer_id: String) -> AppResult<()> {
     core.pairing().await?.unpair(&peer_id).await?;
     core.event_bus()
@@ -118,6 +124,7 @@ pub async fn unpair_device(core: State<'_, Arc<AppCore>>, peer_id: String) -> Ap
 // ── 设备查询命令 ──
 
 #[tauri::command]
+#[specta::specta]
 pub async fn list_devices(
     core: State<'_, Arc<AppCore>>,
     filter: Option<DeviceFilter>,
@@ -129,6 +136,7 @@ pub async fn list_devices(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn get_nearby_devices(core: State<'_, Arc<AppCore>>) -> AppResult<Vec<Device>> {
     let dm = match core.devices().await {
         Ok(dm) => dm,
@@ -144,7 +152,7 @@ pub async fn get_nearby_devices(core: State<'_, Arc<AppCore>>) -> AppResult<Vec<
 // ── 工作区列表交换 ──
 
 /// 远程工作区信息（合并来源 peer 信息）
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct RemoteWorkspaceInfo {
     pub uuid: Uuid,
@@ -158,6 +166,7 @@ pub struct RemoteWorkspaceInfo {
 
 /// 并发查询所有已配对在线 peer 的工作区列表，标记 is_local。
 #[tauri::command]
+#[specta::specta]
 pub async fn get_remote_workspaces(
     core: State<'_, Arc<AppCore>>,
 ) -> AppResult<Vec<RemoteWorkspaceInfo>> {

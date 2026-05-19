@@ -12,6 +12,7 @@ pub struct PairingRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(tag = "type")]
 pub enum PairingMethod {
     Code { code: String },
@@ -19,6 +20,7 @@ pub enum PairingMethod {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(tag = "status")]
 pub enum PairingResponse {
     Success,
@@ -26,6 +28,7 @@ pub enum PairingResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 pub enum PairingRefuseReason {
     UserRejected,
     CodeExpired,

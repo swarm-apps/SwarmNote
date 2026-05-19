@@ -11,7 +11,7 @@ import {
   Table as TableIcon,
 } from "lucide-react";
 import { useMemo } from "react";
-import { openSettingsWindow } from "@/commands/workspace";
+import { commands } from "@/lib/bindings";
 import { modKey } from "@/lib/utils";
 import { useEditorStore } from "@/stores/editorStore";
 import { useFileTreeStore } from "@/stores/fileTreeStore";
@@ -72,7 +72,7 @@ export function useCommands(): { actions: Command[]; recents: Command[] } {
         icon: SettingsIcon,
         shortcut: `${modKey},`,
         run: async () => {
-          await openSettingsWindow("general");
+          await commands.openSettingsWindow("general");
         },
       },
     ];

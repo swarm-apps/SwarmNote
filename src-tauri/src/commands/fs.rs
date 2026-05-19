@@ -12,7 +12,8 @@ use tauri::{State, Window};
 use crate::error::{AppError, AppResult};
 use crate::platform::WorkspaceMap;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
 pub struct SaveDocumentResult {
     /// blake3 hash hex string
     pub file_hash: String,
@@ -23,6 +24,7 @@ async fn workspace_from_label(map: &WorkspaceMap, label: &str) -> AppResult<Arc<
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn load_document(
     window: Window,
     rel_path: String,
@@ -37,6 +39,7 @@ pub async fn load_document(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn save_document(
     window: Window,
     rel_path: String,
@@ -52,6 +55,7 @@ pub async fn save_document(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn save_media(
     window: Window,
     rel_path: String,
@@ -64,6 +68,7 @@ pub async fn save_media(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn scan_workspace_tree(
     window: Window,
     ws_map: State<'_, WorkspaceMap>,
@@ -73,6 +78,7 @@ pub async fn scan_workspace_tree(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn fs_create_file(
     window: Window,
     parent_rel: String,
@@ -84,6 +90,7 @@ pub async fn fs_create_file(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn fs_create_dir(
     window: Window,
     parent_rel: String,
@@ -95,6 +102,7 @@ pub async fn fs_create_dir(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn fs_delete_file(
     window: Window,
     rel_path: String,
@@ -105,6 +113,7 @@ pub async fn fs_delete_file(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn fs_delete_dir(
     window: Window,
     rel_path: String,
@@ -115,6 +124,7 @@ pub async fn fs_delete_dir(
 }
 
 #[tauri::command]
+#[specta::specta]
 pub async fn fs_rename(
     window: Window,
     rel_path: String,

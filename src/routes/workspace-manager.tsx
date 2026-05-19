@@ -6,13 +6,6 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { Copy, EllipsisVertical, ExternalLink, FolderPlus, Minus, Trash2, X } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
-
-import {
-  getRecentWorkspaces,
-  openWorkspaceWindow,
-  type RecentWorkspace,
-  removeRecentWorkspace,
-} from "@/commands/workspace";
 import { Button } from "@/components/ui/button";
 import {
   ContextMenu,
@@ -31,6 +24,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { WorkspaceSyncDialog } from "@/components/workspace/WorkspaceSyncDialog";
+import { commands, type RecentWorkspace } from "@/lib/bindings";
 import { isMac } from "@/lib/utils";
 import { useNetworkStore } from "@/stores/networkStore";
 
@@ -106,22 +100,22 @@ function WorkspaceManagerPage() {
   const hasOnlineDevices = onlineDevices.length > 0;
 
   useEffect(() => {
-    getRecentWorkspaces().then(setRecents);
+    commands.getRecentWorkspaces().then(setRecents);
     getVersion().then(setAppVersion);
   }, []);
 
   async function handleOpen(path: string) {
-    await openWorkspaceWindow(path, { closeWindow: "main" });
+    await commands.openWorkspaceWindow(path, null, "main");
   }
 
   async function handlePickFolder(title: string) {
     const selected = await open({ directory: true, title });
     if (!selected) return;
-    await openWorkspaceWindow(selected, { closeWindow: "main" });
+    await commands.openWorkspaceWindow(selected, null, "main");
   }
 
   async function handleRemove(path: string) {
-    await removeRecentWorkspace(path);
+    await commands.removeRecentWorkspace(path);
     setRecents((prev) => prev.filter((w) => w.path !== path));
   }
 

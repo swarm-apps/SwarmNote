@@ -31,6 +31,7 @@ pub type AppNetClient = NetClient<AppRequest, AppResponse>;
 
 /// P2P 节点状态——Rust/前端共用的 single source of truth。
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
 #[serde(rename_all = "camelCase", tag = "kind")]
 pub enum NodeStatus {
     Stopped,

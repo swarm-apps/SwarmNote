@@ -2,7 +2,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import { relaunch } from "@tauri-apps/plugin-process";
 import type { Update } from "@tauri-apps/plugin-updater";
 import { create } from "zustand";
-import { checkForUpdate, executeDesktopUpdate, type UpgradeType } from "@/commands/upgrade";
+import { checkForUpdate, executeDesktopUpdate, type UpgradeType } from "@/lib/upgrade";
 
 export type UpgradeStatus =
   | "idle"
