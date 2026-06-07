@@ -66,6 +66,24 @@ impl WorkspaceKeys {
     fn insert(&mut self, version: u32, set: WorkspaceKeySet) {
         self.versions.insert(version, set);
     }
+
+    /// Test-only constructor for a single key version.
+    #[cfg(test)]
+    pub(crate) fn test_single(
+        version: u32,
+        read_key: [u8; KEY_LEN],
+        write_key: Option<[u8; KEY_LEN]>,
+    ) -> Self {
+        let mut keys = Self::default();
+        keys.insert(
+            version,
+            WorkspaceKeySet {
+                read_key,
+                write_key,
+            },
+        );
+        keys
+    }
 }
 
 /// Generate `key_version = 1` keys for a brand-new workspace, seal a
