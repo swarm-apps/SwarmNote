@@ -133,6 +133,53 @@ impl IdentityManager {
     }
 }
 
+/// Derive a peer's X25519 public key from its (ed25519) PeerId. SwarmNote uses
+/// ed25519 identities, whose public key is inlined in the PeerId's identity
+/// multihash — so a Lockbox can be sealed to a paired device knowing only its
+/// PeerId, with no extra key exchange. See [`crate::crypto::keyx`].
+pub fn peer_id_to_x25519_public(
+    peer_id: &swarm_p2p_core::libp2p::PeerId,
+) -> AppResult<x25519_dalek::PublicKey> {
+    use swarm_p2p_core::libp2p::identity::PublicKey;
+    let mh = swarm_p2p_core::libp2p::multihash::Multihash::<64>::from_bytes(&peer_id.to_bytes())
+        .map_err(|e| AppError::Crypto {
+            context: "peer-x25519",
+            reason: e.to_string(),
+        })?;
+    // Identity multihash (code 0x00) inlines the protobuf-encoded public key.
+    if mh.code() != 0 {
+        return Err(AppError::Crypto {
+            context: "peer-x25519",
+            reason: "peer id is a hash, not an inlined key".into(),
+        });
+    }
+    let pk = PublicKey::try_decode_protobuf(mh.digest()).map_err(|e| AppError::Crypto {
+        context: "peer-x25519",
+        reason: e.to_string(),
+    })?;
+    let ed = pk.try_into_ed25519().map_err(|e| AppError::Crypto {
+        context: "peer-x25519",
+        reason: e.to_string(),
+    })?;
+    crate::crypto::keyx::ed25519_pub_to_x25519(&ed.to_bytes())
+}
+
+#[cfg(test)]
+mod x25519_tests {
+    use super::*;
+    use swarm_p2p_core::libp2p::identity::Keypair;
+
+    #[test]
+    fn peer_id_x25519_matches_direct_derivation() {
+        let kp = Keypair::generate_ed25519();
+        let peer_id = kp.public().to_peer_id();
+        let ed = kp.try_into_ed25519().unwrap();
+        let direct = crate::crypto::keyx::ed25519_pub_to_x25519(&ed.public().to_bytes()).unwrap();
+        let via_peer = peer_id_to_x25519_public(&peer_id).unwrap();
+        assert_eq!(direct.as_bytes(), via_peer.as_bytes());
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

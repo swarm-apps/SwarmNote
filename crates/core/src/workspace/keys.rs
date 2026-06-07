@@ -8,17 +8,20 @@
 //! `dev-notes/design/{05-sharing,08-e2e-encryption}.md`.
 
 use std::collections::BTreeMap;
+use std::str::FromStr;
 
 use chrono::Utc;
 use entity::workspace::workspace_key_lockboxes::{self, Entity as Lockboxes};
 use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
 };
+use swarm_p2p_core::libp2p::PeerId;
 use uuid::Uuid;
 use x25519_dalek::{PublicKey, StaticSecret};
 
 use crate::crypto::{open_lockbox, random_key, seal_lockbox, KEY_LEN};
 use crate::error::{AppError, AppResult};
+use crate::identity::peer_id_to_x25519_public;
 
 /// One key version's symmetric material. `write_key` is `None` for a future
 /// read-only (Reader) device.
@@ -167,24 +170,34 @@ pub async fn load_workspace_keys(
 
     let mut keys = WorkspaceKeys::default();
     for row in rows {
-        // v1: only self-sealed Lockboxes exist. Opening a Lockbox sealed by
-        // another device (sender X25519 public derived from its PeerId) is
-        // wired in the sharing phase.
-        if row.sealed_by_peer_id != my_peer_id {
-            tracing::warn!(
-                workspace_id = %workspace_id,
-                sealed_by = %row.sealed_by_peer_id,
-                "skipping non-self Lockbox (peer-key derivation lands in sharing phase)"
-            );
-            continue;
-        }
+        // The sender's X25519 public key: our own for a self-Lockbox, otherwise
+        // derived from the sealer's PeerId (ed25519 → X25519). Skip rows whose
+        // sealer PeerId can't be parsed/derived rather than failing the load.
+        let sender_public = if row.sealed_by_peer_id == my_peer_id {
+            *my_public
+        } else {
+            match PeerId::from_str(&row.sealed_by_peer_id)
+                .ok()
+                .and_then(|pid| peer_id_to_x25519_public(&pid).ok())
+            {
+                Some(pk) => pk,
+                None => {
+                    tracing::warn!(
+                        workspace_id = %workspace_id,
+                        sealed_by = %row.sealed_by_peer_id,
+                        "skipping Lockbox: cannot derive sealer X25519 public key"
+                    );
+                    continue;
+                }
+            }
+        };
         let read = to_key(
-            open_lockbox(my_secret, my_public, &row.sealed_read_key)?,
+            open_lockbox(my_secret, &sender_public, &row.sealed_read_key)?,
             "read_key",
         )?;
         let write = match row.sealed_write_key {
             Some(ref sealed) => Some(to_key(
-                open_lockbox(my_secret, my_public, sealed)?,
+                open_lockbox(my_secret, &sender_public, sealed)?,
                 "write_key",
             )?),
             None => None,
@@ -198,6 +211,50 @@ pub async fn load_workspace_keys(
         );
     }
     Ok(keys)
+}
+
+/// Seal this device's current workspace keys to a paired `recipient` device
+/// (X25519 public derived from its PeerId) and persist the Lockbox, so the
+/// recipient can load them on its next open. The crypto + storage half of key
+/// distribution — protocol delivery (sending these rows to the peer) is wired
+/// separately. A read-only (future Reader) recipient is given only the read key.
+pub async fn share_workspace_keys_to_device(
+    db: &DatabaseConnection,
+    workspace_id: Uuid,
+    my_peer_id: &str,
+    my_secret: &StaticSecret,
+    recipient_peer_id: &str,
+    keys: &WorkspaceKeys,
+    include_write_key: bool,
+) -> AppResult<()> {
+    let (version, set) = keys.current().ok_or(AppError::Crypto {
+        context: "share-keys",
+        reason: "workspace has no key to share".into(),
+    })?;
+    let recipient_pid = PeerId::from_str(recipient_peer_id).map_err(|e| AppError::Crypto {
+        context: "share-keys",
+        reason: format!("bad recipient peer id: {e}"),
+    })?;
+    let recipient_public = peer_id_to_x25519_public(&recipient_pid)?;
+
+    let sealed_read = seal_lockbox(my_secret, &recipient_public, &set.read_key)?;
+    let sealed_write = match (include_write_key, set.write_key) {
+        (true, Some(write)) => Some(seal_lockbox(my_secret, &recipient_public, &write)?),
+        _ => None,
+    };
+
+    workspace_key_lockboxes::ActiveModel {
+        workspace_id: Set(workspace_id),
+        key_version: Set(version as i32),
+        recipient_peer_id: Set(recipient_peer_id.to_string()),
+        sealed_read_key: Set(sealed_read),
+        sealed_write_key: Set(sealed_write),
+        sealed_by_peer_id: Set(my_peer_id.to_string()),
+        created_at: Set(Utc::now()),
+    }
+    .insert(db)
+    .await?;
+    Ok(())
 }
 
 fn to_key(bytes: Vec<u8>, what: &'static str) -> AppResult<[u8; KEY_LEN]> {
@@ -280,5 +337,46 @@ mod tests {
             .await
             .unwrap();
         assert!(loaded_b.is_empty());
+    }
+
+    /// A real device with a genuine ed25519 PeerId (so `sealed_by` parses and
+    /// `peer_id_to_x25519_public` can derive the sender key cross-device).
+    fn real_device() -> (String, StaticSecret, PublicKey) {
+        use swarm_p2p_core::libp2p::identity::Keypair;
+        let kp = Keypair::generate_ed25519();
+        let peer_id = kp.public().to_peer_id().to_string();
+        let ed = kp.try_into_ed25519().unwrap();
+        let seed: [u8; 32] = ed.to_bytes()[..32].try_into().unwrap();
+        let sec = derive_x25519_secret(&seed);
+        let pubk = PublicKey::from(&sec);
+        (peer_id, sec, pubk)
+    }
+
+    #[tokio::test]
+    async fn share_to_paired_device_round_trip() {
+        let db = mem_db().await;
+        let ws = Uuid::now_v7();
+        insert_workspace(&db, ws).await;
+
+        let (peer_a, sec_a, pub_a) = real_device();
+        let (peer_b, sec_b, pub_b) = real_device();
+
+        // A initializes its own keys (self-Lockbox).
+        let a_keys = initialize_workspace_keys(&db, ws, &peer_a, &sec_a, &pub_a)
+            .await
+            .unwrap();
+
+        // A shares its current keys to paired device B (sealed to B's PeerId).
+        share_workspace_keys_to_device(&db, ws, &peer_a, &sec_a, &peer_b, &a_keys, true)
+            .await
+            .unwrap();
+
+        // B loads → opens A's Lockbox (sender X25519 derived from A's PeerId) and
+        // recovers the SAME read/write keys.
+        let b_keys = load_workspace_keys(&db, ws, &peer_b, &sec_b, &pub_b)
+            .await
+            .unwrap();
+        assert_eq!(b_keys.read_key(1), a_keys.read_key(1));
+        assert_eq!(b_keys.write_key(1), a_keys.write_key(1));
     }
 }
