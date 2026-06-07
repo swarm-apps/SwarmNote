@@ -18,6 +18,9 @@ pub struct Model {
     #[sea_orm(default_value = 0)]
     pub used_count: i32,
     pub password_hash: Option<String>,
+    /// Key commitment over the secret/password-wrapped invite (partitioning-
+    /// oracle defense). Nullable for rows created before this column existed.
+    pub commitment: Option<Vec<u8>>,
 }
 
 impl ActiveModelBehavior for ActiveModel {}

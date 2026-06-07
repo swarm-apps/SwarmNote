@@ -99,6 +99,13 @@ pub enum AppError {
         failures: Vec<(Uuid, String)>,
     },
 
+    // ── Cryptography (E2E sharing) ────────────────────────────
+    #[error("crypto error ({context}): {reason}")]
+    Crypto {
+        context: &'static str,
+        reason: String,
+    },
+
     // ── Window (desktop shell) ────────────────────────────────
     #[error("window error: {0}")]
     Window(String),
@@ -153,6 +160,8 @@ impl Serialize for AppError {
             AppError::NameConflict(_) => "NameConflict",
             AppError::NoWorkspaceOpen => "NoWorkspaceOpen",
             AppError::WorkspaceCloseFailed { .. } => "WorkspaceCloseFailed",
+
+            AppError::Crypto { .. } => "Crypto",
 
             AppError::Window(_) => "Window",
         };

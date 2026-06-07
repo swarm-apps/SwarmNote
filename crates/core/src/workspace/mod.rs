@@ -6,6 +6,7 @@
 //! shared across windows of the same workspace). Mobile holds at most one.
 
 pub mod db;
+pub mod keys;
 pub mod sync;
 
 use std::path::Path;

@@ -111,6 +111,26 @@ impl IdentityManager {
             .to_protobuf_encoding()
             .map_err(|e| AppError::KeypairEncode(e.to_string()))
     }
+
+    /// This device's long-lived X25519 secret, derived from the Ed25519
+    /// identity (single-layer reuse). Used as the sender/recipient key for
+    /// workspace-key Lockboxes. See [`crate::crypto::keyx`].
+    pub fn x25519_secret(&self) -> AppResult<x25519_dalek::StaticSecret> {
+        let ed = self
+            .keypair
+            .clone()
+            .try_into_ed25519()
+            .map_err(|e| AppError::KeypairDecode(e.to_string()))?;
+        let bytes = ed.to_bytes(); // [secret_seed(32) || public(32)]
+        let mut seed = [0u8; 32];
+        seed.copy_from_slice(&bytes[..32]);
+        Ok(crate::crypto::keyx::derive_x25519_secret(&seed))
+    }
+
+    /// This device's X25519 public key (Lockbox recipient identity).
+    pub fn x25519_public(&self) -> AppResult<x25519_dalek::PublicKey> {
+        Ok(x25519_dalek::PublicKey::from(&self.x25519_secret()?))
+    }
 }
 
 #[cfg(test)]
