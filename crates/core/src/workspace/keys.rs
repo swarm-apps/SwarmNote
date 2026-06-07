@@ -422,4 +422,62 @@ mod tests {
         assert_eq!(b_keys.read_key(1), a_keys.read_key(1));
         assert_eq!(b_keys.write_key(1), a_keys.write_key(1));
     }
+
+    /// End-to-end proof of the encrypted-sync core (everything except the
+    /// libp2p transport itself): A initializes a key, distributes it to B via a
+    /// peer-sealed Lockbox, B installs + loads it, A encrypts a gossip payload,
+    /// **B decrypts it**, and an unauthorized device C (no key) cannot.
+    #[tokio::test]
+    async fn encrypted_sync_end_to_end_after_key_share() {
+        use crate::workspace::sync::{
+            decode_encrypted_gossip, encode_encrypted_gossip, MSG_TYPE_DOC,
+        };
+
+        // Device A owns the workspace; B is a paired joiner; C is unauthorized.
+        let db_a = mem_db().await;
+        let db_b = mem_db().await;
+        let ws = Uuid::now_v7();
+        insert_workspace(&db_a, ws).await;
+        insert_workspace(&db_b, ws).await;
+
+        let (peer_a, sec_a, pub_a) = real_device();
+        let (peer_b, sec_b, pub_b) = real_device();
+        let (_peer_c, sec_c, pub_c) = real_device();
+
+        // 1. A initializes its workspace key (v1, self-Lockbox).
+        let a_keys = initialize_workspace_keys(&db_a, ws, &peer_a, &sec_a, &pub_a)
+            .await
+            .unwrap();
+
+        // 2. A seals its key to B's PeerId; B installs it into its own DB and loads.
+        let b_pub = peer_id_to_x25519_public(&PeerId::from_str(&peer_b).unwrap()).unwrap();
+        let (ver, sealed_read, sealed_write) =
+            seal_keys_for_recipient(&sec_a, &b_pub, &a_keys, true).unwrap();
+        install_received_key(&db_b, ws, &peer_b, &peer_a, ver, sealed_read, sealed_write)
+            .await
+            .unwrap();
+        let b_keys = load_workspace_keys(&db_b, ws, &peer_b, &sec_b, &pub_b)
+            .await
+            .unwrap();
+        assert_eq!(b_keys.read_key(1), a_keys.read_key(1), "B must hold A's key");
+
+        // 3. A encrypts a gossip doc-update; B decrypts it back to plaintext.
+        let doc = Uuid::now_v7();
+        let plaintext = b"yjs-update-\xf0\x9f\x90\x9d"; // arbitrary bytes incl. emoji
+        let wire = encode_encrypted_gossip(&a_keys, &ws, &doc, MSG_TYPE_DOC, plaintext).unwrap();
+        let (got_doc, got) =
+            decode_encrypted_gossip(&b_keys, &ws, MSG_TYPE_DOC, &wire).unwrap();
+        assert_eq!(got_doc, doc);
+        assert_eq!(got, plaintext, "B must decrypt A's broadcast");
+
+        // 4. Unauthorized device C (never received the key) cannot decrypt.
+        let c_keys = load_workspace_keys(&mem_db().await, ws, "c", &sec_c, &pub_c)
+            .await
+            .unwrap();
+        assert!(c_keys.is_empty());
+        assert!(
+            decode_encrypted_gossip(&c_keys, &ws, MSG_TYPE_DOC, &wire).is_err(),
+            "device without the key must not decrypt"
+        );
+    }
 }
