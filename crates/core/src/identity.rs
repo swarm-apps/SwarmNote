@@ -131,6 +131,37 @@ impl IdentityManager {
     pub fn x25519_public(&self) -> AppResult<x25519_dalek::PublicKey> {
         Ok(x25519_dalek::PublicKey::from(&self.x25519_secret()?))
     }
+
+    /// Sign `msg` with this device's Ed25519 identity key. Used to sign
+    /// permission operations so peers can verify the issuer.
+    pub fn sign(&self, msg: &[u8]) -> AppResult<Vec<u8>> {
+        self.keypair.sign(msg).map_err(|e| AppError::Crypto {
+            context: "sign",
+            reason: e.to_string(),
+        })
+    }
+}
+
+/// Recover a peer's libp2p Ed25519 [`PublicKey`] from its (inlined) PeerId.
+fn peer_ed25519_public(
+    peer_id: &swarm_p2p_core::libp2p::PeerId,
+) -> AppResult<swarm_p2p_core::libp2p::identity::PublicKey> {
+    use swarm_p2p_core::libp2p::identity::PublicKey;
+    let mh = swarm_p2p_core::libp2p::multihash::Multihash::<64>::from_bytes(&peer_id.to_bytes())
+        .map_err(|e| AppError::Crypto {
+            context: "peer-pubkey",
+            reason: e.to_string(),
+        })?;
+    if mh.code() != 0 {
+        return Err(AppError::Crypto {
+            context: "peer-pubkey",
+            reason: "peer id is a hash, not an inlined key".into(),
+        });
+    }
+    PublicKey::try_decode_protobuf(mh.digest()).map_err(|e| AppError::Crypto {
+        context: "peer-pubkey",
+        reason: e.to_string(),
+    })
 }
 
 /// Derive a peer's X25519 public key from its (ed25519) PeerId. SwarmNote uses
@@ -140,28 +171,25 @@ impl IdentityManager {
 pub fn peer_id_to_x25519_public(
     peer_id: &swarm_p2p_core::libp2p::PeerId,
 ) -> AppResult<x25519_dalek::PublicKey> {
-    use swarm_p2p_core::libp2p::identity::PublicKey;
-    let mh = swarm_p2p_core::libp2p::multihash::Multihash::<64>::from_bytes(&peer_id.to_bytes())
+    let ed = peer_ed25519_public(peer_id)?
+        .try_into_ed25519()
         .map_err(|e| AppError::Crypto {
             context: "peer-x25519",
             reason: e.to_string(),
         })?;
-    // Identity multihash (code 0x00) inlines the protobuf-encoded public key.
-    if mh.code() != 0 {
-        return Err(AppError::Crypto {
-            context: "peer-x25519",
-            reason: "peer id is a hash, not an inlined key".into(),
-        });
-    }
-    let pk = PublicKey::try_decode_protobuf(mh.digest()).map_err(|e| AppError::Crypto {
-        context: "peer-x25519",
-        reason: e.to_string(),
-    })?;
-    let ed = pk.try_into_ed25519().map_err(|e| AppError::Crypto {
-        context: "peer-x25519",
-        reason: e.to_string(),
-    })?;
     crate::crypto::keyx::ed25519_pub_to_x25519(&ed.to_bytes())
+}
+
+/// Verify an Ed25519 signature against a peer's PeerId-derived public key.
+/// Returns `false` on any decode/verify failure (never panics).
+pub fn verify_peer_signature(
+    peer_id: &swarm_p2p_core::libp2p::PeerId,
+    msg: &[u8],
+    sig: &[u8],
+) -> bool {
+    peer_ed25519_public(peer_id)
+        .map(|pk| pk.verify(msg, sig))
+        .unwrap_or(false)
 }
 
 #[cfg(test)]

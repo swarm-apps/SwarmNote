@@ -7,6 +7,7 @@
 
 pub mod db;
 pub mod keys;
+pub mod permissions;
 pub mod sync;
 
 use std::path::Path;
