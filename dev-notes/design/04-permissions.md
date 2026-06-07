@@ -1,164 +1,74 @@
-# 权限模型
+# 权限模型（v1 定稿）
 
-## 角色定义
+> **2026-06 调研定稿**，取代 2026-03 的三级（Owner/Editor/Reader）纸面版。v1 收敛为**两级 Owner/Collaborator**（真正的只读 Reader 后置 v2），并把权限变更做成**签名操作链**而非可变 DB 行。
+> 加密底层见 [08-e2e-encryption.md](08-e2e-encryption.md)，分享流程见 [05-sharing.md](05-sharing.md)。
 
-| 角色 | 读 | 编辑 | 管理权限 | 删除 | 密码学能力 |
-|------|:--:|:----:|:--------:|:----:|:----------:|
-| Owner | ✓ | ✓ | ✓ | ✓ | 持有主密钥（read_key + write_key + admin_key） |
-| Editor | ✓ | ✓ | | | 持有 read_key + write_key |
-| Reader | ✓ | | | | 仅持有 read_key |
+## 角色（v1 两级）
 
-- **Owner**：资源创建者，唯一能管理权限（授权/撤销/转让）和删除资源的角色
-- **Editor**：可编辑文档内容（CRDT 双向同步）
-- **Reader**：只读，只接收文档更新
+| 角色 | 读 | 写 | 管理成员 | 密钥持有 |
+|------|:--:|:--:|:--------:|---------|
+| **Owner** | ✓ | ✓ | ✓（授权/移除/轮换）| read_key + write_key（+ 管理权）|
+| **Collaborator** | ✓ | ✓ | | read_key + write_key |
 
-> 三级权限模型。不设 Commenter（评论系统对个人/小团队笔记场景优先级低，增加的复杂度不值得）。不设 Manager（飞书有但我们不做，单 Owner 足够）。
+- **v1 不做真正的只读 Reader**：有 key 即可读写。原因——真 Reader 必须每条 update 设备签名 + 合并前校验 + 丢弃越权写入，是巨大工作量。
+- **v2 Reader 是开关不是重构**：v1 已（a）read/write 分两把独立 key、（b）每条 update 携带设备 Ed25519 签名（携带但不强制校验）。v2 加 Reader = 「只发 read_key 的 lockbox + 打开签名校验丢弃越权 update」，无新表、无 re-key、无历史回填。
 
-## 密码学权限执行
+## 密码学执行（P2P 无服务器）
 
-P2P 没有服务器强制执行权限，改用**密钥分发**控制访问：
+没有服务器强制权限，用**密钥分发 + 签名**替代：
 
-### 每个工作区的密钥体系
+- **读 = 持有 read_key**：能解密 = 能读。通过 X25519 Lockbox 分发（见 [05-sharing.md](05-sharing.md)）。
+- **写 = 持有 write_key**：v1「有 key 即可写」，update 携带设备签名但**不强制校验**（为 v2 铺路）。
+- **管理 = Owner**：成员变更操作必须由 Owner 的设备 Ed25519 签名（见下）。
 
-```text
-Workspace 创建时 Owner 生成：
-├── read_key    (对称密钥，ChaCha20-Poly1305)  → 解密文档内容
-├── write_key   (对称密钥)                      → 签署 CRDT 编辑操作
-└── admin_key   (对称密钥)                      → 签署权限变更操作
-```
+## 权限表 = 签名操作链（v1 就做）
 
-### 密钥分发规则
-
-| 授予角色 | 分发的密钥 |
-|---------|-----------|
-| Reader | read_key |
-| Editor | read_key + write_key |
-| Owner（转让） | read_key + write_key + admin_key |
-
-### 密钥传输
-
-通过已配对的 P2P 加密通道传输（libp2p Noise 协议已提供传输层加密）。链接分享场景下，密钥嵌入在邀请 token 中（见 [05-sharing.md](05-sharing.md)）。
-
-### 操作验证
-
-收到远程操作时，本地验证：
-
-```text
-收到 CRDT Update：
-  → 验证发送者持有 write_key（检查操作签名）
-  → 验证失败 → 丢弃该 update
-
-收到权限变更：
-  → 验证发送者持有 admin_key
-  → 验证失败 → 丢弃
-```
-
-## 权限继承
-
-```text
-Workspace 权限 + 密钥
-  └─ 向下继承到 Folder
-       └─ 向下继承到 Document
-```
-
-- 子级**默认继承**父级权限和密钥
-- 子级可以**覆盖**继承的权限（提升或降低）
-- 冲突解决：**直接授权优先于继承**，与 Notion 类似
-  - 同一设备通过多条路径获得权限时，取**最高权限**（Notion 的"最高权限胜出"规则）
-- 覆盖记录单独存储，删除覆盖则恢复继承
-
-示例：
-
-- Workspace 授予 B 设备 Editor → B 可编辑该工作区下所有文档
-- 某个 Folder 将 B 降为 Reader → B 只能查看该文件夹下的文档
-- 该 Folder 下某篇 Document 将 B 提升为 Editor → B 可编辑这篇文档
-
-### Folder/Document 级别独立密钥（可选扩展）
-
-默认所有文档共享工作区密钥。如果需要更细粒度控制（如某个 Folder 有独立的 write_key），可为该 Folder 生成独立密钥组，降级用户只分发 read_key。
-
-此特性复杂度较高，MVP 阶段建议工作区级别统一密钥，后续按需扩展。
-
-## 权限数据结构
+**不能**把成员/角色当普通可变 DB 行在 P2P 间同步——任何节点都能伪造一行把自己设成 Owner。做成 **append-only 的签名操作 DAG**（对齐 Matrix auth chain / Jazz 角色 transaction / p2panda Causal-Length CRDT）：
 
 ```rust
-enum ResourceType {
-    Workspace,
-    Folder,
-    Document,
-}
-
-enum Role {
-    Owner,
-    Editor,
-    Reader,
-}
-
-/// 一条权限记录
-struct Permission {
-    resource_type: ResourceType,
-    resource_id: Uuid,          // workspace/folder/document 的 ID
-    peer_id: PeerId,            // 被授权的设备
-    role: Role,
-    granted_by: PeerId,         // 授权者
-    granted_at: i64,
+// 新增 permission_ops 表（append-only）
+struct PermissionOp {
+    op: OpKind,              // Add / Remove / Promote / TransferOwner
+    target_peer_id: String,  // 被操作设备
+    new_role: Role,
+    issuer_peer_id: String,  // 发起设备
+    key_version: i32,        // 关联的 workspace key 版本
+    prev_hash: Vec<u8>,      // 因果前序（构成 DAG/链）
+    issuer_signature: Vec<u8>, // issuer 设备 Ed25519 签名（覆盖以上全部字段）
 }
 ```
 
-## 权限解析算法
+每个节点收到后**本地重放并校验**三条不变量：
 
-查询某设备对某文档的有效权限：
+1. **签名有效**：`issuer_signature` 由 `issuer_peer_id` 对应的 Ed25519 公钥验证通过。
+2. **issuer 有权**：在该操作的因果前序里，`issuer` 确实是 Owner（或对该操作有权）。
+3. **不得提权越级**：不能把任何人设到高于 issuer 自己的等级（Matrix 防提权不变量）。
 
-```text
-1. 查该文档是否有直接授权 → 有则返回
-2. 查父文件夹是否有直接授权 → 有则返回
-3. 递归向上查到工作区 → 有则返回
-4. 无任何授权 → 拒绝访问
-```
+任一不满足 → 丢弃该 op。改一条记录就得伪造整条签名链（不可行）。这使无中心、离线可判定。
 
-如果通过多条路径获得不同角色（如工作区 Editor + 文件夹 Reader），取最高权限。
+> **当前 schema 缺口**：现有 `permissions` 表是普通行结构（`id/resource_type/resource_id/peer_id/role/granted_by/granted_at`）。v1 需新增 `permission_ops` 表承载签名操作链；`permissions` 可作为重放后的物化视图（可重建索引）。
 
-## 权限撤销与密钥轮换
+## 撤销与密钥轮换（lazy re-encryption）
 
-### 核心挑战
+移除某 Collaborator 设备时：
 
-P2P 场景下权限撤销比中心化产品困难：
-- 无服务器可以立即切断访问
-- 被撤销者已持有解密密钥，本地已有数据无法收回
-- 被撤销者可能离线，无法实时通知
+1. Owner 生成新 `read_key` + `write_key`，`key_version + 1`。
+2. **只**为剩余设备重新封 Lockbox（新增 `workspace_key_lockboxes` 行），不给被移除设备。
+3. 此后新 gossip update / awareness / 资产用新 key 加密，payload 头部 `key_version` 标新版本。
+4. **旧密文不重写**——去中心化下旧 update 已散落各设备、各人本地有旧 key，重写既不干净又破坏 CRDT 历史连续性（SecSync 能丢旧 snapshot 是因为有中心 relay，SwarmNote 没有）。
+5. permissions 记一条签名的 `Remove` op（非裸删行）。
 
-### 撤销策略
+**key 历史**永久保留 `{key_version → (read_key, write_key)}`（CRDT 必须能重放全历史）。
 
-#### 即时效果
+### 并发撤销收敛
 
-```text
-Owner 撤销 B 的权限：
-1. 从本地权限表删除 B 的记录
-2. 广播 PermissionRevoked 消息给所有在线协作者
-3. 所有在线节点停止向 B 发送文档更新
-4. B 的本地数据保留，但不再接收新内容
-```
+去中心化下两设备可能并发触发轮换，致 `key_version` 冲突。用确定性收敛——`key_version` 用 `(counter, 触发者 PeerId)` 做全序 tie-break，或并发时两个新 key 都保留（谁都能解）直到下次轮换合并（借鉴 BeeKEM coordination-free revocation 思想，不上 BeeKEM 本体）。
 
-#### 密钥轮换（彻底撤销）
+### 诚实声明（写进威胁模型）
 
-当需要确保被撤销者无法解密后续内容时：
+撤销是 **lazy** 的：被移除设备保留它离开前的 read_key，**对它离开前能看到的明文 `.md` / 旧密文永久可读**。撤销只保证「读不到轮换之后的新内容」。这是所有本地优先 E2EE 方案的固有属性（Jazz/SecSync/Keyhive 均如此），与「不防丢设备」决策自洽。**别向用户承诺「踢人即焚」。** 详见 [11-threat-model.md](11-threat-model.md)。
 
-```text
-Owner 轮换密钥：
-1. 生成新的 read_key / write_key
-2. 向所有仍有权限的设备分发新密钥（通过 P2P 加密通道）
-3. 后续文档更新用新密钥加密
-4. 被撤销者的旧密钥只能解密轮换前的内容
-```
+## 权限粒度
 
-> 参考 Google Docs 的做法：移除协作者后，对方保留已下载的内容但无法访问新内容。密钥轮换是 P2P 下的等价实现。
-
-### Owner 转让
-
-```text
-A 转让 Owner 给 B：
-1. A 将 admin_key 通过加密通道发送给 B
-2. A 本地将自己的角色降为 Editor（或其他指定角色）
-3. 广播 OwnerTransferred 消息
-4. 同一资源始终只有一个 Owner（避免飞书/Notion 中的多管理员冲突）
-```
+- **v1 = 工作区级统一密钥**：一个 workspace 一组 read/write key，覆盖其下所有文档。
+- **Folder/Document 级独立密钥 + 继承（向下级联 + 可覆盖 + 最高权限胜出）**：复杂度高，后置 v2+。届时用 HKDF 从 workspace key 派生 folder/doc key。

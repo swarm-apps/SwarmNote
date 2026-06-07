@@ -1,109 +1,88 @@
-# E2E 加密设计方案
+# E2E 加密设计（v1 定稿）
 
-> 参考架构：SecSync（Serenity Notes 使用的 E2E 加密 CRDT 方案，NLnet 资助）。
-> 本文档描述底层加密实现细节，权限模型层面的密钥分发规则见 [04-permissions.md](04-permissions.md)。
+> **2026-06 调研定稿**，取代 2026-03 基于 SecSync 的初稿。主要变化：加密主体由"用户"改为**设备**、密钥存储由 Stronghold 改为 **OS keychain**、X25519 由设备 Ed25519 **复用派生**、新增 **key commitment**。
+> 本文描述加密底层；权限/角色见 [04-permissions.md](04-permissions.md)，分享流程见 [05-sharing.md](05-sharing.md)，威胁边界见 [11-threat-model.md](11-threat-model.md)。
+>
+> 业界共识：SwarmNote 这种「无服务器 + Yjs CRDT + 2-3 人 + 偶尔分享」的场景，正解是 **per-workspace 对称群 key + per-device X25519 Lockbox + 移除时 lazy 轮换**——与 Jazz/cojson、p2panda Data Encryption、Tresorit、SecSync 同构。MLS/BeeKEM/CGKA 对此规模是过度工程，后置 v2/v3。
 
 ## 设计原则
 
-- **设备信任 ≠ 文档授权**：设备信任允许网络连接，文档授权通过密钥分发控制访问权限
-- **中继节点不可读**：引导节点和 Relay 节点不能解密任何文档内容
-- **前向安全性**：移除协作者后，新内容不可读（但无法阻止保留已解密的旧数据）
-
-## 加密算法
-
-**XChaCha20-Poly1305**
-
-| 维度 | 选择理由 |
-|------|---------|
-| Nonce | 24 字节，P2P 无法协调计数器，必须随机生成，192-bit 空间消除碰撞风险 |
-| 跨平台 | 纯 Rust 实现，无 C 依赖 |
-| 侧信道 | 不依赖硬件加速，任何设备上都是常数时间 |
-| 验证 | SecSync 同款选择，已在生产环境验证 |
+- **仅传输加密**：加密只发生在网络层（GossipSub 广播 / 资产传输 / 链接邀请包）。授权设备本地仍写明文 `.md`，folder-is-truth 不变；丢设备的风险交给 OS 全盘加密。
+- **加密主体 = 设备**：SwarmNote 无账号、无用户注册表，唯一稳定密码学身份是 per-device 的 libp2p Ed25519 keypair（`crates/core/src/identity.rs`，已作 PeerId + Noise 静态身份持久化在 OS keychain）。Lockbox 收方、`permissions.peer_id` 全是设备粒度；逻辑上的"用户"只是 UI 把若干 PeerId 归组，密码学上不存在用户主体。
+- **不追前向保密（FS）**：CRDT 必须重放全部历史 update 才能收敛 → 必须保留所有历史 key，应用层 FS 名存实亡（Ink & Switch Keyhive 已论证）。保留 `{key_version → key}` 全历史是正确取舍。
 
 ## 密钥层级
 
-```
-用户主密钥（Stronghold 保护）
-  ├── Ed25519 签名密钥对（验证消息来源、签名文档更新）
-  ├── X25519 密钥交换密钥对（与其他用户安全交换文档对称密钥）
-  ├── 工作区密钥组（见 04-permissions.md）
-  │     ├── read_key   → 解密文档内容
-  │     ├── write_key   → 签署编辑操作
-  │     └── admin_key   → 签署权限变更
-  └── 文件夹级密钥（可选扩展，HKDF 派生文档密钥）
-```
+```text
+第0层 设备根（OS keychain）
+  Ed25519 设备密钥 ──复用派生──▶ X25519 设备密钥（Lockbox 收方）
 
-## 加密消息格式
+第1层 workspace 对称密钥（每 workspace 一组，带 key_version）
+  ├── read_key  (32B 随机)  → 加密 gossip doc-update / awareness / 资产
+  └── write_key (32B 随机，独立生成，绝不从 read_key 派生)
+                            → v1 仅作 Collaborator 写凭证占位；v2 演化为逐 update 签名授权根
+  （admin_key_enc 列保留，v1 不用）
 
-对每个同步消息整体加密后传输：
-
-```
-+--------+-------+---------+----------------+----------+
-| doc_id | nonce | key_id  | ciphertext     | auth_tag |
-| 32B    | 24B   | 4B      | variable       | 16B      |
-+--------+-------+---------+----------------+----------+
+第2层 子用途派生（每次加密前 HKDF-Expand）
+  HKDF-SHA256(read_key, info = b"swarmnote:v1:<purpose>" || workspace_id || key_version)
+  purpose ∈ { gossip, asset, commit }    salt = workspace_id
 ```
 
-- doc_id 明文：网络层需要据此路由消息
-- nonce 随机生成：每条消息唯一
-- key_id 支持密钥轮换
-- auth_tag AEAD 认证标签，防篡改
+**为什么 v1 就分两把独立 key**：v1 虽不强制只读，但若 read/write 合成一把或派生，v2 给 Reader 发 read_key 就等于泄露能推 write 凭证的种子，被迫 re-key 重构。两把独立 ⇒ v2 加 Reader = 「不发 write_key 的 lockbox + 打开签名校验开关」，schema/密钥布局零改动。这是把「2 级 → 3 级」从重构降为开关的关键。
 
-## 密钥分发（Lockbox）
+**key 历史**：本地保存 `{key_version → (read_key, write_key)}` 全历史 map。解旧密文按 payload 头部携带的 `key_version` 取对应 key。不做 Plutus 式单向 key 链（2-3 人是过度优化）。
 
-文档密钥用每个协作者的 X25519 公钥分别加密，形成 Lockbox：
+## Ed25519 → X25519 派生
 
-1. Alice 获取 Bob 的 X25519 公钥
-2. Alice 计算 `shared_secret = X25519(alice_sk, bob_pk)`
-3. Alice 用 shared_secret 加密文档密钥，创建 Lockbox
-4. 发送 Lockbox 给 Bob
-5. Bob 计算相同 `shared_secret = X25519(bob_sk, alice_pk)`
-6. Bob 解密 Lockbox 获得文档密钥
+采用 **复用 + 严格 HKDF 域分离**，而非每设备独立生成第二把长期 X25519：
 
-## 文件夹级密钥派生（HKDF）
+- 本机 X25519 私钥 = `SigningKey::to_scalar_bytes()`（ed25519-dalek 2.x）；对端 X25519 公钥 = `verifying_key().to_montgomery()`（或等价 libsodium `crypto_sign_ed25519_*_to_curve25519`）。
+- **理由**：配对时对端只交换 PeerId/Ed25519 公钥即可算出其 X25519 公钥，零额外密钥分发/签名绑定；Thormarker 2021/509 在 ROM 下证明 joint security，libsodium/GNUnet 生产在用。
+- **硬约束**：① 全局钉死同一 clamp 约定（`to_scalar_bytes` 配 `to_montgomery`，跨端必须一致否则 DH 不匹配）；② **只做单层转换，不做层级派生**（层级派生需乘 cofactor，否则触发 hidden-number-problem）；③ Lockbox 对称封装必须 key-committing（见下）。
 
+## 对称加密原语
+
+- **XChaCha20-Poly1305**：192-bit nonce，每条消息 `OsRng` 随机生成 nonce 前置于密文——免去跨设备 nonce 计数器协调（P2P 多写的唯一现实选择；约 2^80 条消息才到 2^-32 碰撞概率）。这正是 SecSync/p2panda Data Encryption 都选它的原因。
+- **key commitment**（纸面遗漏，必补）：裸 AEAD 不是 key-committing——同一密文可被构造成不同 key 解出不同明文，链接分享是这类 partitioning-oracle / invisible-salamander 攻击（USENIX'21）的靶心。方案：HKDF 多挤 32B（`info = b"swarmnote:v1:commit"...`）作 commitment 与密文同存，解密时用 `subtle` 常量时间比对。零新依赖。
+
+## 逐通道加密策略
+
+| 通道 | 是否应用层加密 | 说明 |
+|------|:---:|------|
+| **gossip doc-update**（`ws` topic） | ✅ 必须 | 真正裸奔点：mesh 内任何订阅 topic 的转发节点解开逐跳 Noise 后读到明文。现状 `[16B uuid][明文 update]` 零保护 |
+| **awareness**（`ws-aw` topic） | ✅ 必须 | 不加密会泄露光标/在线/用户名/颜色给整个 mesh。AAD 的 `msg_type` 区分 ws/ws-aw 防跨通道重放 |
+| **资产分块**（走 gossip 时） | ✅ 必须 | 各分块独立 nonce + AAD（含 `asset_id+chunk_index`）防重排/跨资产重放 |
+| **SV 交换 / 全量拉取 / 资产 RPC** | ❌ 不叠 | 走 request-response，已被 libp2p Noise 端到端加密 + 对端认证（点对点直连不经 mesh 转发）。应用层加密预算全砸 GossipSub |
+| **DocList 元数据（路径/标题）** | ⚠️ 真正泄漏在 topic 名 | payload 走 RR 由 Noise 护住；但 `swarmnote/ws/{明文uuid}` topic 名泄露"谁关注哪个工作区"→ 改 HMAC 不可逆派生 topic（见 [11-threat-model.md](11-threat-model.md)） |
+| **online 宣告（DHT）** | 现状即可 | 本就是公开存在性信息；但**分享邀请包**发 DHT 必须加密+签名（见 [05-sharing.md](05-sharing.md)） |
+
+## 加密 wire 格式（GossipSub payload）
+
+```text
+[1B version][4B key_version][24B nonce][32B commitment][ciphertext]
+AAD = workspace_id(16B) || doc_uuid(16B) || key_version(4B) || msg_type(1B)
 ```
-文件夹密钥（256-bit 随机）
-  ├── HKDF(folder_key, "doc:" + doc_id_1) → 文档 1 密钥
-  ├── HKDF(folder_key, "doc:" + doc_id_2) → 文档 2 密钥
-  └── HKDF(folder_key, "doc:" + doc_id_3) → 文档 3 密钥
-```
 
-```rust
-fn derive_doc_key(folder_key: &[u8; 32], doc_id: &str) -> [u8; 32] {
-    let hk = Hkdf::<Sha256>::new(None, folder_key);
-    let mut doc_key = [0u8; 32];
-    let info = format!("doc:{}", doc_id);
-    hk.expand(info.as_bytes(), &mut doc_key).unwrap();
-    doc_key
-}
-```
+- `doc_uuid` 仍需明文（路由用），放进 AAD 绑定（防混淆）。
+- 改造点：在 `ydoc.on('update')` 拿到 update 后**先 `mergeUpdates` 合并、再加密广播**（别逐 keypress 加密——会让文档膨胀且无法压缩，Keyhive/Automerge 反面教训）。
+- 解密失败 / `key_version` 不符 / 反序列化失败 → GossipSub v1.1 **Extended Validator 返回 `Reject`**（触发 P4 评分惩罚 + graylist），顺带补上"入站 gossip 无来源鉴权"的审计缺口。
 
-## 密钥轮换（移除协作者时）
+## Rust 依赖（钉死稳定线，不上 rc）
 
-1. Owner 移除协作者 Charlie
-2. 生成新密钥组（key_version + 1）
-3. 用新密钥加密当前状态快照
-4. 为剩余协作者创建新 Lockbox
-5. 后续所有消息使用新密钥加密
-6. Charlie 仍持有旧密钥，可读取轮换前的数据（P2P 系统无法避免）
+| 用途 | 选择 | crate |
+|------|------|-------|
+| 对称 AEAD | XChaCha20-Poly1305 | `chacha20poly1305 = "0.10"` |
+| 非对称 DH | X25519 ECDH | `x25519-dalek = "2"` |
+| 设备签名 + Ed25519→X25519 | Ed25519 | `ed25519-dalek = "2"`（复用 libp2p 同一把设备密钥）|
+| 密钥派生 + key commitment | HKDF-SHA256 | `hkdf = "0.13"` + `sha2 = "0.10"` |
+| 链接密码 KDF | Argon2id（RFC 9106 参数二 t=3/m=64MiB/p=4）| `argon2 = "0.5"` |
+| 常量时间比较 | — | `subtle = "2"` |
+| CSPRNG | OS 熵 | `getrandom`（经 `rand`）|
 
-## 网络层集成
+## 与 2026-03 纸面设计的分歧
 
-| 数据 | 是否加密 | 原因 |
-|------|---------|------|
-| yjs Update / FastCDC chunk | 加密 | 文档内容 |
-| 资源文件传输 | 加密 | 用户数据 |
-| Awareness 数据 | 不加密 | 不含文档内容（光标位置等） |
-| DHT Provider Records | 不加密 | 仅含 hash(doc_id)，不暴露原始 ID |
-
-## Rust 依赖
-
-```toml
-chacha20poly1305 = "0.10"
-x25519-dalek = { version = "2", features = ["static_secrets"] }
-ed25519-dalek = { version = "2", features = ["rand_core"] }
-hkdf = "0.12"
-sha2 = "0.10"
-rand = "0.8"
-```
+1. **主体设备非用户**：无账号系统就没有"用户"这个密码学锚点，强造用户主体反而要引入账号/同步用户密钥的复杂度。
+2. **OS keychain 非 Stronghold**：主体是设备 + 不防丢设备，Stronghold 的"用户主密钥"前提不成立且强度过度。
+3. **Ed25519 复用派生 X25519**：纸面未明确 X25519 来源；定为单层复用派生（钉死 clamp）。
+4. **新增 key commitment**：纸面漏了，链接分享非补不可。
+5. **撤销是 lazy 的**，不是即时彻底（见 [04-permissions.md](04-permissions.md)）。

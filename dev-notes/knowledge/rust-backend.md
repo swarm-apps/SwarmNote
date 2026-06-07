@@ -452,3 +452,38 @@ app.emit("peer-connected", PeerPayload { ... })?;
 前端 `listen<Payload>(eventName, handler)` 订阅。
 
 **约定**：事件名以模块前缀命名（`yjs:*`、`network:*`、`pairing:*` 等）。
+
+## 密码学（E2E sharing，`crates/core/src/crypto/`）
+
+E2E 分享的密码学地基在 `crypto/`（entry `crypto.rs` + 子模块 `kdf`/`aead`/`keyx`/`lockbox`/`password`）。设计见 `dev-notes/design/{08-e2e-encryption,04-permissions,05-sharing,11-threat-model}.md`。
+
+### 依赖版本坑：hkdf 用 0.12 不用 0.13
+
+`hkdf 0.13` 升级到 `digest 0.11`，与 workspace 钉死的 `sha2 0.10`（`digest 0.10`）类型不兼容（`Hkdf::<Sha256>` 会因 digest 版本不匹配编译失败）。
+
+**正确做法**：`hkdf = "0.12"` 配 `sha2 = "0.10"`。要升 0.13 必须同时把 workspace `sha2` 升 0.11。
+
+### 随机数：用项目 `rand 0.9`，不要喂 RNG 给 dalek
+
+`x25519-dalek 2` / `ed25519-dalek 2` / `chacha20poly1305 0.10` 内部用 `rand_core 0.6`，与项目的 `rand 0.9`（`rand_core 0.9`）trait 不兼容——把 `rand 0.9` 的 RNG 传进 dalek 的 `*_from_rng` API 会编译失败。
+
+**正确做法**：所有随机材料（key/nonce/secret/salt）用 `crypto::fill_random`（内部 `rand::rng().fill_bytes`，OS 种子 CSPRNG），自己填字节数组；DH/密钥派生全部走静态密钥，不需要给 dalek 喂 RNG。
+
+**不要做**：`XChaCha20Poly1305::generate_key(&mut OsRng)` / dalek 的 `generate(&mut rng)`——会拉进 rand_core 0.6 冲突。
+
+### Ed25519 → X25519 复用派生
+
+设备只有一把 libp2p Ed25519 keypair（`IdentityManager`）。X25519（Lockbox 收发方）从它单层派生，不存第二把：
+
+**正确做法**：
+- 本机私钥：`keypair.clone().try_into_ed25519()?.to_bytes()` 取前 32B 作 seed → `ed25519_dalek::SigningKey::from_bytes(seed).to_scalar_bytes()` → `x25519_dalek::StaticSecret::from(..)`（`keyx::derive_x25519_secret`）。
+- 对端公钥：从对端 Ed25519 公钥 `VerifyingKey::from_bytes()?.to_montgomery().to_bytes()` → `x25519_dalek::PublicKey::from(..)`（`keyx::ed25519_pub_to_x25519`）。配对时对端只需给 PeerId/Ed25519 公钥即可算出其 X25519 公钥。
+- 全局钉死这一条 clamp 约定，**只单层、不层级派生**（层级派生需乘 cofactor，否则 hidden-number-problem）。`IdentityManager::x25519_secret()` / `x25519_public()` 是入口。
+
+### key-committing AEAD（裸 XChaCha20-Poly1305 不是 key-committing）
+
+链接分享是 partitioning-oracle / invisible-salamander 攻击靶心。所有对称封装（`aead::seal`、`lockbox::seal_lockbox`）都额外存一个 HKDF 多挤 32B 的 commitment，解密前用 `subtle::ConstantTimeEq` 常量时间比对——错 key 在 AEAD 之前就被拒。
+
+**wire 帧**：`aead` = `[1B version][4B key_version BE][24B nonce][32B commitment][ciphertext]`，AAD 由调用方传（同步层用 `workspace_id||doc_uuid||key_version||msg_type`）；`lockbox` = `[1B version][24B nonce][32B commitment][ciphertext]`。`frame_key_version()` 先廉价读 key_version 再按 `{key_version→key}` 历史取 key 解密。
+
+**相关文件**：`crates/core/src/crypto/`、`crates/core/src/identity.rs`（X25519 暴露）、`crates/core/src/error.rs`（`AppError::Crypto { context, reason }`）
