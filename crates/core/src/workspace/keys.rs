@@ -125,6 +125,32 @@ pub async fn initialize_workspace_keys(
     Ok(keys)
 }
 
+/// Load this device's keys, generating `key_version = 1` (self-Lockbox) if the
+/// workspace has none yet. Idempotent + race-safe: if a concurrent open wins the
+/// init, this reloads the persisted keys instead of returning divergent ones.
+///
+/// NOTE: a workspace synced/joined from another device should receive its keys
+/// via a shared Lockbox (sharing phase) rather than self-initializing — until
+/// then a joined workspace self-inits its own (distinct) key, which only matters
+/// once encrypted broadcast is switched on.
+pub async fn load_or_initialize_workspace_keys(
+    db: &DatabaseConnection,
+    workspace_id: Uuid,
+    my_peer_id: &str,
+    my_secret: &StaticSecret,
+    my_public: &PublicKey,
+) -> AppResult<WorkspaceKeys> {
+    let existing = load_workspace_keys(db, workspace_id, my_peer_id, my_secret, my_public).await?;
+    if !existing.is_empty() {
+        return Ok(existing);
+    }
+    match initialize_workspace_keys(db, workspace_id, my_peer_id, my_secret, my_public).await {
+        Ok(keys) => Ok(keys),
+        // Lost an init race (PK conflict): use whatever was persisted.
+        Err(_) => load_workspace_keys(db, workspace_id, my_peer_id, my_secret, my_public).await,
+    }
+}
+
 /// Load every key version sealed for this device from the workspace DB.
 pub async fn load_workspace_keys(
     db: &DatabaseConnection,

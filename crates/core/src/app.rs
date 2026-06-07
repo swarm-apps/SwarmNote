@@ -252,6 +252,8 @@ impl AppCore {
         info.path = path.to_string_lossy().into_owned();
         let workspace_id = info.id;
 
+        let my_x25519_secret = self.identity.x25519_secret()?;
+        let my_x25519_public = self.identity.x25519_public()?;
         let core = WorkspaceCore::new(
             info,
             db,
@@ -259,6 +261,8 @@ impl AppCore {
             watcher,
             self.event_bus.clone(),
             peer_id,
+            my_x25519_secret,
+            my_x25519_public,
             Arc::downgrade(self),
         )
         .await?;

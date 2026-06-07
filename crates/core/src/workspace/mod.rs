@@ -72,11 +72,16 @@ pub struct WorkspaceCore {
     /// Per-workspace sync runtime. `None` until P2P starts; torn down when
     /// the workspace closes or P2P stops.
     sync: tokio::sync::RwLock<Option<Arc<WorkspaceSync>>>,
+    /// This workspace's symmetric key history (`{key_version → keys}`), loaded
+    /// on open. Held for the encrypted-broadcast cutover; broadcast stays
+    /// plaintext until encryption is switched on with key distribution.
+    keys: tokio::sync::RwLock<crate::WorkspaceKeys>,
 }
 
 impl WorkspaceCore {
     /// Construct a new workspace runtime. Called by
     /// [`AppCore::open_workspace`] — not a public entry point.
+    #[allow(clippy::too_many_arguments)] // single internal call site; injecting deps explicitly
     pub(crate) async fn new(
         info: WorkspaceInfo,
         db: DatabaseConnection,
@@ -84,9 +89,22 @@ impl WorkspaceCore {
         watcher: Option<Arc<dyn FileWatcher>>,
         event_bus: Arc<dyn EventBus>,
         peer_id: String,
+        my_x25519_secret: x25519_dalek::StaticSecret,
+        my_x25519_public: x25519_dalek::PublicKey,
         app: Weak<AppCore>,
     ) -> AppResult<Arc<Self>> {
         let db = Arc::new(db);
+        // Load (or self-initialize) this workspace's symmetric key history.
+        // Non-breaking groundwork: keys are held but broadcast stays plaintext
+        // until encryption is switched on together with key distribution.
+        let workspace_keys = keys::load_or_initialize_workspace_keys(
+            db.as_ref(),
+            info.id,
+            &peer_id,
+            &my_x25519_secret,
+            &my_x25519_public,
+        )
+        .await?;
         let documents = Arc::new(DocumentCrud::new(Arc::clone(&db), peer_id.clone()));
         let ydoc = YDocManager::new(
             info.id,
@@ -114,6 +132,7 @@ impl WorkspaceCore {
             event_bus,
             _app: app,
             sync: tokio::sync::RwLock::new(None),
+            keys: tokio::sync::RwLock::new(workspace_keys),
         }))
     }
 
@@ -163,6 +182,12 @@ impl WorkspaceCore {
     /// Current per-workspace sync runtime (if P2P is running).
     pub async fn sync(&self) -> Option<Arc<WorkspaceSync>> {
         self.sync.read().await.clone()
+    }
+
+    /// This workspace's loaded symmetric key history (clone of the in-memory
+    /// `{key_version → keys}` map). Used by the encrypted gossip codec.
+    pub async fn keys(&self) -> crate::WorkspaceKeys {
+        self.keys.read().await.clone()
     }
 
     /// Broadcast an awareness (caret / presence) update for an open doc.
