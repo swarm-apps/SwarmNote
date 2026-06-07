@@ -213,11 +213,30 @@ pub async fn load_workspace_keys(
     Ok(keys)
 }
 
+/// Seal this device's current workspace keys to a `recipient` X25519 public key
+/// (pure crypto, no DB). Returns `(key_version, sealed_read, sealed_write)`.
+/// A read-only (Reader) recipient is given only the read key.
+pub fn seal_keys_for_recipient(
+    my_secret: &StaticSecret,
+    recipient_public: &PublicKey,
+    keys: &WorkspaceKeys,
+    include_write_key: bool,
+) -> AppResult<(u32, Vec<u8>, Option<Vec<u8>>)> {
+    let (version, set) = keys.current().ok_or(AppError::Crypto {
+        context: "seal-keys",
+        reason: "workspace has no key to share".into(),
+    })?;
+    let sealed_read = seal_lockbox(my_secret, recipient_public, &set.read_key)?;
+    let sealed_write = match (include_write_key, set.write_key) {
+        (true, Some(write)) => Some(seal_lockbox(my_secret, recipient_public, &write)?),
+        _ => None,
+    };
+    Ok((version, sealed_read, sealed_write))
+}
+
 /// Seal this device's current workspace keys to a paired `recipient` device
-/// (X25519 public derived from its PeerId) and persist the Lockbox, so the
-/// recipient can load them on its next open. The crypto + storage half of key
-/// distribution — protocol delivery (sending these rows to the peer) is wired
-/// separately. A read-only (future Reader) recipient is given only the read key.
+/// (X25519 public derived from its PeerId) and persist the Lockbox locally.
+/// A read-only (Reader) recipient is given only the read key.
 pub async fn share_workspace_keys_to_device(
     db: &DatabaseConnection,
     workspace_id: Uuid,
@@ -227,29 +246,53 @@ pub async fn share_workspace_keys_to_device(
     keys: &WorkspaceKeys,
     include_write_key: bool,
 ) -> AppResult<()> {
-    let (version, set) = keys.current().ok_or(AppError::Crypto {
-        context: "share-keys",
-        reason: "workspace has no key to share".into(),
-    })?;
     let recipient_pid = PeerId::from_str(recipient_peer_id).map_err(|e| AppError::Crypto {
         context: "share-keys",
         reason: format!("bad recipient peer id: {e}"),
     })?;
     let recipient_public = peer_id_to_x25519_public(&recipient_pid)?;
+    let (version, sealed_read, sealed_write) =
+        seal_keys_for_recipient(my_secret, &recipient_public, keys, include_write_key)?;
 
-    let sealed_read = seal_lockbox(my_secret, &recipient_public, &set.read_key)?;
-    let sealed_write = match (include_write_key, set.write_key) {
-        (true, Some(write)) => Some(seal_lockbox(my_secret, &recipient_public, &write)?),
-        _ => None,
-    };
+    install_received_key(
+        db,
+        workspace_id,
+        recipient_peer_id,
+        my_peer_id,
+        version,
+        sealed_read,
+        sealed_write,
+    )
+    .await
+}
 
+/// Persist a received (or self-sealed) Lockbox row for `recipient_peer_id`.
+/// Idempotent: a row already present for `(workspace, version, recipient)` is
+/// left untouched.
+pub async fn install_received_key(
+    db: &DatabaseConnection,
+    workspace_id: Uuid,
+    recipient_peer_id: &str,
+    sealed_by_peer_id: &str,
+    key_version: u32,
+    sealed_read: Vec<u8>,
+    sealed_write: Option<Vec<u8>>,
+) -> AppResult<()> {
+    let pk = (
+        workspace_id,
+        key_version as i32,
+        recipient_peer_id.to_string(),
+    );
+    if Lockboxes::find_by_id(pk).one(db).await?.is_some() {
+        return Ok(());
+    }
     workspace_key_lockboxes::ActiveModel {
         workspace_id: Set(workspace_id),
-        key_version: Set(version as i32),
+        key_version: Set(key_version as i32),
         recipient_peer_id: Set(recipient_peer_id.to_string()),
         sealed_read_key: Set(sealed_read),
         sealed_write_key: Set(sealed_write),
-        sealed_by_peer_id: Set(my_peer_id.to_string()),
+        sealed_by_peer_id: Set(sealed_by_peer_id.to_string()),
         created_at: Set(Utc::now()),
     }
     .insert(db)

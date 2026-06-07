@@ -17,10 +17,7 @@ use crate::pairing::PairingManager;
 use crate::protocol::{
     AppRequest, AppResponse, WorkspaceMeta, WorkspaceRequest, WorkspaceResponse,
 };
-use crate::workspace::sync::{
-    decode_ws_awareness, decode_ws_gossip, parse_sync_topic, parse_ws_awareness_topic,
-    parse_ws_topic, AppSyncCoordinator,
-};
+use crate::workspace::sync::{parse_ws_awareness_topic, parse_ws_topic, AppSyncCoordinator};
 
 /// 启动事件循环，持续读取 NodeEvent 并分发到 DeviceManager + EventBus。
 ///
@@ -175,31 +172,13 @@ async fn handle_event(
                     }
                 }
             } else if let Some(ws_uuid) = parse_ws_topic(&topic) {
-                // Workspace-level topic: decode doc_uuid from payload
-                if let Some((doc_uuid, update)) = decode_ws_gossip(&data) {
-                    coordinator
-                        .handle_ws_gossip_update(source, ws_uuid, doc_uuid, update.to_vec())
-                        .await;
-                } else {
-                    warn!("Invalid workspace GossipSub payload on {topic}");
-                }
+                // Encrypted workspace doc-update broadcast — decrypt + route.
+                coordinator
+                    .handle_ws_gossip_update(source, ws_uuid, data)
+                    .await;
             } else if let Some(ws_uuid) = parse_ws_awareness_topic(&topic) {
-                // Workspace-level awareness topic: pure fan-out, no apply.
-                if let Some((doc_uuid, update)) = decode_ws_awareness(&data) {
-                    coordinator
-                        .handle_ws_awareness_gossip(ws_uuid, doc_uuid, update.to_vec())
-                        .await;
-                } else {
-                    warn!("Invalid awareness GossipSub payload on {topic}");
-                }
-            } else if let Some(doc_uuid) = parse_sync_topic(&topic) {
-                // Legacy per-doc topic (backwards compat during transition).
-                // Attempt to route via any open workspace's YDocManager.
-                for ws in core.list_workspaces().await {
-                    if let Some(Err(e)) = ws.ydoc().apply_sync_update(&doc_uuid, &data).await {
-                        warn!("Failed to apply legacy gossip update for {doc_uuid}: {e}");
-                    }
-                }
+                // Encrypted workspace awareness broadcast — decrypt + fan-out.
+                coordinator.handle_ws_awareness_gossip(ws_uuid, data).await;
             } else {
                 info!("GossipSub message on unknown topic: {topic}");
             }

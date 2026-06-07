@@ -217,6 +217,24 @@ impl AppCore {
         self: &Arc<Self>,
         path: impl Into<PathBuf>,
     ) -> AppResult<Arc<WorkspaceCore>> {
+        self.open_workspace_impl(path, true).await
+    }
+
+    /// Like [`AppCore::open_workspace`] but for a workspace being synced/joined
+    /// from a peer: keys are NOT self-initialized — they arrive via the owner's
+    /// Lockbox during sync, so the joiner doesn't fork a divergent key.
+    pub async fn open_workspace_for_sync(
+        self: &Arc<Self>,
+        path: impl Into<PathBuf>,
+    ) -> AppResult<Arc<WorkspaceCore>> {
+        self.open_workspace_impl(path, false).await
+    }
+
+    async fn open_workspace_impl(
+        self: &Arc<Self>,
+        path: impl Into<PathBuf>,
+        init_keys: bool,
+    ) -> AppResult<Arc<WorkspaceCore>> {
         let path: PathBuf = path.into();
         if !path.is_dir() {
             return Err(AppError::InvalidPath(path.to_string_lossy().into_owned()));
@@ -263,6 +281,7 @@ impl AppCore {
             peer_id,
             my_x25519_secret,
             my_x25519_public,
+            init_keys,
             Arc::downgrade(self),
         )
         .await?;

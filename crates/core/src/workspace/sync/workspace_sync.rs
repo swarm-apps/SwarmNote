@@ -95,11 +95,32 @@ impl WorkspaceSync {
         }
     }
 
-    /// Broadcast a local edit to connected peers via GossipSub. On failure,
-    /// signals the coordinator to run urgent SV compensation.
+    /// Encrypt a gossip payload under the workspace's current key. Returns
+    /// `None` if the workspace is gone or holds no key yet (e.g. a joined
+    /// workspace still awaiting the owner's Lockbox — nothing to broadcast).
+    async fn encrypt_gossip(&self, doc_uuid: Uuid, msg_type: u8, update: &[u8]) -> Option<Vec<u8>> {
+        let ws = self.core.get_workspace(&self.workspace_id).await?;
+        let keys = ws.keys().await;
+        match super::encode_encrypted_gossip(&keys, &self.workspace_id, &doc_uuid, msg_type, update)
+        {
+            Ok(payload) => Some(payload),
+            Err(e) => {
+                warn!("Failed to encrypt gossip for doc {doc_uuid}: {e}");
+                None
+            }
+        }
+    }
+
+    /// Broadcast a local edit to connected peers via GossipSub (encrypted under
+    /// the workspace key). On failure, signals urgent SV compensation.
     pub async fn publish_doc_update(&self, doc_uuid: Uuid, update: Vec<u8>) {
+        let Some(payload) = self
+            .encrypt_gossip(doc_uuid, super::MSG_TYPE_DOC, &update)
+            .await
+        else {
+            return;
+        };
         let topic = super::ws_topic(&self.workspace_id);
-        let payload = super::encode_ws_gossip(&doc_uuid, &update);
         if let Err(e) = self.client.publish(&topic, payload).await {
             tracing::debug!("Failed to publish doc update to {topic}: {e}");
             // Schedule urgent SV compensation to ensure data consistency.
@@ -109,13 +130,17 @@ impl WorkspaceSync {
         }
     }
 
-    /// Broadcast a local awareness update to peers. Awareness is ephemeral —
-    /// failure to publish only means peers won't see this presence beat;
-    /// no compensation logic is needed (the next beat or a full reconnect
-    /// will resync).
+    /// Broadcast a local awareness update to peers (encrypted). Awareness is
+    /// ephemeral — a dropped beat just means peers miss this presence update;
+    /// the next beat or a reconnect resyncs.
     pub async fn publish_awareness(&self, doc_uuid: Uuid, update: Vec<u8>) {
+        let Some(payload) = self
+            .encrypt_gossip(doc_uuid, super::MSG_TYPE_AWARENESS, &update)
+            .await
+        else {
+            return;
+        };
         let topic = super::ws_awareness_topic(&self.workspace_id);
-        let payload = super::encode_ws_awareness(&doc_uuid, &update);
         if let Err(e) = self.client.publish(&topic, payload).await {
             tracing::debug!("Failed to publish awareness to {topic}: {e}");
         }

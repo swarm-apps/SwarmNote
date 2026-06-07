@@ -19,7 +19,7 @@ use uuid::Uuid;
 
 use crate::app::AppCore;
 use crate::network::AppNetClient;
-use crate::protocol::{AppResponse, SyncRequest, SyncResponse};
+use crate::protocol::{AppResponse, SealedWorkspaceKey, SyncRequest, SyncResponse};
 
 use super::{asset_sync, doc_sync, full_sync};
 
@@ -233,41 +233,108 @@ impl AppSyncCoordinator {
                     }
                 }
             }
+            SyncRequest::WorkspaceKey { workspace_uuid } => {
+                info!("Inbound WorkspaceKey request from {peer_id} for workspace {workspace_uuid}");
+                let sealed = self
+                    .build_sealed_workspace_key(peer_id, workspace_uuid)
+                    .await;
+                let resp = AppResponse::Sync(SyncResponse::WorkspaceKey {
+                    workspace_uuid,
+                    sealed,
+                });
+                if let Err(e) = self.client.send_response(pending_id, resp).await {
+                    warn!("Failed to send WorkspaceKey response to {peer_id}: {e}");
+                }
+            }
         }
     }
 
-    /// Handle an incoming workspace-level GossipSub message. Routes to the
-    /// workspace's [`WorkspaceSync`] for open-doc apply or pending-buffer.
+    /// Seal this workspace's current key to a requesting paired device. Returns
+    /// `None` if the requester isn't paired, the workspace is unknown, or it has
+    /// no key. v1 trust model: paired == authorized (refined by permissions in
+    /// a later phase).
+    async fn build_sealed_workspace_key(
+        &self,
+        requester: PeerId,
+        workspace_uuid: Uuid,
+    ) -> Option<SealedWorkspaceKey> {
+        let net = self.core.net().await?;
+        if !net.device_manager.is_paired(&requester) {
+            warn!("Declining WorkspaceKey to unpaired peer {requester}");
+            return None;
+        }
+        let ws = self.core.get_workspace(&workspace_uuid).await?;
+        let keys = ws.keys().await;
+        let recipient_public = crate::identity::peer_id_to_x25519_public(&requester).ok()?;
+        let my_secret = self.core.identity().x25519_secret().ok()?;
+        let (key_version, sealed_read, sealed_write) =
+            crate::workspace::keys::seal_keys_for_recipient(
+                &my_secret,
+                &recipient_public,
+                &keys,
+                true,
+            )
+            .ok()?;
+        Some(SealedWorkspaceKey {
+            key_version,
+            sealed_read,
+            sealed_write,
+        })
+    }
+
+    /// Handle an incoming **encrypted** workspace-level doc-update GossipSub
+    /// message: decrypt with the workspace key (drop if undecryptable — unknown
+    /// key_version / wrong key / tamper), then route to [`WorkspaceSync`].
     pub async fn handle_ws_gossip_update(
         &self,
         source: Option<PeerId>,
         workspace_uuid: Uuid,
-        doc_uuid: Uuid,
         data: Vec<u8>,
     ) {
         let Some(ws) = self.core.get_workspace(&workspace_uuid).await else {
             return;
         };
+        let keys = ws.keys().await;
+        let (doc_uuid, update) = match super::decode_encrypted_gossip(
+            &keys,
+            &workspace_uuid,
+            super::MSG_TYPE_DOC,
+            &data,
+        ) {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::debug!("dropping undecryptable ws gossip for {workspace_uuid}: {e}");
+                return;
+            }
+        };
         if let Some(ws_sync) = ws.sync().await {
             ws_sync
-                .handle_gossip_update(&ws, source, doc_uuid, data)
+                .handle_gossip_update(&ws, source, doc_uuid, update)
                 .await;
         }
     }
 
-    /// Handle an incoming workspace-level awareness GossipSub message. Pure
-    /// fan-out to the event bus — no persistence, no apply, no buffering.
-    pub async fn handle_ws_awareness_gossip(
-        &self,
-        workspace_uuid: Uuid,
-        doc_uuid: Uuid,
-        data: Vec<u8>,
-    ) {
+    /// Handle an incoming **encrypted** awareness GossipSub message: decrypt,
+    /// then pure fan-out to the event bus (no persistence/apply/buffer).
+    pub async fn handle_ws_awareness_gossip(&self, workspace_uuid: Uuid, data: Vec<u8>) {
         let Some(ws) = self.core.get_workspace(&workspace_uuid).await else {
             return;
         };
+        let keys = ws.keys().await;
+        let (doc_uuid, update) = match super::decode_encrypted_gossip(
+            &keys,
+            &workspace_uuid,
+            super::MSG_TYPE_AWARENESS,
+            &data,
+        ) {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::trace!("dropping undecryptable awareness for {workspace_uuid}: {e}");
+                return;
+            }
+        };
         if let Some(ws_sync) = ws.sync().await {
-            ws_sync.handle_awareness_gossip(&ws, doc_uuid, data);
+            ws_sync.handle_awareness_gossip(&ws, doc_uuid, update);
         }
     }
 

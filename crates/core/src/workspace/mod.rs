@@ -73,9 +73,13 @@ pub struct WorkspaceCore {
     /// the workspace closes or P2P stops.
     sync: tokio::sync::RwLock<Option<Arc<WorkspaceSync>>>,
     /// This workspace's symmetric key history (`{key_version → keys}`), loaded
-    /// on open. Held for the encrypted-broadcast cutover; broadcast stays
-    /// plaintext until encryption is switched on with key distribution.
+    /// on open. Used by the encrypted gossip codec for publish/receive.
     keys: tokio::sync::RwLock<crate::WorkspaceKeys>,
+    /// Device identity material retained for reloading keys after a Lockbox is
+    /// installed (e.g. one received from a peer during sync).
+    dev_peer_id: String,
+    dev_x25519_secret: x25519_dalek::StaticSecret,
+    dev_x25519_public: x25519_dalek::PublicKey,
 }
 
 impl WorkspaceCore {
@@ -91,20 +95,35 @@ impl WorkspaceCore {
         peer_id: String,
         my_x25519_secret: x25519_dalek::StaticSecret,
         my_x25519_public: x25519_dalek::PublicKey,
+        init_keys: bool,
         app: Weak<AppCore>,
     ) -> AppResult<Arc<Self>> {
         let db = Arc::new(db);
-        // Load (or self-initialize) this workspace's symmetric key history.
-        // Non-breaking groundwork: keys are held but broadcast stays plaintext
-        // until encryption is switched on together with key distribution.
-        let workspace_keys = keys::load_or_initialize_workspace_keys(
-            db.as_ref(),
-            info.id,
-            &peer_id,
-            &my_x25519_secret,
-            &my_x25519_public,
-        )
-        .await?;
+        // Owner-opened workspaces self-initialize a key if absent; sync-joined
+        // workspaces (init_keys = false) stay keyless until the owner's Lockbox
+        // arrives via sync, so they don't fork a divergent key.
+        let workspace_keys = if init_keys {
+            keys::load_or_initialize_workspace_keys(
+                db.as_ref(),
+                info.id,
+                &peer_id,
+                &my_x25519_secret,
+                &my_x25519_public,
+            )
+            .await?
+        } else {
+            keys::load_workspace_keys(
+                db.as_ref(),
+                info.id,
+                &peer_id,
+                &my_x25519_secret,
+                &my_x25519_public,
+            )
+            .await?
+        };
+        let dev_peer_id = peer_id.clone();
+        let dev_x25519_secret = my_x25519_secret.clone();
+        let dev_x25519_public = my_x25519_public;
         let documents = Arc::new(DocumentCrud::new(Arc::clone(&db), peer_id.clone()));
         let ydoc = YDocManager::new(
             info.id,
@@ -133,6 +152,9 @@ impl WorkspaceCore {
             _app: app,
             sync: tokio::sync::RwLock::new(None),
             keys: tokio::sync::RwLock::new(workspace_keys),
+            dev_peer_id,
+            dev_x25519_secret,
+            dev_x25519_public,
         }))
     }
 
@@ -188,6 +210,21 @@ impl WorkspaceCore {
     /// `{key_version → keys}` map). Used by the encrypted gossip codec.
     pub async fn keys(&self) -> crate::WorkspaceKeys {
         self.keys.read().await.clone()
+    }
+
+    /// Reload the key history from the DB. Called after installing a Lockbox
+    /// received from a peer during sync, so subsequent gossip can decrypt.
+    pub async fn reload_keys(&self) -> AppResult<()> {
+        let loaded = keys::load_workspace_keys(
+            self.db.as_ref(),
+            self.info.id,
+            &self.dev_peer_id,
+            &self.dev_x25519_secret,
+            &self.dev_x25519_public,
+        )
+        .await?;
+        *self.keys.write().await = loaded;
+        Ok(())
     }
 
     /// Broadcast an awareness (caret / presence) update for an open doc.
