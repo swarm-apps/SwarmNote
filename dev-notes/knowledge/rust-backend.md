@@ -487,3 +487,13 @@ E2E 分享的密码学地基在 `crypto/`（entry `crypto.rs` + 子模块 `kdf`/
 **wire 帧**：`aead` = `[1B version][4B key_version BE][24B nonce][32B commitment][ciphertext]`，AAD 由调用方传（同步层用 `workspace_id||doc_uuid||key_version||msg_type`）；`lockbox` = `[1B version][24B nonce][32B commitment][ciphertext]`。`frame_key_version()` 先廉价读 key_version 再按 `{key_version→key}` 历史取 key 解密。
 
 **相关文件**：`crates/core/src/crypto/`、`crates/core/src/identity.rs`（X25519 暴露）、`crates/core/src/error.rs`（`AppError::Crypto { context, reason }`）
+
+### permission_ops 缺少 genesis owner op（Phase 5 前置）
+
+`permissions.rs` 的 `materialize()` 要求第一条 op 是 owner 的 **genesis self-grant**（`prev_hash=None` + `Grant` + `new_role=Owner` + `issuer==target`）才能 bootstrap owner，后续非 genesis op 的 issuer 必须当前为 Owner 才生效。但当前**没有任何代码创建这条 genesis op**——`ensure_workspace_row` / `WorkspaceCore::new` / `create_workspace_for_sync` 都只建 workspace 行 + self-Lockbox key，从不调 `build_signed_op`/`save_op`。
+
+**后果**：每个 workspace 的 `load_ops()` 返回空，`materialize()` 返回空 map，没有任何设备被认定为 Owner。Phase 5 把 `build_sealed_workspace_key` 从 `is_paired` 改成权限 gating **之前**，必须先在 owner 创建 workspace 时种下 genesis op，否则 key 分发会全部被拒。
+
+**正确做法**：在 owner 首次创建 workspace（`init_keys=true` 路径，即 `WorkspaceCore::new` 里 key 刚 self-init 那一步）后，若 `load_ops` 为空则 `build_signed_op(identity, Grant, my_peer_id, Some(Owner), key_version=1, prev_hash=None)` + `save_op`。幂等。sync-joined workspace（`init_keys=false`）不种 genesis——它的 owner op 随 permission_ops 广播到达。
+
+**相关文件**：`crates/core/src/workspace/permissions.rs`（`materialize` 三不变式）、`crates/core/src/workspace/mod.rs`（`WorkspaceCore::new` key-init 分支）
