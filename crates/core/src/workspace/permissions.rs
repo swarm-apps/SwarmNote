@@ -18,6 +18,7 @@ use entity::workspace::permission_ops::{self, Entity as PermissionOps};
 use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
 };
+use serde::{Deserialize, Serialize};
 use swarm_p2p_core::libp2p::PeerId;
 use uuid::Uuid;
 
@@ -25,7 +26,9 @@ use crate::error::AppResult;
 use crate::identity::{verify_peer_signature, IdentityManager};
 
 /// Workspace role. v1 two-tier; `Reader` is reserved for v2.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "specta", derive(specta::Type))]
+#[serde(rename_all = "lowercase")]
 pub enum Role {
     Owner,
     Collaborator,
@@ -48,7 +51,8 @@ impl Role {
 }
 
 /// Permission operation kind.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum OpKind {
     Grant,
     Revoke,
@@ -76,8 +80,9 @@ impl OpKind {
     }
 }
 
-/// One node in the signed permission chain.
-#[derive(Clone, Debug)]
+/// One node in the signed permission chain. Serializable for broadcast over
+/// the ctrl GossipSub topic (`CtrlMessage::PermissionOpsUpdate`).
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct PermissionOp {
     pub op_id: String,
     pub op_kind: OpKind,
@@ -227,6 +232,44 @@ pub async fn load_ops(db: &DatabaseConnection, workspace_id: Uuid) -> AppResult<
             })
         })
         .collect())
+}
+
+/// Load + replay this workspace's permission ops into a `peer → role` map.
+pub async fn load_and_materialize(
+    db: &DatabaseConnection,
+    workspace_id: Uuid,
+) -> AppResult<HashMap<String, Role>> {
+    Ok(materialize(&load_ops(db, workspace_id).await?))
+}
+
+/// This peer's current role in the workspace (if any).
+pub async fn role_of(
+    db: &DatabaseConnection,
+    workspace_id: Uuid,
+    peer_id: &str,
+) -> AppResult<Option<Role>> {
+    Ok(load_and_materialize(db, workspace_id)
+        .await?
+        .get(peer_id)
+        .copied())
+}
+
+/// Seed the genesis Owner op for a freshly-created (owner) workspace if the
+/// permission chain is empty. Idempotent. Called only on the owner's create
+/// path (where this device self-initialized the workspace key).
+pub async fn ensure_genesis_owner(
+    db: &DatabaseConnection,
+    identity: &IdentityManager,
+    workspace_id: Uuid,
+) -> AppResult<()> {
+    if !load_ops(db, workspace_id).await?.is_empty() {
+        return Ok(());
+    }
+    let me = identity.peer_id()?;
+    let op = build_signed_op(identity, OpKind::Grant, &me, Some(Role::Owner), 1, None)?;
+    save_op(db, workspace_id, &op).await?;
+    tracing::info!(workspace_id = %workspace_id, "seeded genesis owner permission op");
+    Ok(())
 }
 
 /// Replay ops into a `peer → role` map, dropping any op that fails the three
@@ -400,6 +443,44 @@ mod tests {
         g.signature[0] ^= 0xff; // tamper
         assert!(!g.verify());
         assert!(materialize(&[g]).is_empty());
+    }
+
+    #[tokio::test]
+    async fn genesis_seeding_idempotent_and_db_round_trip() {
+        use crate::identity::IdentityManager;
+        use entity::workspace::workspaces;
+        use migration::{MigratorTrait, WorkspaceMigrator};
+        use sea_orm::Database;
+
+        let db = Database::connect("sqlite::memory:").await.unwrap();
+        WorkspaceMigrator::up(&db, None).await.unwrap();
+        let ws = Uuid::now_v7();
+        workspaces::ActiveModel {
+            id: Set(ws),
+            name: Set("WS".to_string()),
+            created_by: Set("me".to_string()),
+            created_at: Set(Utc::now()),
+            updated_at: Set(Utc::now()),
+        }
+        .insert(&db)
+        .await
+        .unwrap();
+
+        let identity = IdentityManager::for_tests().await;
+        let me = identity.peer_id().unwrap();
+
+        ensure_genesis_owner(&db, &identity, ws).await.unwrap();
+        ensure_genesis_owner(&db, &identity, ws).await.unwrap(); // idempotent
+
+        let ops = load_ops(&db, ws).await.unwrap();
+        assert_eq!(ops.len(), 1, "genesis seeded exactly once");
+        assert!(
+            ops[0].verify(),
+            "persisted genesis op signature round-trips"
+        );
+
+        let roles = load_and_materialize(&db, ws).await.unwrap();
+        assert_eq!(roles.get(&me), Some(&Role::Owner), "creator is Owner");
     }
 
     #[test]

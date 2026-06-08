@@ -95,6 +95,27 @@ impl WorkspaceSync {
         }
     }
 
+    /// Broadcast signed permission ops for this workspace to all peers via the
+    /// ctrl topic, so members converge on the same `peer → role` map.
+    pub async fn publish_permission_ops(
+        &self,
+        ops: Vec<crate::workspace::permissions::PermissionOp>,
+    ) {
+        if ops.is_empty() {
+            return;
+        }
+        let payload = super::encode_ctrl_message(&super::CtrlMessage::PermissionOpsUpdate {
+            workspace_uuid: self.workspace_id,
+            ops,
+        });
+        if let Err(e) = self.client.publish(super::CTRL_TOPIC, payload).await {
+            warn!(
+                "Failed to publish permission ops for {}: {e}",
+                self.workspace_id
+            );
+        }
+    }
+
     /// Encrypt a gossip payload under the workspace's current key. Returns
     /// `None` if the workspace is gone or holds no key yet (e.g. a joined
     /// workspace still awaiting the owner's Lockbox — nothing to broadcast).

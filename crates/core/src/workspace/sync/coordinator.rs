@@ -67,6 +67,27 @@ impl AppSyncCoordinator {
                     self.ensure_subscribed_and_sync(source, &ws).await;
                 }
             }
+            super::CtrlMessage::PermissionOpsUpdate {
+                workspace_uuid,
+                ops,
+            } => {
+                let Some(ws) = self.core.get_workspace(&workspace_uuid).await else {
+                    return;
+                };
+                for op in &ops {
+                    // Verify the signature before persisting so we never store
+                    // forged ops (materialize would drop them anyway).
+                    if !op.verify() {
+                        warn!("Dropping invalid permission op from {source} for {workspace_uuid}");
+                        continue;
+                    }
+                    if let Err(e) =
+                        crate::workspace::permissions::save_op(ws.db(), workspace_uuid, op).await
+                    {
+                        warn!("Failed to save permission op for {workspace_uuid}: {e}");
+                    }
+                }
+            }
         }
     }
 

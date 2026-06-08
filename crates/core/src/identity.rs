@@ -193,6 +193,39 @@ pub fn verify_peer_signature(
 }
 
 #[cfg(test)]
+impl IdentityManager {
+    /// Construct an `IdentityManager` with an ephemeral in-memory keypair, for
+    /// tests that need real Ed25519 signing.
+    pub(crate) async fn for_tests() -> Self {
+        struct MemKeychain(tokio::sync::Mutex<Option<Vec<u8>>>);
+        #[async_trait::async_trait]
+        impl KeychainProvider for MemKeychain {
+            async fn get_or_create_keypair(&self) -> AppResult<Vec<u8>> {
+                let mut guard = self.0.lock().await;
+                if let Some(b) = guard.as_ref() {
+                    return Ok(b.clone());
+                }
+                let b = Keypair::generate_ed25519().to_protobuf_encoding().unwrap();
+                *guard = Some(b.clone());
+                Ok(b)
+            }
+        }
+        let config = GlobalConfig {
+            device_name: "Test Device".to_string(),
+            created_at: "2026-01-01T00:00:00Z".to_string(),
+            last_workspace_path: None,
+            recent_workspaces: Vec::new(),
+        };
+        IdentityManager::new(
+            Arc::new(MemKeychain(tokio::sync::Mutex::new(None))),
+            &config,
+        )
+        .await
+        .unwrap()
+    }
+}
+
+#[cfg(test)]
 mod x25519_tests {
     use super::*;
     use swarm_p2p_core::libp2p::identity::Keypair;

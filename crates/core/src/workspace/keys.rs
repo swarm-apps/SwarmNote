@@ -136,21 +136,27 @@ pub async fn initialize_workspace_keys(
 /// via a shared Lockbox (sharing phase) rather than self-initializing — until
 /// then a joined workspace self-inits its own (distinct) key, which only matters
 /// once encrypted broadcast is switched on.
+/// Returns `(keys, did_initialize)` where `did_initialize` is `true` only when
+/// this call freshly self-initialized the workspace key — i.e. the owner-create
+/// moment, used to seed the genesis permission op exactly once.
 pub async fn load_or_initialize_workspace_keys(
     db: &DatabaseConnection,
     workspace_id: Uuid,
     my_peer_id: &str,
     my_secret: &StaticSecret,
     my_public: &PublicKey,
-) -> AppResult<WorkspaceKeys> {
+) -> AppResult<(WorkspaceKeys, bool)> {
     let existing = load_workspace_keys(db, workspace_id, my_peer_id, my_secret, my_public).await?;
     if !existing.is_empty() {
-        return Ok(existing);
+        return Ok((existing, false));
     }
     match initialize_workspace_keys(db, workspace_id, my_peer_id, my_secret, my_public).await {
-        Ok(keys) => Ok(keys),
+        Ok(keys) => Ok((keys, true)),
         // Lost an init race (PK conflict): use whatever was persisted.
-        Err(_) => load_workspace_keys(db, workspace_id, my_peer_id, my_secret, my_public).await,
+        Err(_) => Ok((
+            load_workspace_keys(db, workspace_id, my_peer_id, my_secret, my_public).await?,
+            false,
+        )),
     }
 }
 
@@ -459,14 +465,17 @@ mod tests {
         let b_keys = load_workspace_keys(&db_b, ws, &peer_b, &sec_b, &pub_b)
             .await
             .unwrap();
-        assert_eq!(b_keys.read_key(1), a_keys.read_key(1), "B must hold A's key");
+        assert_eq!(
+            b_keys.read_key(1),
+            a_keys.read_key(1),
+            "B must hold A's key"
+        );
 
         // 3. A encrypts a gossip doc-update; B decrypts it back to plaintext.
         let doc = Uuid::now_v7();
         let plaintext = b"yjs-update-\xf0\x9f\x90\x9d"; // arbitrary bytes incl. emoji
         let wire = encode_encrypted_gossip(&a_keys, &ws, &doc, MSG_TYPE_DOC, plaintext).unwrap();
-        let (got_doc, got) =
-            decode_encrypted_gossip(&b_keys, &ws, MSG_TYPE_DOC, &wire).unwrap();
+        let (got_doc, got) = decode_encrypted_gossip(&b_keys, &ws, MSG_TYPE_DOC, &wire).unwrap();
         assert_eq!(got_doc, doc);
         assert_eq!(got, plaintext, "B must decrypt A's broadcast");
 

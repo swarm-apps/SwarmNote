@@ -93,25 +93,33 @@ impl WorkspaceCore {
         fs: Arc<dyn FileSystem>,
         watcher: Option<Arc<dyn FileWatcher>>,
         event_bus: Arc<dyn EventBus>,
-        peer_id: String,
-        my_x25519_secret: x25519_dalek::StaticSecret,
-        my_x25519_public: x25519_dalek::PublicKey,
+        identity: &crate::identity::IdentityManager,
         init_keys: bool,
         app: Weak<AppCore>,
     ) -> AppResult<Arc<Self>> {
         let db = Arc::new(db);
+        let peer_id = identity.peer_id()?;
+        let my_x25519_secret = identity.x25519_secret()?;
+        let my_x25519_public = identity.x25519_public()?;
+
         // Owner-opened workspaces self-initialize a key if absent; sync-joined
         // workspaces (init_keys = false) stay keyless until the owner's Lockbox
         // arrives via sync, so they don't fork a divergent key.
         let workspace_keys = if init_keys {
-            keys::load_or_initialize_workspace_keys(
+            let (workspace_keys, did_init) = keys::load_or_initialize_workspace_keys(
                 db.as_ref(),
                 info.id,
                 &peer_id,
                 &my_x25519_secret,
                 &my_x25519_public,
             )
-            .await?
+            .await?;
+            // Owner-create moment (key freshly self-initialized): seed the
+            // genesis Owner permission op so the chain has a root of trust.
+            if did_init {
+                permissions::ensure_genesis_owner(db.as_ref(), identity, info.id).await?;
+            }
+            workspace_keys
         } else {
             keys::load_workspace_keys(
                 db.as_ref(),

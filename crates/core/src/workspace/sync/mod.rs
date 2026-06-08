@@ -36,6 +36,11 @@ pub const CTRL_TOPIC: &str = "swarmnote/ctrl";
 pub enum CtrlMessage {
     /// A peer opened a workspace — receivers with the same workspace should subscribe + sync.
     WorkspaceOpened { uuid: Uuid },
+    /// A peer broadcasts new/updated signed permission ops for a workspace.
+    PermissionOpsUpdate {
+        workspace_uuid: Uuid,
+        ops: Vec<crate::workspace::permissions::PermissionOp>,
+    },
 }
 
 pub fn encode_ctrl_message(msg: &CtrlMessage) -> Vec<u8> {
