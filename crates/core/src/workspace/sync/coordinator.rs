@@ -19,7 +19,7 @@ use uuid::Uuid;
 
 use crate::app::AppCore;
 use crate::network::AppNetClient;
-use crate::protocol::{AppResponse, SyncRequest, SyncResponse};
+use crate::protocol::{AppResponse, SealedWorkspaceKey, SyncRequest, SyncResponse};
 
 use super::{asset_sync, doc_sync, full_sync};
 
@@ -65,6 +65,27 @@ impl AppSyncCoordinator {
                         "Peer {source} opened workspace {uuid} which is also open locally — syncing"
                     );
                     self.ensure_subscribed_and_sync(source, &ws).await;
+                }
+            }
+            super::CtrlMessage::PermissionOpsUpdate {
+                workspace_uuid,
+                ops,
+            } => {
+                let Some(ws) = self.core.get_workspace(&workspace_uuid).await else {
+                    return;
+                };
+                for op in &ops {
+                    // Verify the signature before persisting so we never store
+                    // forged ops (materialize would drop them anyway).
+                    if !op.verify() {
+                        warn!("Dropping invalid permission op from {source} for {workspace_uuid}");
+                        continue;
+                    }
+                    if let Err(e) =
+                        crate::workspace::permissions::save_op(ws.db(), workspace_uuid, op).await
+                    {
+                        warn!("Failed to save permission op for {workspace_uuid}: {e}");
+                    }
                 }
             }
         }
@@ -143,6 +164,12 @@ impl AppSyncCoordinator {
         match request {
             SyncRequest::DocList { workspace_uuid } => {
                 info!("Inbound DocList request from {peer_id} for workspace {workspace_uuid}");
+                if !self.is_authorized(workspace_uuid, peer_id).await {
+                    warn!("Declining DocList to unauthorized peer {peer_id} for {workspace_uuid}");
+                    let resp = AppResponse::Sync(SyncResponse::DocList { docs: vec![] });
+                    let _ = self.client.send_response(pending_id, resp).await;
+                    return;
+                }
                 match full_sync::build_local_doc_list(&self.core, workspace_uuid).await {
                     Ok(docs) => {
                         let resp = AppResponse::Sync(SyncResponse::DocList { docs });
@@ -159,6 +186,10 @@ impl AppSyncCoordinator {
                 info!("Inbound StateVector request from {peer_id} for doc {doc_id}");
                 match self.find_doc_context(doc_id).await.map(|(ws, _)| ws) {
                     Some(ws_uuid) => {
+                        if !self.is_authorized(ws_uuid, peer_id).await {
+                            warn!("Declining StateVector to unauthorized {peer_id} for {ws_uuid}");
+                            return;
+                        }
                         if let Err(e) = doc_sync::handle_state_vector_request(
                             &self.core,
                             &self.client,
@@ -179,6 +210,10 @@ impl AppSyncCoordinator {
                 info!("Inbound FullSync request from {peer_id} for doc {doc_id}");
                 match self.find_doc_context(doc_id).await.map(|(ws, _)| ws) {
                     Some(ws_uuid) => {
+                        if !self.is_authorized(ws_uuid, peer_id).await {
+                            warn!("Declining FullSync to unauthorized {peer_id} for {ws_uuid}");
+                            return;
+                        }
                         if let Err(e) = doc_sync::handle_full_sync_request(
                             &self.core,
                             &self.client,
@@ -197,6 +232,9 @@ impl AppSyncCoordinator {
             SyncRequest::AssetManifest { doc_id } => {
                 info!("Inbound AssetManifest request from {peer_id} for doc {doc_id}");
                 if let Some((ws_uuid, rel_path)) = self.find_doc_context(doc_id).await {
+                    if !self.is_authorized(ws_uuid, peer_id).await {
+                        return;
+                    }
                     if let Err(e) = asset_sync::handle_asset_manifest_request(
                         &self.core,
                         &self.client,
@@ -217,6 +255,9 @@ impl AppSyncCoordinator {
                 chunk_index,
             } => {
                 if let Some((ws_uuid, rel_path)) = self.find_doc_context(doc_id).await {
+                    if !self.is_authorized(ws_uuid, peer_id).await {
+                        return;
+                    }
                     if let Err(e) = asset_sync::handle_asset_chunk_request(
                         &self.core,
                         &self.client,
@@ -233,41 +274,142 @@ impl AppSyncCoordinator {
                     }
                 }
             }
+            SyncRequest::WorkspaceKey { workspace_uuid } => {
+                info!("Inbound WorkspaceKey request from {peer_id} for workspace {workspace_uuid}");
+                let (sealed, ops) = self
+                    .build_workspace_key_response(peer_id, workspace_uuid)
+                    .await;
+                let resp = AppResponse::Sync(SyncResponse::WorkspaceKey {
+                    workspace_uuid,
+                    sealed,
+                    ops,
+                });
+                if let Err(e) = self.client.send_response(pending_id, resp).await {
+                    warn!("Failed to send WorkspaceKey response to {peer_id}: {e}");
+                }
+            }
         }
     }
 
-    /// Handle an incoming workspace-level GossipSub message. Routes to the
-    /// workspace's [`WorkspaceSync`] for open-doc apply or pending-buffer.
+    /// Whether `peer` is an authorized member (has any role) of the workspace —
+    /// the access-control gate for key distribution + sync responses.
+    async fn is_authorized(&self, workspace_uuid: Uuid, peer: PeerId) -> bool {
+        let Some(ws) = self.core.get_workspace(&workspace_uuid).await else {
+            return false;
+        };
+        matches!(
+            crate::workspace::permissions::role_of(ws.db(), workspace_uuid, &peer.to_string())
+                .await,
+            Ok(Some(_))
+        )
+    }
+
+    /// Build the sealed key + permission chain for a requester. The key is
+    /// sealed **only if the requester is an authorized member** (has a role);
+    /// a paired-but-unauthorized peer gets `(None, [])`. `ops` lets an authorized
+    /// requester materialize its own role locally.
+    async fn build_workspace_key_response(
+        &self,
+        requester: PeerId,
+        workspace_uuid: Uuid,
+    ) -> (
+        Option<SealedWorkspaceKey>,
+        Vec<crate::workspace::permissions::PermissionOp>,
+    ) {
+        let Some(ws) = self.core.get_workspace(&workspace_uuid).await else {
+            return (None, vec![]);
+        };
+        let db = ws.db();
+        let role =
+            crate::workspace::permissions::role_of(db, workspace_uuid, &requester.to_string())
+                .await
+                .ok()
+                .flatten();
+        if role.is_none() {
+            warn!("Declining WorkspaceKey to unauthorized peer {requester} for {workspace_uuid}");
+            return (None, vec![]);
+        }
+        let ops = crate::workspace::permissions::load_ops(db, workspace_uuid)
+            .await
+            .unwrap_or_default();
+        let keys = ws.keys().await;
+        let (Ok(recipient_public), Ok(my_secret)) = (
+            crate::identity::peer_id_to_x25519_public(&requester),
+            self.core.identity().x25519_secret(),
+        ) else {
+            return (None, ops);
+        };
+        match crate::workspace::keys::seal_keys_for_recipient(
+            &my_secret,
+            &recipient_public,
+            &keys,
+            true,
+        ) {
+            Ok((key_version, sealed_read, sealed_write)) => (
+                Some(SealedWorkspaceKey {
+                    key_version,
+                    sealed_read,
+                    sealed_write,
+                }),
+                ops,
+            ),
+            Err(_) => (None, ops),
+        }
+    }
+
+    /// Handle an incoming **encrypted** workspace-level doc-update GossipSub
+    /// message: decrypt with the workspace key (drop if undecryptable — unknown
+    /// key_version / wrong key / tamper), then route to [`WorkspaceSync`].
     pub async fn handle_ws_gossip_update(
         &self,
         source: Option<PeerId>,
         workspace_uuid: Uuid,
-        doc_uuid: Uuid,
         data: Vec<u8>,
     ) {
         let Some(ws) = self.core.get_workspace(&workspace_uuid).await else {
             return;
         };
+        let keys = ws.keys().await;
+        let (doc_uuid, update) = match super::decode_encrypted_gossip(
+            &keys,
+            &workspace_uuid,
+            super::MSG_TYPE_DOC,
+            &data,
+        ) {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::debug!("dropping undecryptable ws gossip for {workspace_uuid}: {e}");
+                return;
+            }
+        };
         if let Some(ws_sync) = ws.sync().await {
             ws_sync
-                .handle_gossip_update(&ws, source, doc_uuid, data)
+                .handle_gossip_update(&ws, source, doc_uuid, update)
                 .await;
         }
     }
 
-    /// Handle an incoming workspace-level awareness GossipSub message. Pure
-    /// fan-out to the event bus — no persistence, no apply, no buffering.
-    pub async fn handle_ws_awareness_gossip(
-        &self,
-        workspace_uuid: Uuid,
-        doc_uuid: Uuid,
-        data: Vec<u8>,
-    ) {
+    /// Handle an incoming **encrypted** awareness GossipSub message: decrypt,
+    /// then pure fan-out to the event bus (no persistence/apply/buffer).
+    pub async fn handle_ws_awareness_gossip(&self, workspace_uuid: Uuid, data: Vec<u8>) {
         let Some(ws) = self.core.get_workspace(&workspace_uuid).await else {
             return;
         };
+        let keys = ws.keys().await;
+        let (doc_uuid, update) = match super::decode_encrypted_gossip(
+            &keys,
+            &workspace_uuid,
+            super::MSG_TYPE_AWARENESS,
+            &data,
+        ) {
+            Ok(v) => v,
+            Err(e) => {
+                tracing::trace!("dropping undecryptable awareness for {workspace_uuid}: {e}");
+                return;
+            }
+        };
         if let Some(ws_sync) = ws.sync().await {
-            ws_sync.handle_awareness_gossip(&ws, doc_uuid, data);
+            ws_sync.handle_awareness_gossip(&ws, doc_uuid, update);
         }
     }
 

@@ -42,6 +42,7 @@
 
 pub mod app;
 pub mod config;
+pub mod crypto;
 pub mod device;
 pub mod document;
 pub mod error;
@@ -58,6 +59,7 @@ pub mod yjs;
 // ── Host core ──────────────────────────────────────────────────────────────
 pub use app::{AppCore, AppCoreBuilder, FsFactory, WatcherFactory};
 pub use config::RecentWorkspace;
+pub use workspace::keys::{WorkspaceKeySet, WorkspaceKeys};
 pub use workspace::{ensure_workspace_row, WorkspaceCore, WorkspaceInfo};
 
 // ── Errors & events ────────────────────────────────────────────────────────

@@ -44,61 +44,65 @@ msgid "新建笔记"
 msgstr "New note"
 
 #. placeholder {0}: event.payload.relPath
-#: src/components/editor/NoteEditor.tsx:425
+#: src/components/editor/NoteEditor.tsx:466
 msgid "\"{0}\" 已被外部修改。是否重新加载？当前未保存的编辑将丢失。"
 msgstr "\"{0}\" was modified externally. Reload? Unsaved edits will be lost."
 
+#: src/components/share/MemberRow.tsx:33
+msgid "（你）"
+msgstr ""
+
 #. placeholder {0}: pairedDevices.length
-#: src/routes/settings/devices.tsx:217
+#: src/routes/settings/devices.tsx:218
 msgid "{0} 台"
 msgstr "{0} devices"
 
 #. placeholder {0}: onlineDevices.length
-#: src/components/workspace/WorkspacePicker.tsx:84
+#: src/components/workspace/WorkspacePicker.tsx:79
 msgid "{0} 台设备在线，可同步工作区"
 msgstr "{0} devices online, workspaces available to sync"
 
 #. placeholder {0}: formatSeconds(remaining)
-#: src/components/pairing/CodePairingCard.tsx:89
+#: src/components/pairing/CodePairingCard.tsx:80
 msgid "{0} 后过期"
 msgstr "Expires in {0}"
 
 #. placeholder {0}: item.ws.docCount
 #. placeholder {0}: ws.docCount
-#: src/components/workspace/WorkspaceSyncDialog.tsx:109
-#: src/components/workspace/WorkspaceSyncDialog.tsx:345
+#: src/components/workspace/WorkspaceSyncDialog.tsx:103
+#: src/components/workspace/WorkspaceSyncDialog.tsx:339
 msgid "{0} 篇文档"
 msgstr "{0} documents"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:418
+#: src/components/workspace/WorkspaceSyncDialog.tsx:412
 msgid "{doneCount} 个成功，{errorCount} 个失败"
 msgstr "{doneCount} succeeded, {errorCount} failed"
 
-#: src/components/layout/SyncStatusBar.tsx:34
+#: src/components/layout/SyncStatusBar.tsx:32
 msgid "{peerCount} 台 · 同步中 {completed}/{total}"
 msgstr "{peerCount} devices · syncing {completed}/{total}"
 
-#: src/components/layout/SyncStatusBar.tsx:42
+#: src/components/layout/SyncStatusBar.tsx:40
 msgid "{peerCount} 台设备在线"
 msgstr "{peerCount} devices online"
 
-#: src/components/layout/SyncStatusBar.tsx:38
+#: src/components/layout/SyncStatusBar.tsx:36
 msgid "{peerCount} 台设备在线 · 已同步"
 msgstr "{peerCount} devices online · synced"
 
-#: src/routes/settings/general.tsx:85
+#: src/routes/settings/general.tsx:88
 msgid "Admonition"
 msgstr "Admonition"
 
-#: src/routes/settings/general.tsx:92
+#: src/routes/settings/general.tsx:95
 msgid "fenced 代码块渲染与高亮"
 msgstr "Fenced code block rendering and highlighting"
 
-#: src/routes/settings/general.tsx:103
+#: src/routes/settings/general.tsx:106
 msgid "HTML 渲染"
 msgstr "HTML rendering"
 
-#: src/routes/settings/general.tsx:79
+#: src/routes/settings/general.tsx:82
 msgid "Mermaid 图表"
 msgstr "Mermaid diagrams"
 
@@ -110,13 +114,25 @@ msgstr "P2P Sync"
 msgid "P2P 网络"
 msgstr "P2P Network"
 
-#: src/components/onboarding/PairingStep.tsx:172
+#: src/components/onboarding/PairingStep.tsx:174
 msgid "P2P 节点启动失败"
 msgstr "Failed to start P2P node"
 
 #: src/components/settings/NetworkStatusCard.tsx:68
 msgid "P2P 节点未运行"
 msgstr "P2P node not running"
+
+#: src/routes/settings/general.tsx:130
+msgid "Selection 工具栏"
+msgstr ""
+
+#: src/routes/settings/general.tsx:118
+msgid "Slash 命令"
+msgstr ""
+
+#: src/routes/settings/general.tsx:124
+msgid "Wikilink"
+msgstr ""
 
 #: src/components/onboarding/DeviceNameStep.tsx:58
 msgid "上一步"
@@ -132,7 +148,7 @@ msgstr "Next"
 msgid "下载中..."
 msgstr "Downloading..."
 
-#: src/routes/settings/general.tsx:136
+#: src/routes/settings/general.tsx:157
 msgid "中文"
 msgstr "Chinese"
 
@@ -144,20 +160,20 @@ msgstr "Relay"
 msgid "为你的设备取个名字，方便在 P2P 网络中识别。"
 msgstr "Give your device a name to identify it on the P2P network."
 
-#: src/components/settings/WorkspaceSyncList.tsx:75
+#: src/components/settings/WorkspaceSyncList.tsx:74
 msgid "仅本地"
 msgstr "Local only"
 
-#: src/routes/workspace-manager.tsx:64
+#: src/routes/workspace-manager.tsx:58
 msgid "从列表移除"
 msgstr "Remove from list"
 
 #. placeholder {0}: onlineDevices.length
-#: src/routes/workspace-manager.tsx:272
+#: src/routes/workspace-manager.tsx:266
 msgid "从已配对设备同步工作区到本地。{0} 台设备在线。"
 msgstr "Sync workspace from paired devices to local. {0} devices online."
 
-#: src/routes/settings/general.tsx:91
+#: src/routes/settings/general.tsx:94
 msgid "代码块"
 msgstr "Code block"
 
@@ -165,11 +181,11 @@ msgstr "Code block"
 msgid "任务列表"
 msgstr "Task list"
 
-#: src/components/onboarding/CompleteStep.tsx:36
+#: src/components/onboarding/CompleteStep.tsx:35
 msgid "你可以在工作区管理窗口中选择要同步的工作区"
 msgstr "You can choose workspaces to sync in the Workspace Manager window"
 
-#: src/components/onboarding/CompleteStep.tsx:38
+#: src/components/onboarding/CompleteStep.tsx:37
 msgid "你可以稍后在设置 → 设备中配对设备"
 msgstr "You can pair devices later in Settings → Devices"
 
@@ -177,9 +193,13 @@ msgstr "You can pair devices later in Settings → Devices"
 msgid "你是如何开始的？"
 msgstr "How are you getting started?"
 
-#: src/components/onboarding/CompleteStep.tsx:40
+#: src/components/onboarding/CompleteStep.tsx:39
 msgid "你的设备身份已建立，可以开始使用 SwarmNote 了。"
 msgstr "Your device identity is set up. You can start using SwarmNote."
+
+#: src/components/share/ShareDialog.tsx:117
+msgid "先在「设备」设置里配对设备"
+msgstr ""
 
 #: src/components/onboarding/PathChoiceStep.tsx:37
 msgid "全新开始"
@@ -189,11 +209,19 @@ msgstr "Start fresh"
 msgid "全选"
 msgstr "Select all"
 
+#: src/components/share/ShareDialog.tsx:69
+msgid "共享「{workspaceName}」"
+msgstr ""
+
+#: src/components/layout/TitleBar.tsx:122
+msgid "共享工作区"
+msgstr ""
+
 #: src/routes/settings.tsx:29
 msgid "关于"
 msgstr "About"
 
-#: src/components/pairing/CodePairingCard.tsx:72
+#: src/components/pairing/CodePairingCard.tsx:63
 msgid "关闭"
 msgstr "Close"
 
@@ -205,7 +233,7 @@ msgstr "Closing P2P network will disconnect all devices and stop syncing notes."
 msgid "关闭网络"
 msgstr "Stop Network"
 
-#: src/routes/settings/general.tsx:208
+#: src/routes/settings/general.tsx:229
 msgid "内联"
 msgstr "Inline"
 
@@ -214,7 +242,7 @@ msgstr "Inline"
 msgid "最后在线 {0}"
 msgstr "Last online {0}"
 
-#: src/components/workspace/WorkspacePicker.tsx:93
+#: src/components/workspace/WorkspacePicker.tsx:88
 msgid "最近打开"
 msgstr "Recently opened"
 
@@ -223,15 +251,19 @@ msgid "最近文件"
 msgstr "Recent Files"
 
 #. placeholder {0}: item.ws.docCount
-#: src/components/workspace/WorkspaceSyncDialog.tsx:114
+#: src/components/workspace/WorkspaceSyncDialog.tsx:108
 msgid "准备同步 · {0} 篇文档"
 msgstr "Preparing to sync · {0} documents"
 
-#: src/components/onboarding/CompleteStep.tsx:32
+#: src/components/onboarding/CompleteStep.tsx:31
 msgid "准备就绪!"
 msgstr "Ready to Go!"
 
-#: src/routes/settings/general.tsx:210
+#: src/components/share/ShareDialog.tsx:139
+msgid "分享"
+msgstr ""
+
+#: src/routes/settings/general.tsx:231
 msgid "切换"
 msgstr "Toggle"
 
@@ -239,7 +271,7 @@ msgstr "Toggle"
 msgid "切换侧边栏"
 msgstr "Toggle Sidebar"
 
-#: src/routes/settings/general.tsx:191
+#: src/routes/settings/general.tsx:212
 msgid "切换插件启用状态后,需要重新打开文档或重启应用以生效。"
 msgstr "Plugin toggles take effect on next document open or app restart."
 
@@ -251,7 +283,7 @@ msgstr ""
 msgid "列"
 msgstr ""
 
-#: src/routes/workspace-manager.tsx:247
+#: src/routes/workspace-manager.tsx:241
 msgid "创建"
 msgstr "Create"
 
@@ -259,7 +291,7 @@ msgstr "Create"
 msgid "创建你的第一篇笔记，开始记录想法"
 msgstr "Create your first note and start capturing ideas"
 
-#: src/components/workspace/WorkspacePicker.tsx:64
+#: src/components/workspace/WorkspacePicker.tsx:59
 msgid "创建新工作区"
 msgstr "Create new workspace"
 
@@ -284,11 +316,12 @@ msgstr ""
 msgid "删除表格"
 msgstr ""
 
-#: src/routes/settings/devices.tsx:254
+#: src/components/pairing/CodePairingCard.tsx:96
+#: src/routes/settings/devices.tsx:255
 msgid "刷新"
 msgstr "Refresh"
 
-#: src/components/onboarding/PairingStep.tsx:292
+#: src/components/onboarding/PairingStep.tsx:294
 msgid "刷新码"
 msgstr "Refresh Code"
 
@@ -300,9 +333,17 @@ msgstr "Cut"
 msgid "加粗"
 msgstr "Bold"
 
-#: src/components/editor/NoteEditor.tsx:122
+#: src/components/editor/NoteEditor.tsx:141
 msgid "加载中..."
 msgstr "Loading..."
+
+#: src/components/share/ShareDialog.tsx:88
+msgid "加载中…"
+msgstr ""
+
+#: src/components/share/RoleBadge.tsx:13
+msgid "协作者"
+msgstr ""
 
 #: src/routes/settings/about.tsx:67
 msgid "去中心化、本地优先的 P2P 笔记应用"
@@ -321,13 +362,14 @@ msgid "发现新版本"
 msgstr "Update Available"
 
 #: src/components/filetree/FileTree.tsx:84
-#: src/components/onboarding/PairingStep.tsx:271
-#: src/components/onboarding/PairingStep.tsx:305
+#: src/components/onboarding/PairingStep.tsx:273
+#: src/components/onboarding/PairingStep.tsx:307
 #: src/components/pairing/FoundDeviceDialog.tsx:72
-#: src/components/pairing/InputCodeDialog.tsx:89
+#: src/components/pairing/InputCodeDialog.tsx:85
 #: src/components/pairing/UnpairConfirmDialog.tsx:55
 #: src/components/settings/NetworkStatusCard.tsx:125
-#: src/components/workspace/WorkspaceSyncDialog.tsx:379
+#: src/components/share/RevokeMemberDialog.tsx:60
+#: src/components/workspace/WorkspaceSyncDialog.tsx:373
 msgid "取消"
 msgstr "Cancel"
 
@@ -340,7 +382,7 @@ msgid "取消配对"
 msgstr "Unpair"
 
 #: src/components/editor/EditorContextMenu.tsx:284
-#: src/routes/settings/general.tsx:161
+#: src/routes/settings/general.tsx:182
 msgid "可读行宽"
 msgstr "Readable line width"
 
@@ -348,42 +390,42 @@ msgstr "Readable line width"
 msgid "右对齐"
 msgstr ""
 
-#: src/routes/workspace-manager.tsx:284
+#: src/routes/workspace-manager.tsx:278
 msgid "同步"
 msgstr "Sync"
 
 #. placeholder {0}: syncState.completed
 #. placeholder {1}: syncState.total
-#: src/components/settings/WorkspaceSyncList.tsx:25
+#: src/components/settings/WorkspaceSyncList.tsx:24
 msgid "同步中 · {0}/{1} 篇"
 msgstr "Syncing · {0}/{1}"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:364
+#: src/components/workspace/WorkspaceSyncDialog.tsx:358
 msgid "同步位置"
 msgstr "Sync location"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:264
+#: src/components/workspace/WorkspaceSyncDialog.tsx:258
 msgid "同步完成"
 msgstr "Sync complete"
 
 #. placeholder {0}: item.ws.docCount
-#: src/components/workspace/WorkspaceSyncDialog.tsx:122
+#: src/components/workspace/WorkspaceSyncDialog.tsx:116
 msgid "同步完成 · {0} 篇文档"
 msgstr "Sync complete · {0} documents"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:266
+#: src/components/workspace/WorkspaceSyncDialog.tsx:260
 msgid "同步工作区"
 msgstr "Sync workspace"
 
-#: src/components/workspace/WorkspacePicker.tsx:81
+#: src/components/workspace/WorkspacePicker.tsx:76
 msgid "同步已配对设备工作区"
 msgstr "Sync workspace from paired devices"
 
-#: src/routes/workspace-manager.tsx:269
+#: src/routes/workspace-manager.tsx:263
 msgid "同步远程工作区"
 msgstr "Sync remote workspace"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:398
+#: src/components/workspace/WorkspaceSyncDialog.tsx:392
 msgid "后台运行"
 msgstr "Run in background"
 
@@ -395,7 +437,7 @@ msgstr "Start P2P network to sync workspaces"
 msgid "启动中..."
 msgstr "Starting..."
 
-#: src/routes/settings/general.tsx:178
+#: src/routes/settings/general.tsx:199
 msgid "启动时自动打开上次使用的工作区"
 msgstr "Automatically open the last-used workspace on startup"
 
@@ -403,15 +445,15 @@ msgstr "Automatically open the last-used workspace on startup"
 msgid "启动网络"
 msgstr "Start Network"
 
-#: src/routes/settings/general.tsx:172
+#: src/routes/settings/general.tsx:193
 msgid "启动行为"
 msgstr "Startup behavior"
 
-#: src/components/layout/TitleBar.tsx:115
+#: src/components/layout/TitleBar.tsx:136
 msgid "命令面板"
 msgstr "Command palette"
 
-#: src/routes/settings/general.tsx:97
+#: src/routes/settings/general.tsx:100
 msgid "图片渲染"
 msgstr "Image rendering"
 
@@ -423,7 +465,7 @@ msgstr ""
 msgid "在下方新增行"
 msgstr ""
 
-#: src/components/pairing/CodePairingCard.tsx:93
+#: src/components/pairing/CodePairingCard.tsx:84
 msgid "在另一台设备输入此码"
 msgstr "Enter this code on another device"
 
@@ -435,19 +477,20 @@ msgstr ""
 msgid "在左侧新增列"
 msgstr ""
 
-#: src/routes/workspace-manager.tsx:244
+#: src/routes/workspace-manager.tsx:238
 msgid "在指定文件夹下创建一个新的工作区。"
 msgstr "Create a new workspace in the specified folder."
 
-#: src/routes/workspace-manager.tsx:55
+#: src/routes/workspace-manager.tsx:49
 msgid "在文件管理器中打开"
 msgstr "Open in file manager"
 
-#: src/components/editor/DocumentOutline.tsx:152
+#: src/components/layout/Sidebar.tsx:183
 msgid "在文档中添加标题即可看到大纲导航"
 msgstr "Add headings in your document to see the outline navigation"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:328
+#: src/components/share/MemberRow.tsx:45
+#: src/components/workspace/WorkspaceSyncDialog.tsx:322
 msgid "在线"
 msgstr "Online"
 
@@ -456,8 +499,8 @@ msgid "在表头下方新增行"
 msgstr ""
 
 #: src/components/editor/EditorContextMenu.tsx:268
-#: src/components/pairing/CodePairingCard.tsx:101
-#: src/components/pairing/CodePairingCard.tsx:104
+#: src/components/pairing/CodePairingCard.tsx:102
+#: src/components/pairing/CodePairingCard.tsx:105
 msgid "复制"
 msgstr "Copy"
 
@@ -465,16 +508,16 @@ msgstr "Copy"
 msgid "复制为 Markdown"
 msgstr ""
 
-#: src/routes/workspace-manager.tsx:59
+#: src/routes/workspace-manager.tsx:53
 msgid "复制路径"
 msgstr "Copy path"
 
-#: src/components/onboarding/PairingStep.tsx:289
+#: src/components/onboarding/PairingStep.tsx:291
 msgid "复制配对码"
 msgstr "Copy Pairing Code"
 
-#: src/routes/settings/general.tsx:126
-#: src/routes/settings/general.tsx:143
+#: src/routes/settings/general.tsx:147
+#: src/routes/settings/general.tsx:164
 msgid "外观"
 msgstr "Appearance"
 
@@ -482,7 +525,7 @@ msgstr "Appearance"
 msgid "多端协作"
 msgstr "Multi-device"
 
-#: src/components/layout/TitleBar.tsx:94
+#: src/components/layout/TitleBar.tsx:105
 msgid "大纲"
 msgstr "Outline"
 
@@ -494,24 +537,24 @@ msgstr "Characters"
 msgid "安全加密"
 msgstr "Encrypted"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:424
+#: src/components/workspace/WorkspaceSyncDialog.tsx:418
 msgid "完成"
 msgstr "Done"
 
-#: src/routes/settings/general.tsx:98
+#: src/routes/settings/general.tsx:101
 msgid "将 Markdown 图片渲染为内联 / 块级 widget"
 msgstr "Render Markdown images as inline / block widgets"
 
-#: src/routes/workspace-manager.tsx:255
+#: src/routes/workspace-manager.tsx:249
 msgid "将一个本地文件夹作为工作区打开。"
 msgstr "Open a local folder as a workspace."
 
-#: src/routes/workspace-manager.tsx:274
+#: src/routes/workspace-manager.tsx:268
 msgid "将已配对设备的工作区同步到本地。需先启动 P2P 网络。"
 msgstr "Sync workspaces from paired devices to local. The P2P network must be running first."
 
 #. placeholder {0}: formatSeconds(remaining)
-#: src/components/onboarding/PairingStep.tsx:280
+#: src/components/onboarding/PairingStep.tsx:282
 msgid "将此配对码告知对方设备，配对码将在 {0} 后过期"
 msgstr "Share this code with the other device. It expires in {0}."
 
@@ -523,15 +566,15 @@ msgstr "LAN"
 msgid "居中对齐"
 msgstr ""
 
-#: src/components/layout/TitleBar.tsx:77
+#: src/components/layout/TitleBar.tsx:88
 msgid "展开侧边栏"
 msgstr "Expand Sidebar"
 
-#: src/components/workspace/WorkspacePicker.tsx:118
+#: src/components/workspace/WorkspacePicker.tsx:113
 msgid "工作区管理"
 msgstr "Workspace manager"
 
-#: src/components/workspace/WorkspacePopover.tsx:78
+#: src/components/workspace/WorkspacePopover.tsx:72
 msgid "工作区管理..."
 msgstr "Workspace manager..."
 
@@ -540,7 +583,7 @@ msgid "左对齐"
 msgstr ""
 
 #. placeholder {0}: device.name ?? device.hostname
-#: src/components/pairing/NearbyDeviceCard.tsx:35
+#: src/components/pairing/NearbyDeviceCard.tsx:34
 msgid "已与 {0} 配对"
 msgstr "Paired with {0}"
 
@@ -552,21 +595,29 @@ msgstr "Saved"
 msgid "已停止"
 msgstr "Stopped"
 
+#: src/components/share/ShareDialog.tsx:57
+msgid "已分享给 {name}"
+msgstr ""
+
 #: src/components/pairing/UnpairConfirmDialog.tsx:37
 msgid "已取消与 {deviceName} 的配对"
 msgstr "Unpaired from {deviceName}"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:350
+#: src/components/workspace/WorkspaceSyncDialog.tsx:344
 msgid "已同步"
 msgstr "Synced"
 
-#: src/components/settings/WorkspaceSyncList.tsx:57
+#: src/components/settings/WorkspaceSyncList.tsx:56
 msgid "已同步 · 最后同步 {timeStr}"
 msgstr "Synced · last synced {timeStr}"
 
 #: src/routes/settings/about.tsx:59
 msgid "已是最新"
 msgstr "Up to Date"
+
+#: src/components/share/RevokeMemberDialog.tsx:38
+msgid "已移除 {name}"
+msgstr ""
 
 #: src/components/settings/NetworkStatusCard.tsx:64
 msgid "已连接 {connectedCount} 台设备"
@@ -577,11 +628,11 @@ msgid "已连接，暂无设备在线"
 msgstr "Connected, no devices online"
 
 #. placeholder {0}: onlineDevices.length
-#: src/components/layout/SyncStatusBar.tsx:66
+#: src/components/layout/SyncStatusBar.tsx:64
 msgid "已连接设备 ({0})"
 msgstr "Connected devices ({0})"
 
-#: src/routes/settings/devices.tsx:213
+#: src/routes/settings/devices.tsx:214
 msgid "已配对设备"
 msgstr "Paired Devices"
 
@@ -589,7 +640,7 @@ msgstr "Paired Devices"
 msgid "开始使用"
 msgstr "Get Started"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:382
+#: src/components/workspace/WorkspaceSyncDialog.tsx:376
 msgid "开始同步"
 msgstr "Start sync"
 
@@ -605,13 +656,17 @@ msgstr "Blockquote"
 msgid "当前版本 {currentVersion} 已不再支持，请更新到 {latestVersion}"
 msgstr "Version {currentVersion} is no longer supported. Please update to {latestVersion}"
 
-#: src/routes/settings/devices.tsx:186
+#: src/routes/settings/devices.tsx:187
 msgid "当前设备"
 msgstr "Current device"
 
-#: src/routes/settings/general.tsx:177
+#: src/routes/settings/general.tsx:198
 msgid "恢复上次工作区"
 msgstr "Restore last workspace"
+
+#: src/components/share/ShareDialog.tsx:83
+msgid "成员"
+msgstr ""
 
 #: src/components/onboarding/PathChoiceStep.tsx:60
 msgid "我已有其他设备，想要同步笔记"
@@ -621,7 +676,7 @@ msgstr "I have other devices and want to sync notes"
 msgid "我的设备"
 msgstr "My Device"
 
-#: src/components/onboarding/PairingStep.tsx:221
+#: src/components/onboarding/PairingStep.tsx:223
 msgid "或使用配对码"
 msgstr "Or use a pairing code"
 
@@ -629,13 +684,17 @@ msgstr "Or use a pairing code"
 msgid "或按 {modKey}N 快速创建"
 msgstr "or press {modKey}N to quick create"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:131
-#: src/routes/workspace-manager.tsx:262
+#: src/components/share/RoleBadge.tsx:13
+msgid "所有者"
+msgstr ""
+
+#: src/components/workspace/WorkspaceSyncDialog.tsx:125
+#: src/routes/workspace-manager.tsx:256
 msgid "打开"
 msgstr "Open"
 
-#: src/components/workspace/WorkspacePicker.tsx:47
-#: src/routes/workspace-manager.tsx:260
+#: src/components/workspace/WorkspacePicker.tsx:42
+#: src/routes/workspace-manager.tsx:254
 msgid "打开工作区文件夹"
 msgstr "Open workspace folder"
 
@@ -643,15 +702,15 @@ msgstr "Open workspace folder"
 msgid "打开工作区时自动启动 P2P 节点"
 msgstr "Automatically start P2P node when opening a workspace"
 
-#: src/components/workspace/WorkspacePicker.tsx:68
+#: src/components/workspace/WorkspacePicker.tsx:63
 msgid "打开文件夹"
 msgstr "Open folder"
 
-#: src/components/editor/DocumentOutline.tsx:141
+#: src/components/layout/Sidebar.tsx:182
 msgid "打开文档以查看大纲"
 msgstr "Open a document to see its outline"
 
-#: src/routes/workspace-manager.tsx:254
+#: src/routes/workspace-manager.tsx:248
 msgid "打开本地工作区"
 msgstr "Open local workspace"
 
@@ -667,7 +726,7 @@ msgstr "Hole-punch"
 msgid "找到设备"
 msgstr "Devices found"
 
-#: src/routes/settings/general.tsx:80
+#: src/routes/settings/general.tsx:83
 msgid "把 mermaid 代码块渲染为 SVG"
 msgstr "Render mermaid code blocks as SVG"
 
@@ -699,7 +758,7 @@ msgstr "Insert table"
 msgid "插入链接"
 msgstr "Insert link"
 
-#: src/components/layout/Sidebar.tsx:120
+#: src/components/layout/Sidebar.tsx:123
 msgid "搜索文件..."
 msgstr "Search files..."
 
@@ -707,19 +766,19 @@ msgstr "Search files..."
 msgid "操作"
 msgstr "Actions"
 
-#: src/components/layout/TitleBar.tsx:77
+#: src/components/layout/TitleBar.tsx:88
 msgid "收起侧边栏"
 msgstr "Collapse Sidebar"
 
-#: src/routes/settings/general.tsx:67
+#: src/routes/settings/general.tsx:70
 msgid "数学公式"
 msgstr "Math formulas"
 
-#: src/components/editor/NoteEditor.tsx:426
+#: src/components/editor/NoteEditor.tsx:467
 msgid "文件已修改"
 msgstr "File Modified"
 
-#: src/components/layout/TitleBar.tsx:91
+#: src/components/layout/TitleBar.tsx:102
 msgid "文件树"
 msgstr "File tree"
 
@@ -735,18 +794,18 @@ msgstr "Document"
 msgid "斜体"
 msgstr "Italic"
 
-#: src/routes/workspace-manager.tsx:243
+#: src/routes/workspace-manager.tsx:237
 msgid "新建工作区"
 msgstr "New workspace"
 
-#: src/components/layout/Sidebar.tsx:145
+#: src/components/layout/Sidebar.tsx:148
 msgid "新建文件"
 msgstr "New File"
 
 #: src/components/filetree/FileTree.tsx:67
 #: src/components/filetree/FileTreeContextMenu.tsx:43
-#: src/components/layout/Sidebar.tsx:84
-#: src/components/layout/Sidebar.tsx:160
+#: src/components/layout/Sidebar.tsx:87
+#: src/components/layout/Sidebar.tsx:163
 msgid "新建文件夹"
 msgstr "New Folder"
 
@@ -754,7 +813,7 @@ msgstr "New Folder"
 #: src/components/filetree/FileTreeContextMenu.tsx:39
 #: src/components/layout/EmptyState.tsx:24
 #: src/components/layout/EmptyState.tsx:27
-#: src/components/layout/Sidebar.tsx:80
+#: src/components/layout/Sidebar.tsx:83
 #: src/lib/commands.ts:49
 #: src/lib/commands.ts:55
 msgid "新建笔记"
@@ -768,7 +827,7 @@ msgstr "Version {latestVersion} is available. Current version: {currentVersion}"
 msgid "无序列表"
 msgstr "Bullet list"
 
-#: src/routes/settings/general.tsx:109
+#: src/routes/settings/general.tsx:112
 msgid "智能粘贴"
 msgstr "Smart paste"
 
@@ -776,19 +835,23 @@ msgstr "Smart paste"
 msgid "暂无工作区"
 msgstr "No workspaces"
 
-#: src/components/layout/SyncStatusBar.tsx:71
+#: src/components/layout/SyncStatusBar.tsx:69
 msgid "暂无已连接设备"
 msgstr "No connected devices"
+
+#: src/components/share/ShareDialog.tsx:88
+msgid "暂无成员"
+msgstr ""
 
 #: src/components/filetree/EmptyTreeState.tsx:12
 msgid "暂无笔记"
 msgstr "No notes yet"
 
-#: src/routes/settings/devices.tsx:235
+#: src/routes/settings/devices.tsx:236
 msgid "暂无配对设备"
 msgstr "No paired devices"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:371
+#: src/components/workspace/WorkspaceSyncDialog.tsx:365
 msgid "更改"
 msgstr "Change"
 
@@ -801,7 +864,7 @@ msgstr "What's New"
 msgid "更新到 v{0}"
 msgstr "Update to v{0}"
 
-#: src/routes/settings/devices.tsx:174
+#: src/routes/settings/devices.tsx:175
 msgid "更新名称失败"
 msgstr "Failed to update name"
 
@@ -817,19 +880,19 @@ msgstr "Numbered list"
 msgid "未保存"
 msgstr "Unsaved"
 
-#: src/routes/settings/devices.tsx:271
+#: src/routes/settings/devices.tsx:272
 msgid "未发现附近设备"
 msgstr "No nearby devices found"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:313
+#: src/components/workspace/WorkspaceSyncDialog.tsx:307
 msgid "未找到可同步的工作区"
 msgstr "No workspaces to sync"
 
-#: src/components/pairing/InputCodeDialog.tsx:93
+#: src/components/pairing/InputCodeDialog.tsx:89
 msgid "查找中..."
 msgstr "Searching..."
 
-#: src/components/pairing/InputCodeDialog.tsx:97
+#: src/components/pairing/InputCodeDialog.tsx:93
 msgid "查找设备"
 msgstr "Find devices"
 
@@ -874,7 +937,7 @@ msgstr "Downloading v{0}"
 msgid "正在准备工作区..."
 msgstr "Preparing workspace..."
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:262
+#: src/components/workspace/WorkspaceSyncDialog.tsx:256
 msgid "正在同步..."
 msgstr "Syncing..."
 
@@ -884,15 +947,15 @@ msgstr "Syncing..."
 msgid "正在同步文档 {0}/{1}..."
 msgstr "Syncing document {0}/{1}..."
 
-#: src/components/onboarding/PairingStep.tsx:161
+#: src/components/onboarding/PairingStep.tsx:163
 msgid "正在启动 P2P 节点..."
 msgstr "Starting P2P node..."
 
-#: src/components/onboarding/PairingStep.tsx:205
+#: src/components/onboarding/PairingStep.tsx:207
 msgid "正在搜索附近设备..."
 msgstr "Searching for nearby devices..."
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:295
+#: src/components/workspace/WorkspaceSyncDialog.tsx:289
 msgid "正在获取可同步的工作区..."
 msgstr "Fetching syncable workspaces..."
 
@@ -904,6 +967,10 @@ msgstr "Restarting..."
 #: src/components/editor/EditorContextMenu.tsx:246
 msgid "正文"
 msgstr "Body text"
+
+#: src/components/share/ShareDialog.tsx:75
+msgid "此工作区的成员"
+msgstr ""
 
 #: src/components/upgrade/ForceUpdateDialog.tsx:66
 msgid "此版本为必须更新，将自动下载并安装。"
@@ -917,60 +984,65 @@ msgstr "Paragraph"
 msgid "没有匹配的文件"
 msgstr "No matching files"
 
+#: src/components/share/ShareDialog.tsx:114
+msgid "没有可添加的设备"
+msgstr ""
+
 #: src/components/layout/CommandPalette.tsx:41
 msgid "没有找到匹配的命令"
 msgstr "No matching commands found"
 
-#: src/routes/settings/general.tsx:152
+#: src/routes/settings/general.tsx:173
 msgid "浅色"
 msgstr "Light"
 
-#: src/routes/settings/general.tsx:153
+#: src/routes/settings/general.tsx:174
 msgid "深色"
 msgstr "Dark"
 
 #: src/components/onboarding/PathChoiceStep.tsx:57
+#: src/components/share/ShareDialog.tsx:108
 msgid "添加设备"
 msgstr "Add device"
 
-#: src/routes/settings/general.tsx:86
+#: src/routes/settings/general.tsx:89
 msgid "渲染 GFM / Obsidian 风格的提示块"
 msgstr "Render GFM / Obsidian style admonitions"
 
-#: src/routes/settings/general.tsx:68
+#: src/routes/settings/general.tsx:71
 msgid "渲染 KaTeX 数学公式 ($...$ / $$...$$)"
 msgstr "Render KaTeX math ($...$ / $$...$$)"
 
-#: src/routes/workspace-manager.tsx:235
+#: src/routes/workspace-manager.tsx:229
 msgid "版本"
 msgstr "Version"
 
-#: src/components/pairing/CodePairingCard.tsx:124
+#: src/components/pairing/CodePairingCard.tsx:126
 msgid "生成"
 msgstr "Generate"
 
-#: src/components/pairing/CodePairingCard.tsx:120
+#: src/components/pairing/CodePairingCard.tsx:122
 msgid "生成 6 位配对码，在另一台设备输入即可配对"
 msgstr "Generate a 6-digit pairing code; enter it on another device to pair"
 
-#: src/components/onboarding/PairingStep.tsx:233
+#: src/components/onboarding/PairingStep.tsx:235
 msgid "生成配对码"
 msgstr "Generate Pairing Code"
 
-#: src/components/onboarding/PairingStep.tsx:127
-#: src/components/pairing/CodePairingCard.tsx:55
+#: src/components/onboarding/PairingStep.tsx:129
+#: src/components/pairing/CodePairingCard.tsx:46
 msgid "生成配对码失败"
 msgstr "Failed to generate pairing code"
 
-#: src/routes/settings/devices.tsx:236
+#: src/routes/settings/devices.tsx:237
 msgid "生成配对码或发现附近设备来配对"
 msgstr "Generate a pairing code or discover nearby devices to pair"
 
-#: src/routes/settings/devices.tsx:272
+#: src/routes/settings/devices.tsx:273
 msgid "确保其他设备在同一局域网内"
 msgstr "Make sure other devices are on the same LAN"
 
-#: src/components/layout/SyncStatusBar.tsx:73
+#: src/components/layout/SyncStatusBar.tsx:71
 msgid "确保其他设备已配对并在同一网络中"
 msgstr "Make sure other devices are paired and on the same network"
 
@@ -1016,6 +1088,22 @@ msgstr "Confirm pairing"
 msgid "视图"
 msgstr "View"
 
+#: src/components/share/MemberRow.tsx:45
+msgid "离线"
+msgstr ""
+
+#: src/components/share/RevokeMemberDialog.tsx:63
+msgid "移除"
+msgstr ""
+
+#: src/components/share/RevokeMemberDialog.tsx:53
+msgid "移除 {name} 后，该设备将无法获取此工作区的新内容；它此前已同步的内容仍保留在其本地。"
+msgstr ""
+
+#: src/components/share/RevokeMemberDialog.tsx:48
+msgid "移除成员？"
+msgstr ""
+
 #: src/components/upgrade/PromptUpdateDialog.tsx:90
 msgid "稍后提醒"
 msgstr "Remind Me Later"
@@ -1024,27 +1112,27 @@ msgstr "Remind Me Later"
 msgid "立即更新"
 msgstr "Update Now"
 
-#: src/components/onboarding/PairingStep.tsx:298
+#: src/components/onboarding/PairingStep.tsx:300
 msgid "等待对方连接..."
 msgstr "Waiting for connection..."
 
-#: src/components/layout/SyncStatusBar.tsx:31
+#: src/components/layout/SyncStatusBar.tsx:29
 msgid "等待设备连接"
 msgstr "Waiting for device to connect"
 
-#: src/routes/settings/general.tsx:74
+#: src/routes/settings/general.tsx:77
 msgid "管道表格渲染为可视化卡片"
 msgstr "Render pipe tables as visual cards"
 
-#: src/routes/settings/general.tsx:110
+#: src/routes/settings/general.tsx:113
 msgid "粘贴 URL 转链接，拖放 / 粘贴文件上传为图片"
 msgstr "Paste URLs as links; drag/paste files upload as images"
 
-#: src/routes/settings/devices.tsx:201
+#: src/routes/settings/devices.tsx:202
 msgid "编辑名称"
 msgstr "Edit name"
 
-#: src/routes/settings/general.tsx:188
+#: src/routes/settings/general.tsx:209
 msgid "编辑器插件"
 msgstr "Editor plugins"
 
@@ -1053,16 +1141,16 @@ msgstr "Editor plugins"
 msgid "网络"
 msgstr "Network"
 
-#: src/components/layout/SyncStatusBar.tsx:29
+#: src/components/layout/SyncStatusBar.tsx:27
 #: src/components/settings/WorkspaceSyncList.tsx:98
 msgid "网络未启动"
 msgstr "Network not started"
 
-#: src/components/layout/SyncStatusBar.tsx:106
+#: src/components/layout/SyncStatusBar.tsx:104
 msgid "网络设置"
 msgstr "Network settings"
 
-#: src/routes/settings/general.tsx:209
+#: src/routes/settings/general.tsx:230
 msgid "自动"
 msgstr "Auto"
 
@@ -1078,7 +1166,7 @@ msgstr ""
 msgid "行内代码"
 msgstr "Inline code"
 
-#: src/routes/settings/general.tsx:73
+#: src/routes/settings/general.tsx:76
 msgid "表格"
 msgstr "Tables"
 
@@ -1086,65 +1174,73 @@ msgstr "Tables"
 msgid "设备"
 msgstr "Device"
 
-#: src/components/onboarding/CompleteStep.tsx:69
+#: src/components/onboarding/CompleteStep.tsx:68
 msgid "设备 ID"
 msgstr "Device ID"
 
-#: src/components/onboarding/CompleteStep.tsx:59
+#: src/components/onboarding/CompleteStep.tsx:58
 #: src/components/onboarding/DeviceNameStep.tsx:38
 msgid "设备名称"
 msgstr "Device Name"
 
-#: src/routes/settings/devices.tsx:172
+#: src/routes/settings/devices.tsx:173
 msgid "设备名称已更新，网络身份已同步"
 msgstr "Device name updated; network identity synced"
 
-#: src/routes/settings/devices.tsx:148
+#: src/routes/settings/devices.tsx:149
 msgid "设备管理"
 msgstr "Device Management"
 
-#: src/components/layout/TitleBar.tsx:125
+#: src/components/layout/TitleBar.tsx:150
 #: src/routes/settings.tsx:50
 #: src/routes/settings/network.tsx:34
 msgid "设置"
 msgstr "Settings"
 
-#: src/routes/settings/general.tsx:130
+#: src/routes/settings/general.tsx:151
 msgid "语言"
 msgstr "Language"
 
-#: src/components/onboarding/PairingStep.tsx:133
+#: src/components/onboarding/PairingStep.tsx:135
 msgid "请输入6位配对码"
 msgstr "Please enter a 6-digit pairing code"
 
-#: src/components/layout/Sidebar.tsx:187
+#: src/components/layout/Sidebar.tsx:196
 msgid "调整侧边栏宽度 (当前 {sidebarWidth} 像素)"
 msgstr "Adjust sidebar width (currently {sidebarWidth} pixels)"
 
-#: src/routes/settings/general.tsx:154
+#: src/routes/settings/general.tsx:175
 msgid "跟随系统"
 msgstr "System"
 
-#: src/components/onboarding/PairingStep.tsx:182
-#: src/components/onboarding/PairingStep.tsx:318
+#: src/components/onboarding/PairingStep.tsx:184
+#: src/components/onboarding/PairingStep.tsx:320
 msgid "跳过，稍后设置"
 msgstr "Skip, set up later"
+
+#: src/routes/settings/general.tsx:125
+msgid "输入 [[ 触发笔记选择，插入 [[note-title]] 链接"
+msgstr ""
+
+#: src/routes/settings/general.tsx:119
+msgid "输入 / 触发候选菜单，快速插入或跳转笔记"
+msgstr ""
 
 #: src/components/layout/CommandPalette.tsx:38
 msgid "输入命令..."
 msgstr "Type a command..."
 
-#: src/components/pairing/InputCodeDialog.tsx:62
+#: src/components/pairing/InputCodeDialog.tsx:58
 msgid "输入对方设备上显示的 6 位数字"
 msgstr "Enter the 6-digit number shown on the other device"
 
-#: src/components/onboarding/PairingStep.tsx:252
+#: src/components/onboarding/PairingStep.tsx:254
 msgid "输入对方设备生成的6位配对码"
 msgstr "Enter the 6-digit code generated on the other device"
 
-#: src/components/onboarding/PairingStep.tsx:243
-#: src/components/pairing/InputCodeDialog.tsx:59
-#: src/routes/settings/devices.tsx:151
+#: src/components/onboarding/PairingStep.tsx:245
+#: src/components/pairing/InputCodeDialog.tsx:55
+#: src/routes/settings/devices.tsx:152
 msgid "输入配对码"
 msgstr "Enter Pairing Code"
 
@@ -1152,11 +1248,11 @@ msgstr "Enter Pairing Code"
 msgid "运行中"
 msgstr "Running"
 
-#: src/routes/workspace-manager.tsx:220
+#: src/routes/workspace-manager.tsx:214
 msgid "还没有工作区"
 msgstr "No workspaces yet"
 
-#: src/components/workspace/WorkspacePicker.tsx:105
+#: src/components/workspace/WorkspacePicker.tsx:100
 msgid "还没有工作区，创建一个开始使用吧。"
 msgstr "No workspaces yet — create one to get started."
 
@@ -1168,86 +1264,94 @@ msgstr "No Notes Yet"
 msgid "这是我的第一台 SwarmNote 设备"
 msgstr "This is my first SwarmNote device"
 
-#: src/components/onboarding/CompleteStep.tsx:77
+#: src/components/onboarding/CompleteStep.tsx:76
 msgid "进入 SwarmNote"
 msgstr "Enter SwarmNote"
 
-#: src/components/onboarding/PairingStep.tsx:264
+#: src/components/onboarding/PairingStep.tsx:266
 msgid "连接"
 msgstr "Connect"
 
-#: src/components/layout/SyncStatusBar.tsx:25
-#: src/components/onboarding/PairingStep.tsx:264
+#: src/components/layout/SyncStatusBar.tsx:23
+#: src/components/onboarding/PairingStep.tsx:266
 msgid "连接中..."
 msgstr "Connecting..."
 
-#: src/components/onboarding/PairingStep.tsx:195
+#: src/components/onboarding/PairingStep.tsx:197
 msgid "连接你的其他设备以同步笔记"
 msgstr "Connect your other devices to sync notes"
 
-#: src/components/layout/SyncStatusBar.tsx:27
+#: src/components/layout/SyncStatusBar.tsx:25
 msgid "连接失败"
 msgstr "Connection Failed"
+
+#: src/routes/settings/general.tsx:131
+msgid "选中文字时浮出格式化工具栏（粗体 / 斜体 / 链接 等）"
+msgstr ""
 
 #: src/components/onboarding/PathChoiceStep.tsx:21
 msgid "选择最适合你当前情况的选项"
 msgstr "Choose the option that best fits your situation"
 
-#: src/components/workspace/WorkspaceSyncDialog.tsx:206
+#: src/components/workspace/WorkspaceSyncDialog.tsx:200
 msgid "选择同步目标目录"
 msgstr "Choose sync target folder"
 
-#: src/components/workspace/WorkspacePicker.tsx:53
-#: src/routes/workspace-manager.tsx:246
+#: src/components/workspace/WorkspacePicker.tsx:48
+#: src/routes/workspace-manager.tsx:240
 msgid "选择新工作区目录"
 msgstr "Choose new workspace folder"
 
-#: src/routes/settings/general.tsx:143
+#: src/routes/settings/general.tsx:164
 msgid "选择明亮或暗色主题"
 msgstr "Choose light or dark theme"
 
-#: src/routes/settings/general.tsx:130
+#: src/routes/settings/general.tsx:151
 msgid "选择界面显示语言"
 msgstr "Choose the interface language"
 
 #: src/routes/settings.tsx:26
-#: src/routes/settings/general.tsx:118
+#: src/routes/settings/general.tsx:139
 msgid "通用"
 msgstr "General"
 
-#: src/routes/settings/general.tsx:104
+#: src/routes/settings/general.tsx:107
 msgid "通过 DOMPurify 渲染嵌入的原生 HTML"
 msgstr "Render embedded HTML via DOMPurify"
 
-#: src/components/pairing/NearbyDeviceCard.tsx:59
+#: src/components/share/ShareDialog.tsx:73
+msgid "邀请已配对的设备协作编辑此工作区"
+msgstr ""
+
+#: src/components/pairing/NearbyDeviceCard.tsx:58
 msgid "配对"
 msgstr "Pair"
 
 #: src/components/pairing/FoundDeviceDialog.tsx:76
-#: src/components/pairing/NearbyDeviceCard.tsx:59
+#: src/components/pairing/NearbyDeviceCard.tsx:58
 msgid "配对中..."
 msgstr "Pairing..."
 
-#: src/components/onboarding/CompleteStep.tsx:32
+#: src/components/onboarding/CompleteStep.tsx:31
 msgid "配对成功！"
 msgstr "Paired successfully!"
 
-#: src/components/pairing/CodePairingCard.tsx:80
-#: src/components/pairing/CodePairingCard.tsx:116
+#: src/components/pairing/CodePairingCard.tsx:71
+#: src/components/pairing/CodePairingCard.tsx:118
 msgid "配对码"
 msgstr "Pairing code"
 
-#: src/components/pairing/CodePairingCard.tsx:62
+#: src/components/pairing/CodePairingCard.tsx:53
 msgid "配对码已复制"
 msgstr "Pairing code copied"
 
-#: src/components/onboarding/PairingStep.tsx:144
+#: src/components/onboarding/PairingStep.tsx:146
 #: src/components/pairing/FoundDeviceDialog.tsx:43
-#: src/components/pairing/NearbyDeviceCard.tsx:38
+#: src/components/pairing/NearbyDeviceCard.tsx:37
 msgid "配对被拒绝"
 msgstr "Pairing rejected"
 
-#: src/components/onboarding/PairingStep.tsx:192
+#: src/components/onboarding/PairingStep.tsx:194
 msgid "配对设备"
 msgstr "Paired devices"
 
@@ -1255,9 +1359,13 @@ msgstr "Paired devices"
 msgid "重命名"
 msgstr "Rename"
 
-#: src/components/onboarding/PairingStep.tsx:175
-#: src/components/workspace/WorkspaceSyncDialog.tsx:307
-#: src/components/workspace/WorkspaceSyncDialog.tsx:316
+#: src/components/pairing/CodePairingCard.tsx:94
+msgid "重新生成"
+msgstr ""
+
+#: src/components/onboarding/PairingStep.tsx:177
+#: src/components/workspace/WorkspaceSyncDialog.tsx:301
+#: src/components/workspace/WorkspaceSyncDialog.tsx:310
 msgid "重试"
 msgstr "Retry"
 
@@ -1265,11 +1373,11 @@ msgstr "Retry"
 msgid "错误"
 msgstr "Error"
 
-#: src/routes/settings/devices.tsx:245
+#: src/routes/settings/devices.tsx:246
 msgid "附近设备"
 msgstr "Nearby Devices"
 
-#: src/routes/settings/general.tsx:162
+#: src/routes/settings/general.tsx:183
 msgid "限制编辑器内容宽度以提升阅读体验"
 msgstr "Limit editor content width for a more comfortable reading experience"
 

@@ -9,12 +9,13 @@
 | [01-device-identity.md](01-device-identity.md) | 设备身份（Stronghold + Ed25519）与 6 位配对码流程 |
 | [02-storage-architecture.md](02-storage-architecture.md) | 存储架构：Markdown 优先、目录结构、工作区发现/移动、容灾恢复 |
 | [03-sync-architecture.md](03-sync-architecture.md) | 三级同步：L1 yjs 实时协作 / L2 FastCDC 分块同步 / L3 资源全量同步 |
-| [04-permissions.md](04-permissions.md) | 三级权限模型（Owner/Editor/Reader）、密码学执行、权限继承、撤销与密钥轮换 |
-| [05-sharing.md](05-sharing.md) | 配对分享与链接分享（DHT 邀请、密码保护、有效期） |
+| [04-permissions.md](04-permissions.md) | **(v1 定稿)** 两级权限（Owner/Collaborator）、签名操作链、lazy 撤销与密钥轮换 |
+| [05-sharing.md](05-sharing.md) | **(v1 定稿)** 配对分享（X25519 Lockbox）与链接分享（DHT 签名邀请、密码、有效期） |
 | [07-data-model.md](07-data-model.md) | SQLite 数据模型（全局 db + 工作区 db） |
-| [08-e2e-encryption.md](08-e2e-encryption.md) | E2E 加密底层实现（XChaCha20、Lockbox、HKDF 派生） |
+| [08-e2e-encryption.md](08-e2e-encryption.md) | **(v1 定稿)** E2E 加密底层（主体=设备、Ed25519→X25519、XChaCha20、Lockbox、HKDF、key commitment） |
 | [09-decisions.md](09-decisions.md) | 设计决策记录、开放问题、分阶段实现路线 |
 | [10-ui-requirements.md](10-ui-requirements.md) | UI 设计需求：页面清单、交互细节、快捷键 |
+| [11-threat-model.md](11-threat-model.md) | **(v1 定稿)** 威胁模型：防什么/不防什么、各通道边界、元数据泄漏治理 |
 
 ## 设计原则
 

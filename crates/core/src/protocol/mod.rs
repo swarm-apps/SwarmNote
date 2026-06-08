@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 pub use os_info::OsInfo;
 pub use pairing::{PairingMethod, PairingRefuseReason, PairingRequest, PairingResponse};
-pub use sync::{AssetMeta, DocMeta, SyncRequest, SyncResponse};
+pub use sync::{AssetMeta, DocMeta, SealedWorkspaceKey, SyncRequest, SyncResponse};
 pub use workspace::{WorkspaceMeta, WorkspaceRequest, WorkspaceResponse};
 
 /// Top-level request envelope.

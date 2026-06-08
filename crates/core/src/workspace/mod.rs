@@ -6,6 +6,9 @@
 //! shared across windows of the same workspace). Mobile holds at most one.
 
 pub mod db;
+pub mod keys;
+pub mod permissions;
+pub mod sharing;
 pub mod sync;
 
 use std::path::Path;
@@ -71,21 +74,66 @@ pub struct WorkspaceCore {
     /// Per-workspace sync runtime. `None` until P2P starts; torn down when
     /// the workspace closes or P2P stops.
     sync: tokio::sync::RwLock<Option<Arc<WorkspaceSync>>>,
+    /// This workspace's symmetric key history (`{key_version → keys}`), loaded
+    /// on open. Used by the encrypted gossip codec for publish/receive.
+    keys: tokio::sync::RwLock<crate::WorkspaceKeys>,
+    /// Device identity material retained for reloading keys after a Lockbox is
+    /// installed (e.g. one received from a peer during sync).
+    dev_peer_id: String,
+    dev_x25519_secret: x25519_dalek::StaticSecret,
+    dev_x25519_public: x25519_dalek::PublicKey,
 }
 
 impl WorkspaceCore {
     /// Construct a new workspace runtime. Called by
     /// [`AppCore::open_workspace`] — not a public entry point.
+    #[allow(clippy::too_many_arguments)] // single internal call site; injecting deps explicitly
     pub(crate) async fn new(
         info: WorkspaceInfo,
         db: DatabaseConnection,
         fs: Arc<dyn FileSystem>,
         watcher: Option<Arc<dyn FileWatcher>>,
         event_bus: Arc<dyn EventBus>,
-        peer_id: String,
+        identity: &crate::identity::IdentityManager,
+        init_keys: bool,
         app: Weak<AppCore>,
     ) -> AppResult<Arc<Self>> {
         let db = Arc::new(db);
+        let peer_id = identity.peer_id()?;
+        let my_x25519_secret = identity.x25519_secret()?;
+        let my_x25519_public = identity.x25519_public()?;
+
+        // Owner-opened workspaces self-initialize a key if absent; sync-joined
+        // workspaces (init_keys = false) stay keyless until the owner's Lockbox
+        // arrives via sync, so they don't fork a divergent key.
+        let workspace_keys = if init_keys {
+            let (workspace_keys, did_init) = keys::load_or_initialize_workspace_keys(
+                db.as_ref(),
+                info.id,
+                &peer_id,
+                &my_x25519_secret,
+                &my_x25519_public,
+            )
+            .await?;
+            // Owner-create moment (key freshly self-initialized): seed the
+            // genesis Owner permission op so the chain has a root of trust.
+            if did_init {
+                permissions::ensure_genesis_owner(db.as_ref(), identity, info.id).await?;
+            }
+            workspace_keys
+        } else {
+            keys::load_workspace_keys(
+                db.as_ref(),
+                info.id,
+                &peer_id,
+                &my_x25519_secret,
+                &my_x25519_public,
+            )
+            .await?
+        };
+        let dev_peer_id = peer_id.clone();
+        let dev_x25519_secret = my_x25519_secret.clone();
+        let dev_x25519_public = my_x25519_public;
         let documents = Arc::new(DocumentCrud::new(Arc::clone(&db), peer_id.clone()));
         let ydoc = YDocManager::new(
             info.id,
@@ -113,6 +161,10 @@ impl WorkspaceCore {
             event_bus,
             _app: app,
             sync: tokio::sync::RwLock::new(None),
+            keys: tokio::sync::RwLock::new(workspace_keys),
+            dev_peer_id,
+            dev_x25519_secret,
+            dev_x25519_public,
         }))
     }
 
@@ -162,6 +214,27 @@ impl WorkspaceCore {
     /// Current per-workspace sync runtime (if P2P is running).
     pub async fn sync(&self) -> Option<Arc<WorkspaceSync>> {
         self.sync.read().await.clone()
+    }
+
+    /// This workspace's loaded symmetric key history (clone of the in-memory
+    /// `{key_version → keys}` map). Used by the encrypted gossip codec.
+    pub async fn keys(&self) -> crate::WorkspaceKeys {
+        self.keys.read().await.clone()
+    }
+
+    /// Reload the key history from the DB. Called after installing a Lockbox
+    /// received from a peer during sync, so subsequent gossip can decrypt.
+    pub async fn reload_keys(&self) -> AppResult<()> {
+        let loaded = keys::load_workspace_keys(
+            self.db.as_ref(),
+            self.info.id,
+            &self.dev_peer_id,
+            &self.dev_x25519_secret,
+            &self.dev_x25519_public,
+        )
+        .await?;
+        *self.keys.write().await = loaded;
+        Ok(())
     }
 
     /// Broadcast an awareness (caret / presence) update for an open doc.
@@ -378,4 +451,28 @@ pub async fn ensure_workspace_row(
         updated_at: created.updated_at,
         doc_count: 0,
     })
+}
+
+/// Pin the workspace's authoritative owner (`created_by`) to `owner_peer_id`.
+///
+/// A joiner creates its local workspace row with **itself** as `created_by`
+/// (it doesn't know the owner at creation time). Once it receives the owner's
+/// signed permission chain over the Noise-authenticated sync channel, it pins
+/// `created_by` to the real owner so [`permissions::materialize`] binds the
+/// genesis correctly (its own role then materializes, and forged genesis ops
+/// are rejected the same way they are on the owner's device). No-op if already
+/// set or if the row is missing.
+pub async fn pin_workspace_owner(
+    db: &DatabaseConnection,
+    workspace_id: Uuid,
+    owner_peer_id: &str,
+) -> AppResult<()> {
+    if let Some(row) = WorkspacesEntity::find_by_id(workspace_id).one(db).await? {
+        if row.created_by != owner_peer_id {
+            let mut model: workspaces::ActiveModel = row.into();
+            model.created_by = Set(owner_peer_id.to_owned());
+            model.update(db).await?;
+        }
+    }
+    Ok(())
 }

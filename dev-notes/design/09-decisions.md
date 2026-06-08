@@ -37,12 +37,36 @@
 | 权限撤销 | 停止同步 + 可选密钥轮换 | Google Docs（移除后保留已有） | 平衡安全性和实现复杂度 |
 | Owner 模型 | 单 Owner，可转让 | Google Docs | 避免多 Owner 冲突，P2P 下难以仲裁 |
 
+## E2E 加密/分享/权限 v1 决策（2026-06 定稿）
+
+> 以下决策取代上方「权限决策」表中关于角色数量、密钥存储、撤销语义的纸面假设。完整设计见 [08-e2e-encryption.md](08-e2e-encryption.md) / [04-permissions.md](04-permissions.md) / [05-sharing.md](05-sharing.md) / [11-threat-model.md](11-threat-model.md)。
+
+| 决策 | 选择 | 参考 | 理由 |
+|------|------|------|------|
+| 加密范围 | 仅传输加密（本地写明文 .md）| Tresorit、p2panda Data Encryption | 保住 folder-is-truth；丢设备交给 OS 全盘加密 |
+| 加密主体 | **设备**（per-device Ed25519），非用户 | — | 无账号系统，唯一稳定密码学锚点是设备 |
+| 密钥存储 | OS keychain（现有），非 Stronghold | `identity.rs` 已用 | 主体是设备 + 不防丢设备，Stronghold 前提不成立 |
+| 群密钥方案 | per-workspace 对称 key + X25519 Lockbox + lazy 轮换 | Jazz/cojson、SecSync | 业界共识；MLS/BeeKEM 对 2-3 人 overkill |
+| X25519 来源 | 从设备 Ed25519 复用派生（单层，钉死 clamp）| libsodium、GNUnet | 配对只换 PeerId 即可算对端公钥，零额外分发 |
+| key commitment | 必加（HKDF-extra-output + 常量时间比对）| USENIX'21 partitioning oracle | 链接分享是攻击靶心，裸 AEAD 非 key-committing |
+| 角色 | v1 两级 Owner/Collaborator | Obsidian Sync | 真 Reader 需逐 update 签名，后置 v2（已铺两把独立 key + 携带签名，v2 仅开开关）|
+| 权限表 | 签名操作链（append-only `permission_ops`）| Matrix auth chain、Jazz | 防伪造提权，无中心可离线判定 |
+| 撤销语义 | lazy re-encryption（被移除者旧数据永久可读）| Google Docs、Keyhive | CRDT 必留历史 key，FS 无意义；别承诺「踢人即焚」|
+| 链接邀请传输 | 上 DHT + Owner 签名 + custom validator + HMAC key | Mega.nz | 支持双方离线异步兑换；#secret 永不上 DHT |
+| 链接 max_uses | 不做强制（保留列不承诺）| — | 无中心计数不可靠，避免安全错觉；撤销靠 key rotation |
+| 加密通道 | 只加密 GossipSub 广播；RR 同步靠 Noise | — | gossip 是真正裸奔点，收窄实现面 |
+
 ## 开放问题
 
-1. **Folder 级独立密钥**：MVP 用工作区统一密钥，后续是否需要 Folder 级密钥？（复杂度高，影响密钥分发流程）
-2. **离线时长限制**：设备离线多久后自动撤销权限？还是不自动撤销？
-3. **密钥备份**：用户丢失设备后如何恢复工作区密钥？助记词？密钥导出文件？
-4. **多设备同用户**：同一个人的多台设备是否共享同一身份？还是每台设备独立身份？（SwarmDrop 是设备级身份）
+1. **密钥备份/恢复**：用户丢失全部设备后如何恢复工作区密钥？助记词？加密导出文件？（v1 暂不做，需规划）
+2. **多设备 UI 归组**：密码学上主体是设备（每设备一份 Lockbox），但用户心智是"我和协作者们"。UI 是否把同一人多 PeerId 聚合展示？可信依据是什么（无账号，只能手动标注/配对时自声明）？
+3. **WorkspaceOpened 派生标识匹配**：`CtrlMessage::WorkspaceOpened` 改派生标识后，接收方如何判断"这是我也有的工作区"——需为每个本地工作区预计算派生标识做匹配集。
+4. **Folder/Document 级独立密钥 + 继承**：v1 工作区级统一密钥，后续按需用 HKDF 派生（复杂度高）。
+
+### 已解决（原开放问题）
+
+- ~~离线时长限制自动撤销~~ → **不自动撤销**（撤销是显式 Owner 操作 + lazy 轮换）。
+- ~~多设备同用户是否共享身份~~ → **每台设备独立身份**（设备级，与 SwarmDrop 一致）；"用户"仅 UI 归组。
 
 ## 分阶段实现
 

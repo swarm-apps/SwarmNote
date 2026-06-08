@@ -17,10 +17,7 @@ use crate::pairing::PairingManager;
 use crate::protocol::{
     AppRequest, AppResponse, WorkspaceMeta, WorkspaceRequest, WorkspaceResponse,
 };
-use crate::workspace::sync::{
-    decode_ws_awareness, decode_ws_gossip, parse_sync_topic, parse_ws_awareness_topic,
-    parse_ws_topic, AppSyncCoordinator,
-};
+use crate::workspace::sync::{parse_ws_awareness_topic, parse_ws_topic, AppSyncCoordinator};
 
 /// 启动事件循环，持续读取 NodeEvent 并分发到 DeviceManager + EventBus。
 ///
@@ -175,31 +172,13 @@ async fn handle_event(
                     }
                 }
             } else if let Some(ws_uuid) = parse_ws_topic(&topic) {
-                // Workspace-level topic: decode doc_uuid from payload
-                if let Some((doc_uuid, update)) = decode_ws_gossip(&data) {
-                    coordinator
-                        .handle_ws_gossip_update(source, ws_uuid, doc_uuid, update.to_vec())
-                        .await;
-                } else {
-                    warn!("Invalid workspace GossipSub payload on {topic}");
-                }
+                // Encrypted workspace doc-update broadcast — decrypt + route.
+                coordinator
+                    .handle_ws_gossip_update(source, ws_uuid, data)
+                    .await;
             } else if let Some(ws_uuid) = parse_ws_awareness_topic(&topic) {
-                // Workspace-level awareness topic: pure fan-out, no apply.
-                if let Some((doc_uuid, update)) = decode_ws_awareness(&data) {
-                    coordinator
-                        .handle_ws_awareness_gossip(ws_uuid, doc_uuid, update.to_vec())
-                        .await;
-                } else {
-                    warn!("Invalid awareness GossipSub payload on {topic}");
-                }
-            } else if let Some(doc_uuid) = parse_sync_topic(&topic) {
-                // Legacy per-doc topic (backwards compat during transition).
-                // Attempt to route via any open workspace's YDocManager.
-                for ws in core.list_workspaces().await {
-                    if let Some(Err(e)) = ws.ydoc().apply_sync_update(&doc_uuid, &data).await {
-                        warn!("Failed to apply legacy gossip update for {doc_uuid}: {e}");
-                    }
-                }
+                // Encrypted workspace awareness broadcast — decrypt + fan-out.
+                coordinator.handle_ws_awareness_gossip(ws_uuid, data).await;
             } else {
                 info!("GossipSub message on unknown topic: {topic}");
             }
@@ -241,7 +220,7 @@ async fn handle_inbound_request(
 
         AppRequest::Workspace(WorkspaceRequest::ListWorkspaces) => {
             info!("Received ListWorkspaces request from {peer_id}");
-            let response = build_workspace_list(core).await;
+            let response = build_workspace_list(core, peer_id).await;
             if let Err(e) = client
                 .send_response(pending_id, AppResponse::Workspace(response))
                 .await
@@ -258,14 +237,25 @@ async fn handle_inbound_request(
     }
 }
 
-/// 从 AppCore 的活工作区列表构建当前已打开工作区的元数据列表。
-async fn build_workspace_list(core: &Arc<AppCore>) -> WorkspaceResponse {
+/// 构建工作区元数据列表，**只包含请求方被授权访问的工作区**（与 key 分发 /
+/// 同步响应的权限 gating 一致，避免请求方"看得到却拉不动")。
+async fn build_workspace_list(core: &Arc<AppCore>, requester: PeerId) -> WorkspaceResponse {
     use entity::workspace::documents;
 
+    let requester_str = requester.to_string();
     let workspaces = core.list_workspaces().await;
     let mut metas = Vec::with_capacity(workspaces.len());
 
     for ws in &workspaces {
+        // Only advertise workspaces the requester is an authorized member of.
+        let authorized = matches!(
+            crate::workspace::permissions::role_of(ws.db(), ws.info.id, &requester_str).await,
+            Ok(Some(_))
+        );
+        if !authorized {
+            continue;
+        }
+
         let doc_count = documents::Entity::find().count(ws.db()).await.unwrap_or(0) as u32;
 
         metas.push(WorkspaceMeta {

@@ -111,6 +111,134 @@ impl IdentityManager {
             .to_protobuf_encoding()
             .map_err(|e| AppError::KeypairEncode(e.to_string()))
     }
+
+    /// This device's long-lived X25519 secret, derived from the Ed25519
+    /// identity (single-layer reuse). Used as the sender/recipient key for
+    /// workspace-key Lockboxes. See [`crate::crypto::keyx`].
+    pub fn x25519_secret(&self) -> AppResult<x25519_dalek::StaticSecret> {
+        let ed = self
+            .keypair
+            .clone()
+            .try_into_ed25519()
+            .map_err(|e| AppError::KeypairDecode(e.to_string()))?;
+        let bytes = ed.to_bytes(); // [secret_seed(32) || public(32)]
+        let mut seed = [0u8; 32];
+        seed.copy_from_slice(&bytes[..32]);
+        Ok(crate::crypto::keyx::derive_x25519_secret(&seed))
+    }
+
+    /// This device's X25519 public key (Lockbox recipient identity).
+    pub fn x25519_public(&self) -> AppResult<x25519_dalek::PublicKey> {
+        Ok(x25519_dalek::PublicKey::from(&self.x25519_secret()?))
+    }
+
+    /// Sign `msg` with this device's Ed25519 identity key. Used to sign
+    /// permission operations so peers can verify the issuer.
+    pub fn sign(&self, msg: &[u8]) -> AppResult<Vec<u8>> {
+        self.keypair.sign(msg).map_err(|e| AppError::Crypto {
+            context: "sign",
+            reason: e.to_string(),
+        })
+    }
+}
+
+/// Recover a peer's libp2p Ed25519 [`PublicKey`] from its (inlined) PeerId.
+fn peer_ed25519_public(
+    peer_id: &swarm_p2p_core::libp2p::PeerId,
+) -> AppResult<swarm_p2p_core::libp2p::identity::PublicKey> {
+    use swarm_p2p_core::libp2p::identity::PublicKey;
+    let mh = swarm_p2p_core::libp2p::multihash::Multihash::<64>::from_bytes(&peer_id.to_bytes())
+        .map_err(|e| AppError::Crypto {
+            context: "peer-pubkey",
+            reason: e.to_string(),
+        })?;
+    if mh.code() != 0 {
+        return Err(AppError::Crypto {
+            context: "peer-pubkey",
+            reason: "peer id is a hash, not an inlined key".into(),
+        });
+    }
+    PublicKey::try_decode_protobuf(mh.digest()).map_err(|e| AppError::Crypto {
+        context: "peer-pubkey",
+        reason: e.to_string(),
+    })
+}
+
+/// Derive a peer's X25519 public key from its (ed25519) PeerId. SwarmNote uses
+/// ed25519 identities, whose public key is inlined in the PeerId's identity
+/// multihash — so a Lockbox can be sealed to a paired device knowing only its
+/// PeerId, with no extra key exchange. See [`crate::crypto::keyx`].
+pub fn peer_id_to_x25519_public(
+    peer_id: &swarm_p2p_core::libp2p::PeerId,
+) -> AppResult<x25519_dalek::PublicKey> {
+    let ed = peer_ed25519_public(peer_id)?
+        .try_into_ed25519()
+        .map_err(|e| AppError::Crypto {
+            context: "peer-x25519",
+            reason: e.to_string(),
+        })?;
+    crate::crypto::keyx::ed25519_pub_to_x25519(&ed.to_bytes())
+}
+
+/// Verify an Ed25519 signature against a peer's PeerId-derived public key.
+/// Returns `false` on any decode/verify failure (never panics).
+pub fn verify_peer_signature(
+    peer_id: &swarm_p2p_core::libp2p::PeerId,
+    msg: &[u8],
+    sig: &[u8],
+) -> bool {
+    peer_ed25519_public(peer_id)
+        .map(|pk| pk.verify(msg, sig))
+        .unwrap_or(false)
+}
+
+#[cfg(test)]
+impl IdentityManager {
+    /// Construct an `IdentityManager` with an ephemeral in-memory keypair, for
+    /// tests that need real Ed25519 signing.
+    pub(crate) async fn for_tests() -> Self {
+        struct MemKeychain(tokio::sync::Mutex<Option<Vec<u8>>>);
+        #[async_trait::async_trait]
+        impl KeychainProvider for MemKeychain {
+            async fn get_or_create_keypair(&self) -> AppResult<Vec<u8>> {
+                let mut guard = self.0.lock().await;
+                if let Some(b) = guard.as_ref() {
+                    return Ok(b.clone());
+                }
+                let b = Keypair::generate_ed25519().to_protobuf_encoding().unwrap();
+                *guard = Some(b.clone());
+                Ok(b)
+            }
+        }
+        let config = GlobalConfig {
+            device_name: "Test Device".to_string(),
+            created_at: "2026-01-01T00:00:00Z".to_string(),
+            last_workspace_path: None,
+            recent_workspaces: Vec::new(),
+        };
+        IdentityManager::new(
+            Arc::new(MemKeychain(tokio::sync::Mutex::new(None))),
+            &config,
+        )
+        .await
+        .unwrap()
+    }
+}
+
+#[cfg(test)]
+mod x25519_tests {
+    use super::*;
+    use swarm_p2p_core::libp2p::identity::Keypair;
+
+    #[test]
+    fn peer_id_x25519_matches_direct_derivation() {
+        let kp = Keypair::generate_ed25519();
+        let peer_id = kp.public().to_peer_id();
+        let ed = kp.try_into_ed25519().unwrap();
+        let direct = crate::crypto::keyx::ed25519_pub_to_x25519(&ed.public().to_bytes()).unwrap();
+        let via_peer = peer_id_to_x25519_public(&peer_id).unwrap();
+        assert_eq!(direct.as_bytes(), via_peer.as_bytes());
+    }
 }
 
 #[cfg(test)]

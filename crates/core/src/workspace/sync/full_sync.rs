@@ -120,6 +120,105 @@ pub async fn request_doc_list(
     }
 }
 
+/// Ensure we hold this workspace's key before syncing. Joined workspaces start
+/// keyless; request the owner's key (sealed to us) over the Noise-encrypted
+/// request-response channel and install it. Best-effort: on failure, RR-based
+/// full sync still pulls document state — only real-time gossip stays
+/// undecryptable until a key arrives.
+async fn ensure_workspace_key(
+    core: &Arc<AppCore>,
+    client: &AppNetClient,
+    peer_id: PeerId,
+    workspace_uuid: Uuid,
+) {
+    let Some(ws) = core.get_workspace(&workspace_uuid).await else {
+        return;
+    };
+    if !ws.keys().await.is_empty() {
+        return;
+    }
+
+    let request = AppRequest::Sync(SyncRequest::WorkspaceKey { workspace_uuid });
+    let response = match tokio::time::timeout(
+        Duration::from_secs(5),
+        client.send_request(peer_id, request),
+    )
+    .await
+    {
+        Ok(Ok(r)) => r,
+        Ok(Err(e)) => {
+            warn!("WorkspaceKey request to {peer_id} failed: {e}");
+            return;
+        }
+        Err(_) => {
+            warn!("WorkspaceKey request to {peer_id} timed out");
+            return;
+        }
+    };
+
+    let AppResponse::Sync(SyncResponse::WorkspaceKey { sealed, ops, .. }) = response else {
+        warn!("Peer {peer_id} returned unexpected response for workspace key");
+        return;
+    };
+
+    // Persist the permission chain so we can materialize our own role, even if
+    // the key itself was declined.
+    for op in &ops {
+        if op.verify() {
+            let _ = crate::workspace::permissions::save_op(ws.db(), workspace_uuid, op).await;
+        }
+    }
+
+    // Pin our local `created_by` to the chain's authoritative owner. A fresh
+    // joiner's row was created with this device as `created_by`; without this
+    // pin, `materialize` would reject the owner's genesis (issuer != our
+    // `created_by`) and our role map would be empty. We trust the single
+    // genesis in the chain we just received over the Noise-authenticated RR
+    // channel from the peer we chose to sync from.
+    if let Some(owner) = crate::workspace::permissions::genesis_owner(&ops) {
+        if let Err(e) = crate::workspace::pin_workspace_owner(ws.db(), workspace_uuid, &owner).await
+        {
+            warn!("Failed to pin workspace owner for {workspace_uuid}: {e}");
+        }
+    }
+
+    let Some(sk) = sealed else {
+        warn!("Peer {peer_id} declined workspace key for {workspace_uuid} (not authorized?)");
+        return;
+    };
+
+    let my_peer = match core.identity().peer_id() {
+        Ok(p) => p,
+        Err(e) => {
+            warn!("Cannot install workspace key: {e}");
+            return;
+        }
+    };
+
+    if let Err(e) = crate::workspace::keys::install_received_key(
+        ws.db(),
+        workspace_uuid,
+        &my_peer,
+        &peer_id.to_string(),
+        sk.key_version,
+        sk.sealed_read,
+        sk.sealed_write,
+    )
+    .await
+    {
+        warn!("Failed to install received workspace key: {e}");
+        return;
+    }
+
+    match ws.reload_keys().await {
+        Ok(()) => info!(
+            "Installed workspace key v{} for {workspace_uuid} from {peer_id}",
+            sk.key_version
+        ),
+        Err(e) => warn!("Failed to reload keys after install: {e}"),
+    }
+}
+
 /// Diff remote DocList against local state to produce a sync plan.
 ///
 /// Single-direction: decides what the **local** side needs to do based on
@@ -281,6 +380,10 @@ async fn run_full_sync(
     workspace_uuid: Uuid,
     cancel: &CancellationToken,
 ) -> AppResult<()> {
+    // 0. Acquire the workspace key if we don't have one (joined workspaces
+    //    start keyless). Best-effort — doesn't block doc sync.
+    ensure_workspace_key(core, client, peer_id, workspace_uuid).await;
+
     // 1. Exchange DocLists
     let remote_docs = request_doc_list(client, peer_id, workspace_uuid).await?;
     let local_docs = build_local_doc_list(core, workspace_uuid).await?;

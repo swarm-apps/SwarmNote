@@ -79,6 +79,10 @@ pub fn specta_builder() -> SpectaBuilder<Wry> {
             commands::yjs::hydrate_workspace,
             // 同步
             commands::sync::trigger_workspace_sync,
+            // 共享 / 成员
+            commands::share::share_workspace_to_device,
+            commands::share::list_workspace_members,
+            commands::share::revoke_workspace_member,
         ])
         .events(collect_events![
             // YDoc / 文档

@@ -358,7 +358,13 @@ pub async fn create_workspace_for_sync(
     drop(conn); // release before open_workspace re-opens it
 
     // Stash the Arc until `trigger_workspace_sync` runs — see `SyncPendingMap` docs.
-    let ws_core = core.inner().clone().open_workspace(ws_path.clone()).await?;
+    // Joined workspace: keys arrive via the owner's Lockbox during sync, so we
+    // open with `for_sync` (no self-init of a divergent key).
+    let ws_core = core
+        .inner()
+        .clone()
+        .open_workspace_for_sync(ws_path.clone())
+        .await?;
     sync_pending.stash(ws_uuid, ws_core).await;
 
     // Record in recent_workspaces.

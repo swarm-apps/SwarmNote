@@ -7,6 +7,7 @@ mod m20260331_000004_rel_path_unique;
 mod m20260401_000005_datetime_text_workspace;
 mod m20260401_000006_datetime_text_devices;
 mod m20260407_000007_add_device_name;
+mod m20260607_000008_e2e_sharing;
 
 pub struct DevicesMigrator;
 
@@ -31,6 +32,7 @@ impl MigratorTrait for WorkspaceMigrator {
             Box::new(m20260330_000003_uuid_stabilization::Migration),
             Box::new(m20260331_000004_rel_path_unique::Migration),
             Box::new(m20260401_000005_datetime_text_workspace::Migration),
+            Box::new(m20260607_000008_e2e_sharing::Migration),
         ]
     }
 }

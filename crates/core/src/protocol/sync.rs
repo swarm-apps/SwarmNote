@@ -24,6 +24,8 @@ pub enum SyncRequest {
         name: String,
         chunk_index: u32,
     },
+    /// Request this workspace's symmetric key, sealed to the requester device.
+    WorkspaceKey { workspace_uuid: Uuid },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -50,6 +52,27 @@ pub enum SyncResponse {
         data: Vec<u8>,
         is_last: bool,
     },
+    /// The workspace key sealed to the requester device (`None` if the
+    /// responder has no key, or declines because the requester isn't an
+    /// authorized member). `ops` carries the workspace's signed permission
+    /// chain so the requester can materialize its own role.
+    WorkspaceKey {
+        workspace_uuid: Uuid,
+        sealed: Option<SealedWorkspaceKey>,
+        #[serde(default)]
+        ops: Vec<crate::workspace::permissions::PermissionOp>,
+    },
+}
+
+/// A workspace key set sealed (X25519 Lockbox) to a specific recipient device.
+/// Each `sealed_*` blob is a self-contained Lockbox frame. A read-only
+/// recipient receives `sealed_write = None`.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SealedWorkspaceKey {
+    pub key_version: u32,
+    #[serde(with = "serde_bytes")]
+    pub sealed_read: Vec<u8>,
+    pub sealed_write: Option<Vec<u8>>,
 }
 
 /// Asset file metadata advertised via `AssetManifest`.
