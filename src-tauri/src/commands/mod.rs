@@ -10,6 +10,7 @@ pub mod fs;
 pub mod identity;
 pub mod network;
 pub mod pairing;
+pub mod share;
 pub mod sync;
 pub mod workspace;
 pub mod yjs;

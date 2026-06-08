@@ -254,6 +254,17 @@ pub async fn role_of(
         .copied())
 }
 
+/// The current tip (leaf) of the op chain — the op_id no other op lists as its
+/// `prev_hash`. For a linear chain this is the latest op; used as `prev_hash`
+/// for a newly-issued op. Deterministic (smallest op_id) on a fork.
+pub fn chain_tip(ops: &[PermissionOp]) -> Option<String> {
+    let prevs: HashSet<&str> = ops.iter().filter_map(|o| o.prev_hash.as_deref()).collect();
+    ops.iter()
+        .filter(|o| !prevs.contains(o.op_id.as_str()))
+        .map(|o| o.op_id.clone())
+        .min()
+}
+
 /// Seed the genesis Owner op for a freshly-created (owner) workspace if the
 /// permission chain is empty. Idempotent. Called only on the owner's create
 /// path (where this device self-initialized the workspace key).

@@ -156,11 +156,21 @@ async fn ensure_workspace_key(
         }
     };
 
-    let AppResponse::Sync(SyncResponse::WorkspaceKey {
-        sealed: Some(sk), ..
-    }) = response
-    else {
-        warn!("Peer {peer_id} returned no workspace key for {workspace_uuid}");
+    let AppResponse::Sync(SyncResponse::WorkspaceKey { sealed, ops, .. }) = response else {
+        warn!("Peer {peer_id} returned unexpected response for workspace key");
+        return;
+    };
+
+    // Persist the permission chain so we can materialize our own role, even if
+    // the key itself was declined.
+    for op in &ops {
+        if op.verify() {
+            let _ = crate::workspace::permissions::save_op(ws.db(), workspace_uuid, op).await;
+        }
+    }
+
+    let Some(sk) = sealed else {
+        warn!("Peer {peer_id} declined workspace key for {workspace_uuid} (not authorized?)");
         return;
     };
 

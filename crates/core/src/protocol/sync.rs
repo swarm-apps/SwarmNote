@@ -53,10 +53,14 @@ pub enum SyncResponse {
         is_last: bool,
     },
     /// The workspace key sealed to the requester device (`None` if the
-    /// responder has no key for that workspace or declines).
+    /// responder has no key, or declines because the requester isn't an
+    /// authorized member). `ops` carries the workspace's signed permission
+    /// chain so the requester can materialize its own role.
     WorkspaceKey {
         workspace_uuid: Uuid,
         sealed: Option<SealedWorkspaceKey>,
+        #[serde(default)]
+        ops: Vec<crate::workspace::permissions::PermissionOp>,
     },
 }
 

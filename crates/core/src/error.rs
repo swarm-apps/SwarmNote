@@ -106,6 +106,10 @@ pub enum AppError {
         reason: String,
     },
 
+    // ── Permissions / sharing ─────────────────────────────────
+    #[error("permission denied: {0}")]
+    PermissionDenied(String),
+
     // ── Window (desktop shell) ────────────────────────────────
     #[error("window error: {0}")]
     Window(String),
@@ -162,6 +166,7 @@ impl Serialize for AppError {
             AppError::WorkspaceCloseFailed { .. } => "WorkspaceCloseFailed",
 
             AppError::Crypto { .. } => "Crypto",
+            AppError::PermissionDenied(_) => "PermissionDenied",
 
             AppError::Window(_) => "Window",
         };
