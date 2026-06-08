@@ -2,10 +2,14 @@
 //!
 //! Each [`PermissionOp`] is identified by its content hash (`op_id`) and signed
 //! by the issuer device's Ed25519 key. Replaying the ops ([`materialize`])
-//! yields the current `peer → role` map, validating three invariants per op:
-//! signature valid, issuer currently Owner, and (two-tier) only Owner may
-//! grant/revoke. The genesis op (no `prev_hash`) is a self-grant of Owner that
-//! bootstraps the workspace owner. See `dev-notes/design/04-permissions.md`.
+//! yields the current `peer → role` map, validating these invariants per op:
+//! signature valid, issuer currently Owner (non-genesis), (two-tier) only Owner
+//! may grant/revoke, and the owner is never demoted. The genesis op (no
+//! `prev_hash`) is a self-grant of Owner that bootstraps the workspace owner —
+//! but it is **bound to the workspace's authoritative creator** (`created_by`):
+//! only that peer's genesis is honored, so a forged self-signed genesis from any
+//! other device cannot establish a second Owner. See
+//! `dev-notes/design/04-permissions.md`.
 //!
 //! v1 is two-tier (Owner / Collaborator). The op carries everything needed to
 //! add a real Reader role later without a schema change.
@@ -15,6 +19,7 @@ use std::str::FromStr;
 
 use chrono::Utc;
 use entity::workspace::permission_ops::{self, Entity as PermissionOps};
+use entity::workspace::workspaces::Entity as Workspaces;
 use sea_orm::{
     ActiveModelTrait, ActiveValue::Set, ColumnTrait, DatabaseConnection, EntityTrait, QueryFilter,
 };
@@ -235,11 +240,55 @@ pub async fn load_ops(db: &DatabaseConnection, workspace_id: Uuid) -> AppResult<
 }
 
 /// Load + replay this workspace's permission ops into a `peer → role` map.
+///
+/// The workspace row's `created_by` is the **authoritative owner** and is
+/// passed to [`materialize`] as the genesis trust anchor — only that peer's
+/// self-grant-Owner genesis is honored, so a forged genesis from any other
+/// device cannot bootstrap a second Owner.
 pub async fn load_and_materialize(
     db: &DatabaseConnection,
     workspace_id: Uuid,
 ) -> AppResult<HashMap<String, Role>> {
-    Ok(materialize(&load_ops(db, workspace_id).await?))
+    let expected_owner = workspace_owner(db, workspace_id).await?;
+    Ok(materialize(
+        &load_ops(db, workspace_id).await?,
+        &expected_owner,
+    ))
+}
+
+/// The workspace's authoritative owner — the `created_by` peer id on the
+/// workspace row. This binds the genesis op (see [`materialize`]). Returns an
+/// empty string if the row is missing, which **fails closed**: no genesis is
+/// accepted and the workspace materializes to an empty role map.
+async fn workspace_owner(db: &DatabaseConnection, workspace_id: Uuid) -> AppResult<String> {
+    Ok(Workspaces::find_by_id(workspace_id)
+        .one(db)
+        .await?
+        .map(|w| w.created_by)
+        .unwrap_or_default())
+}
+
+/// The sole authoritative-owner identity declared by a permission chain — the
+/// issuer of its unique self-grant-Owner genesis op. A joiner uses this to pin
+/// its local `created_by` to the real owner learned from the (Noise-
+/// authenticated) chain it received, so its own genesis binding matches the
+/// owner's. Returns `None` if there is zero or more than one such genesis
+/// (ambiguous → caller should not pin).
+pub fn genesis_owner(ops: &[PermissionOp]) -> Option<String> {
+    let mut found: Option<String> = None;
+    for op in ops.iter().filter(|o| o.verify()) {
+        if op.prev_hash.is_none()
+            && op.op_kind == OpKind::Grant
+            && op.new_role == Some(Role::Owner)
+            && op.issuer_peer_id == op.target_peer_id
+        {
+            if found.is_some() {
+                return None; // ambiguous — multiple genesis claims
+            }
+            found = Some(op.issuer_peer_id.clone());
+        }
+    }
+    found
 }
 
 /// This peer's current role in the workspace (if any).
@@ -283,20 +332,32 @@ pub async fn ensure_genesis_owner(
     Ok(())
 }
 
-/// Replay ops into a `peer → role` map, dropping any op that fails the three
-/// invariants: valid signature, issuer currently Owner (except genesis), and
-/// (two-tier) only Owner grants/revokes. Deterministic across devices.
-pub fn materialize(ops: &[PermissionOp]) -> HashMap<String, Role> {
+/// Replay ops into a `peer → role` map, dropping any op that fails the
+/// invariants: valid signature, **genesis bound to the authoritative owner**,
+/// issuer currently Owner (non-genesis), only Owner grants/revokes, and the
+/// owner is never demoted/revoked. Deterministic across devices.
+///
+/// `expected_owner` is the workspace's authoritative creator (`created_by`).
+/// A genesis op (no `prev_hash`) bootstraps Owner **only** when its
+/// issuer == target == `expected_owner`. This is the trust anchor that closes
+/// the second-genesis-forgery hole: any other device self-signing a genesis
+/// (`issuer == target` but `!= expected_owner`) is rejected, so a paired-but-
+/// unauthorized peer cannot inject a forged root, materialize itself as Owner,
+/// and trick a key holder into sealing the workspace key to it.
+pub fn materialize(ops: &[PermissionOp], expected_owner: &str) -> HashMap<String, Role> {
     let valid: Vec<&PermissionOp> = ops.iter().filter(|o| o.verify()).collect();
     let ordered = order_by_chain(&valid);
 
     let mut roles: HashMap<String, Role> = HashMap::new();
     for op in ordered {
         if op.prev_hash.is_none() {
-            // Genesis bootstraps the owner: a self-grant of Owner.
+            // Genesis bootstraps the owner: a self-grant of Owner — but only for
+            // the workspace's authoritative creator. Any other self-signed
+            // genesis is a forgery and is dropped.
             if op.op_kind == OpKind::Grant
                 && op.new_role == Some(Role::Owner)
                 && op.issuer_peer_id == op.target_peer_id
+                && op.issuer_peer_id == expected_owner
             {
                 roles.insert(op.target_peer_id.clone(), Role::Owner);
             }
@@ -304,6 +365,13 @@ pub fn materialize(ops: &[PermissionOp]) -> HashMap<String, Role> {
         }
         // Non-genesis: the issuer must currently be Owner.
         if roles.get(&op.issuer_peer_id).copied() != Some(Role::Owner) {
+            continue;
+        }
+        // The authoritative owner can never be revoked or downgraded — protects
+        // the founder and guarantees at least one Owner always survives. Without
+        // this, a (forged or peer) Owner could revoke the real owner and seize
+        // the chain.
+        if op.target_peer_id == expected_owner {
             continue;
         }
         match op.op_kind {
@@ -389,7 +457,7 @@ mod tests {
         let owner = new_kp();
         let o = peer_of(&owner);
         let g = signed(&owner, OpKind::Grant, &o, Some(Role::Owner), 1, None);
-        let roles = materialize(&[g]);
+        let roles = materialize(&[g], &o);
         assert_eq!(roles.get(&o), Some(&Role::Owner));
     }
 
@@ -407,11 +475,11 @@ mod tests {
             1,
             Some(g.op_id.clone()),
         );
-        let roles = materialize(&[g.clone(), add.clone()]);
+        let roles = materialize(&[g.clone(), add.clone()], &o);
         assert_eq!(roles.get(&b), Some(&Role::Collaborator));
 
         let rev = signed(&owner, OpKind::Revoke, &b, None, 2, Some(add.op_id.clone()));
-        let roles = materialize(&[g, add, rev]);
+        let roles = materialize(&[g, add, rev], &o);
         assert_eq!(roles.get(&b), None);
     }
 
@@ -438,7 +506,7 @@ mod tests {
             1,
             Some(add.op_id.clone()),
         );
-        let roles = materialize(&[g, add, forged]);
+        let roles = materialize(&[g, add, forged], &o);
         assert_eq!(
             roles.get(&b),
             Some(&Role::Collaborator),
@@ -453,7 +521,105 @@ mod tests {
         let mut g = signed(&owner, OpKind::Grant, &o, Some(Role::Owner), 1, None);
         g.signature[0] ^= 0xff; // tamper
         assert!(!g.verify());
-        assert!(materialize(&[g]).is_empty());
+        assert!(materialize(&[g], &o).is_empty());
+    }
+
+    #[test]
+    fn forged_genesis_cannot_self_bootstrap_owner() {
+        // The authoritative owner's genesis + an attacker's own self-signed
+        // genesis. The attacker's signature/hash are internally valid, so
+        // `verify()` passes — but it is not the workspace's `created_by`, so
+        // `materialize` must drop it. This is the second-genesis-forgery hole.
+        let owner = new_kp();
+        let attacker = new_kp();
+        let (o, a) = (peer_of(&owner), peer_of(&attacker));
+        let g = signed(&owner, OpKind::Grant, &o, Some(Role::Owner), 1, None);
+        let forged_genesis = signed(&attacker, OpKind::Grant, &a, Some(Role::Owner), 1, None);
+        assert!(
+            forged_genesis.verify(),
+            "forged genesis is internally valid"
+        );
+
+        let roles = materialize(&[g, forged_genesis], &o);
+        assert_eq!(roles.get(&o), Some(&Role::Owner), "real owner stands");
+        assert_eq!(
+            roles.get(&a),
+            None,
+            "forged self-grant genesis must NOT establish a second Owner"
+        );
+    }
+
+    #[test]
+    fn lone_forged_genesis_yields_no_owner() {
+        // An attacker-only chain (no real owner present) still materializes to
+        // empty — there is no `expected_owner` match. Fails closed.
+        let attacker = new_kp();
+        let owner = new_kp();
+        let (a, o) = (peer_of(&attacker), peer_of(&owner));
+        let forged = signed(&attacker, OpKind::Grant, &a, Some(Role::Owner), 1, None);
+        let roles = materialize(&[forged], &o);
+        assert!(
+            roles.is_empty(),
+            "no genesis matches the authoritative owner"
+        );
+    }
+
+    #[test]
+    fn owner_cannot_be_revoked_or_demoted() {
+        // Even a validly-signed op (here issued by a second Owner) targeting the
+        // authoritative owner must not remove/demote it — the founder is
+        // protected and at least one Owner always survives.
+        let owner = new_kp();
+        let coowner = new_kp();
+        let (o, c) = (peer_of(&owner), peer_of(&coowner));
+        let g = signed(&owner, OpKind::Grant, &o, Some(Role::Owner), 1, None);
+        // Owner promotes coowner to Owner (no legitimate v1 API does this, but
+        // the DAG must stay sound even if such an op is constructed/injected).
+        let promote = signed(
+            &owner,
+            OpKind::Grant,
+            &c,
+            Some(Role::Owner),
+            1,
+            Some(g.op_id.clone()),
+        );
+        // coowner (a current Owner) tries to revoke the founding owner.
+        let revoke_owner = signed(
+            &coowner,
+            OpKind::Revoke,
+            &o,
+            None,
+            1,
+            Some(promote.op_id.clone()),
+        );
+        let roles = materialize(&[g, promote, revoke_owner], &o);
+        assert_eq!(
+            roles.get(&o),
+            Some(&Role::Owner),
+            "authoritative owner cannot be revoked"
+        );
+    }
+
+    #[test]
+    fn genesis_owner_extracts_unique_or_none() {
+        let owner = new_kp();
+        let attacker = new_kp();
+        let bob = new_kp();
+        let (o, a, b) = (peer_of(&owner), peer_of(&attacker), peer_of(&bob));
+        let g = signed(&owner, OpKind::Grant, &o, Some(Role::Owner), 1, None);
+        let add = signed(
+            &owner,
+            OpKind::Grant,
+            &b,
+            Some(Role::Collaborator),
+            1,
+            Some(g.op_id.clone()),
+        );
+        // Unique genesis → its issuer.
+        assert_eq!(genesis_owner(&[g.clone(), add.clone()]), Some(o.clone()));
+        // Two competing genesis claims → ambiguous → None (caller won't pin).
+        let forged_genesis = signed(&attacker, OpKind::Grant, &a, Some(Role::Owner), 1, None);
+        assert_eq!(genesis_owner(&[g, forged_genesis, add]), None);
     }
 
     #[tokio::test]
@@ -465,20 +631,23 @@ mod tests {
 
         let db = Database::connect("sqlite::memory:").await.unwrap();
         WorkspaceMigrator::up(&db, None).await.unwrap();
+
+        let identity = IdentityManager::for_tests().await;
+        let me = identity.peer_id().unwrap();
+
+        // The workspace's authoritative owner (`created_by`) is this device —
+        // it binds the genesis op that `ensure_genesis_owner` seeds.
         let ws = Uuid::now_v7();
         workspaces::ActiveModel {
             id: Set(ws),
             name: Set("WS".to_string()),
-            created_by: Set("me".to_string()),
+            created_by: Set(me.clone()),
             created_at: Set(Utc::now()),
             updated_at: Set(Utc::now()),
         }
         .insert(&db)
         .await
         .unwrap();
-
-        let identity = IdentityManager::for_tests().await;
-        let me = identity.peer_id().unwrap();
 
         ensure_genesis_owner(&db, &identity, ws).await.unwrap();
         ensure_genesis_owner(&db, &identity, ws).await.unwrap(); // idempotent
@@ -492,6 +661,53 @@ mod tests {
 
         let roles = load_and_materialize(&db, ws).await.unwrap();
         assert_eq!(roles.get(&me), Some(&Role::Owner), "creator is Owner");
+    }
+
+    #[tokio::test]
+    async fn forged_genesis_rejected_against_db_created_by() {
+        // End-to-end at the DB layer: a workspace owned by `owner`; an attacker
+        // injects (persists) its own self-signed genesis op. `load_and_materialize`
+        // reads `created_by` from the row and must reject the forged genesis.
+        use entity::workspace::workspaces;
+        use migration::{MigratorTrait, WorkspaceMigrator};
+        use sea_orm::Database;
+
+        let db = Database::connect("sqlite::memory:").await.unwrap();
+        WorkspaceMigrator::up(&db, None).await.unwrap();
+
+        let owner = new_kp();
+        let attacker = new_kp();
+        let (o, a) = (peer_of(&owner), peer_of(&attacker));
+
+        let ws = Uuid::now_v7();
+        workspaces::ActiveModel {
+            id: Set(ws),
+            name: Set("WS".to_string()),
+            created_by: Set(o.clone()),
+            created_at: Set(Utc::now()),
+            updated_at: Set(Utc::now()),
+        }
+        .insert(&db)
+        .await
+        .unwrap();
+
+        let g = signed(&owner, OpKind::Grant, &o, Some(Role::Owner), 1, None);
+        let forged = signed(&attacker, OpKind::Grant, &a, Some(Role::Owner), 1, None);
+        save_op(&db, ws, &g).await.unwrap();
+        save_op(&db, ws, &forged).await.unwrap(); // attacker manages to persist it
+
+        let roles = load_and_materialize(&db, ws).await.unwrap();
+        assert_eq!(roles.get(&o), Some(&Role::Owner));
+        assert_eq!(
+            roles.get(&a),
+            None,
+            "forged genesis persisted in DB still rejected by created_by binding"
+        );
+        assert_eq!(
+            role_of(&db, ws, &a).await.unwrap(),
+            None,
+            "attacker is not an authorized member"
+        );
     }
 
     #[test]
@@ -508,8 +724,8 @@ mod tests {
             1,
             Some(g.op_id.clone()),
         );
-        let a = materialize(&[g.clone(), add.clone()]);
-        let c = materialize(&[add, g]); // different input order
+        let a = materialize(&[g.clone(), add.clone()], &o);
+        let c = materialize(&[add, g], &o); // different input order
         assert_eq!(a, c);
     }
 }

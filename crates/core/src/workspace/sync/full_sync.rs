@@ -169,6 +169,19 @@ async fn ensure_workspace_key(
         }
     }
 
+    // Pin our local `created_by` to the chain's authoritative owner. A fresh
+    // joiner's row was created with this device as `created_by`; without this
+    // pin, `materialize` would reject the owner's genesis (issuer != our
+    // `created_by`) and our role map would be empty. We trust the single
+    // genesis in the chain we just received over the Noise-authenticated RR
+    // channel from the peer we chose to sync from.
+    if let Some(owner) = crate::workspace::permissions::genesis_owner(&ops) {
+        if let Err(e) = crate::workspace::pin_workspace_owner(ws.db(), workspace_uuid, &owner).await
+        {
+            warn!("Failed to pin workspace owner for {workspace_uuid}: {e}");
+        }
+    }
+
     let Some(sk) = sealed else {
         warn!("Peer {peer_id} declined workspace key for {workspace_uuid} (not authorized?)");
         return;

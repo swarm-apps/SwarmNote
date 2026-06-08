@@ -452,3 +452,27 @@ pub async fn ensure_workspace_row(
         doc_count: 0,
     })
 }
+
+/// Pin the workspace's authoritative owner (`created_by`) to `owner_peer_id`.
+///
+/// A joiner creates its local workspace row with **itself** as `created_by`
+/// (it doesn't know the owner at creation time). Once it receives the owner's
+/// signed permission chain over the Noise-authenticated sync channel, it pins
+/// `created_by` to the real owner so [`permissions::materialize`] binds the
+/// genesis correctly (its own role then materializes, and forged genesis ops
+/// are rejected the same way they are on the owner's device). No-op if already
+/// set or if the row is missing.
+pub async fn pin_workspace_owner(
+    db: &DatabaseConnection,
+    workspace_id: Uuid,
+    owner_peer_id: &str,
+) -> AppResult<()> {
+    if let Some(row) = WorkspacesEntity::find_by_id(workspace_id).one(db).await? {
+        if row.created_by != owner_peer_id {
+            let mut model: workspaces::ActiveModel = row.into();
+            model.created_by = Set(owner_peer_id.to_owned());
+            model.update(db).await?;
+        }
+    }
+    Ok(())
+}
