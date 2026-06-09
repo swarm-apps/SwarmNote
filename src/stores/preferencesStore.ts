@@ -32,6 +32,9 @@ export type CodeBlockPluginMode = "inline" | "auto" | "toggle";
 interface PreferencesState {
   autoStartP2P: boolean;
   restoreLastWorkspace: boolean;
+  /** 是否自动接受他人发来的工作区协作邀请（默认关闭，更安全：收到邀请时弹窗
+   *  让用户决定；开启后对已配对设备的邀请会自动接受、不弹窗）。 */
+  autoAcceptInvitations: boolean;
   /** 启用的编辑器 plugin id 集合（与 EDITOR_PLUGIN_IDS 对应） */
   enabledPlugins: EditorPluginId[];
   /** codeBlock plugin 启用时的渲染模式 */
@@ -41,6 +44,7 @@ interface PreferencesState {
 interface PreferencesActions {
   setAutoStartP2P: (value: boolean) => void;
   setRestoreLastWorkspace: (value: boolean) => void;
+  setAutoAcceptInvitations: (value: boolean) => void;
   setPluginEnabled: (id: EditorPluginId, enabled: boolean) => void;
   setCodeBlockMode: (mode: CodeBlockPluginMode) => void;
 }
@@ -105,11 +109,13 @@ export const usePreferencesStore = create<PreferencesState & PreferencesActions>
     (set) => ({
       autoStartP2P: true,
       restoreLastWorkspace: true,
+      autoAcceptInvitations: false,
       enabledPlugins: DEFAULT_ENABLED_PLUGINS,
       codeBlockMode: DEFAULT_CODE_BLOCK_MODE,
 
       setAutoStartP2P: (value: boolean) => set({ autoStartP2P: value }),
       setRestoreLastWorkspace: (value: boolean) => set({ restoreLastWorkspace: value }),
+      setAutoAcceptInvitations: (value: boolean) => set({ autoAcceptInvitations: value }),
       setPluginEnabled: (id: EditorPluginId, enabled: boolean) =>
         set((state) => {
           const has = state.enabledPlugins.includes(id);

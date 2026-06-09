@@ -77,6 +77,28 @@ pub struct PairedDeviceRemoved {
     pub peer_id: String,
 }
 
+// === 分享 / 成员 ===
+
+/// 收到一条工作区协作邀请,等待用户接受/拒绝。前端弹窗,用户决定后调
+/// `respond_share_invitation(pending_id, accept)`。
+#[derive(Debug, Clone, Serialize, specta::Type, tauri_specta::Event)]
+#[serde(rename_all = "camelCase")]
+pub struct ShareInvitationReceived {
+    pub pending_id: u64,
+    pub peer_id: String,
+    pub workspace_uuid: Uuid,
+    pub workspace_name: String,
+    pub expires_at: chrono::DateTime<chrono::Utc>,
+}
+
+/// 本设备被移出某共享工作区(owner 撤销了其权限)。前端 SHOULD 提示用户;
+/// 已同步到本地的内容仍可读。
+#[derive(Debug, Clone, Serialize, specta::Type, tauri_specta::Event)]
+#[serde(rename_all = "camelCase")]
+pub struct MemberRevoked {
+    pub workspace_id: Uuid,
+}
+
 // === 网络 / P2P 节点 ===
 
 #[derive(Debug, Clone, Serialize, specta::Type, tauri_specta::Event)]

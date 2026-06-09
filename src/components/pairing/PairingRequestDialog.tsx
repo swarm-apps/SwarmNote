@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -8,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useCountdown } from "@/hooks/useCountdown";
 import type { PairingRequestReceived } from "@/lib/bindings";
 import { DeviceInfoCard } from "./DeviceInfoCard";
 
@@ -26,23 +26,8 @@ export function PairingRequestDialog({
   onReject,
   onClose,
 }: PairingRequestDialogProps) {
-  const [remaining, setRemaining] = useState(() =>
-    Math.max(0, Math.ceil((new Date(data.expiresAt).getTime() - Date.now()) / 1000)),
-  );
-
-  // Countdown timer — auto-reject on expiry
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const left = Math.max(0, Math.ceil((new Date(data.expiresAt).getTime() - Date.now()) / 1000));
-      setRemaining(left);
-      if (left <= 0) {
-        clearInterval(interval);
-        onReject();
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [data.expiresAt, onReject]);
+  // 倒计时——到期自动拒绝。
+  const remaining = useCountdown(data.expiresAt, onReject);
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>

@@ -102,6 +102,16 @@ export const commands = {
 	listWorkspaceMembers: (workspaceUuid: string) => __TAURI_INVOKE<MemberInfo[]>("list_workspace_members", { workspaceUuid }),
 	/**  Revoke a member's access (owner only). */
 	revokeWorkspaceMember: (workspaceUuid: string, targetPeerId: string) => __TAURI_INVOKE<null>("revoke_workspace_member", { workspaceUuid, targetPeerId }),
+	/**
+	 *  邀请已配对设备协作此工作区(owner 发起)。**阻塞等待对方接受/拒绝**,
+	 *  返回是否被接受;接受后内部已签发授权 op。
+	 */
+	inviteToWorkspace: (workspaceUuid: string, targetPeerId: string) => __TAURI_INVOKE<boolean>("invite_to_workspace", { workspaceUuid, targetPeerId }),
+	/**
+	 *  被邀请方应答一条分享邀请(接受/拒绝)。`pending_id` 来自
+	 *  `ShareInvitationReceived` 事件。
+	 */
+	respondShareInvitation: (pendingId: number, accept: boolean) => __TAURI_INVOKE<null>("respond_share_invitation", { pendingId, accept }),
 };
 
 /** Events */
@@ -112,6 +122,7 @@ export const events = {
 	externalConflict: makeEvent<ExternalConflict>("external-conflict"),
 	externalUpdate: makeEvent<ExternalUpdate>("external-update"),
 	fileTreeChanged: makeEvent<FileTreeChanged>("file-tree-changed"),
+	memberRevoked: makeEvent<MemberRevoked>("member-revoked"),
 	navigate: makeEvent<Navigate>("navigate"),
 	networkStatusChanged: makeEvent<NetworkStatusChanged>("network-status-changed"),
 	nodeStarted: makeEvent<NodeStarted>("node-started"),
@@ -119,6 +130,7 @@ export const events = {
 	pairedDeviceAdded: makeEvent<PairedDeviceAdded_Deserialize>("paired-device-added"),
 	pairedDeviceRemoved: makeEvent<PairedDeviceRemoved>("paired-device-removed"),
 	pairingRequestReceived: makeEvent<PairingRequestReceived>("pairing-request-received"),
+	shareInvitationReceived: makeEvent<ShareInvitationReceived>("share-invitation-received"),
 	syncCompleted: makeEvent<SyncCompleted>("sync-completed"),
 	syncProgress: makeEvent<SyncProgress>("sync-progress"),
 	syncStarted: makeEvent<SyncStarted>("sync-started"),
@@ -293,6 +305,14 @@ export type MemberInfo = {
 	isSelf: boolean,
 };
 
+/**
+ *  本设备被移出某共享工作区(owner 撤销了其权限)。前端 SHOULD 提示用户;
+ *  已同步到本地的内容仍可读。
+ */
+export type MemberRevoked = {
+	workspaceId: string,
+};
+
 export type MoveDocumentInput = {
 	/**  源路径（文件或目录），相对工作区根。 */
 	fromRelPath: string,
@@ -451,6 +471,18 @@ export type Role = "owner" | "collaborator";
 export type SaveDocumentResult = {
 	/**  blake3 hash hex string */
 	fileHash: string,
+};
+
+/**
+ *  收到一条工作区协作邀请,等待用户接受/拒绝。前端弹窗,用户决定后调
+ *  `respond_share_invitation(pending_id, accept)`。
+ */
+export type ShareInvitationReceived = {
+	pendingId: number,
+	peerId: string,
+	workspaceUuid: string,
+	workspaceName: string,
+	expiresAt: string,
 };
 
 export type SyncCompleted = {

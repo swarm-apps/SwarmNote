@@ -83,6 +83,8 @@ pub fn specta_builder() -> SpectaBuilder<Wry> {
             commands::share::share_workspace_to_device,
             commands::share::list_workspace_members,
             commands::share::revoke_workspace_member,
+            commands::share::invite_to_workspace,
+            commands::share::respond_share_invitation,
         ])
         .events(collect_events![
             // YDoc / 文档
@@ -98,6 +100,9 @@ pub fn specta_builder() -> SpectaBuilder<Wry> {
             events::PairingRequestReceived,
             events::PairedDeviceAdded,
             events::PairedDeviceRemoved,
+            // 分享 / 成员
+            events::ShareInvitationReceived,
+            events::MemberRevoked,
             // 网络
             events::NetworkStatusChanged,
             events::NodeStarted,

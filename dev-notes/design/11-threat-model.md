@@ -23,7 +23,7 @@
 
 1. **丢设备 / 本地磁盘取证**：授权设备本地写明文 `.md`（folder-is-truth 的代价），交给 OS 全盘加密。v1 不做本地静态加密、不上 StrongBox/锁屏门控。
 2. **前向保密（FS）/ 后泄露安全（PCS）**：CRDT 必须重放全历史 → 必须保留全部历史 key，应用层 FS 名存实亡（Keyhive 已论证）。不做 ratchet。
-3. **"踢人即焚"**：撤销是 lazy 的——被移除设备/已存链接者对其能访问过的旧内容**永久可读**。真正切断 = 轮换 key 让新内容对其失效。
+3. **"踢人即焚"（v1.1 已做两段式切断，但旧内容仍永久可读）**：移除成员现在会 **(a) 在线即时切断**——诚实成员对被移除 source 的 gossip 解密前用 `is_authorized` 预检直接丢弃(`coordinator::handle_ws_gossip_update`)，使其在线实时写入即刻失效；**(b) 密钥轮换**——`revoke_member` 发完 `Revoke` op 后调 `keys::rotate_workspace_key`(bump `key_version` + 新 self-Lockbox)，剩余成员收到 `PermissionOpsUpdate` 时反应式重取新版本(`coordinator` → `fetch_workspace_key`)，被移除设备拿不到新 Lockbox → 解不开**新内容**。但**撤销仍是 lazy 的**：被移除设备对其离开**前**已同步的旧内容(旧 `key_version`)**永久可读**、无法远程删除/收回(全行业物理边界)。在线切断不是密码学切断(对方仍持旧 key、能离线解已抓的旧密文)。离线成员在轮换后上线、拿到新 key 前用旧 key 解密合法(身份未变)。链接邀请的撤销同理靠轮换。
 4. **恶意已授权设备**：v1「有 key 即可写」，逐 update 签名携带但不强制校验。拿到 write_key 的设备可注入伪造/损坏 update（CRDT 仍会合并）。真正的写权限强制（丢弃越权 update）= v2 Reader 时一并打开。
 5. **元数据完全隐匿**：已配对设备能看到对方该工作区的**完整路径树**（rel_path/title 经 Noise RR 传，对端可见）。文件名加密是 v2+ 的元数据最小化。
 
@@ -40,6 +40,12 @@
 
 - **owner 设备**：`created_by` = 自己，创建时即正确。
 - **joiner 设备**：本地行创建时 `created_by` = 自己；首次同步（`ensure_workspace_key`）收到经 Noise 认证的对端返回的链后，用链中唯一 genesis 的 issuer 把 `created_by` 钉成真 owner（**trust-on-first-use**）。
+
+## 分享的知情同意（v1.1）
+
+- 分享改为**邀请→接受双向握手**：owner 发 `ShareInvitation`、对端弹窗，**未接受不签发 grant op**（对端不被授权、拿不到 key）。这避免设备被静默塞进别人工作区（对齐 Matrix/MLS「处理才入组」）。拒绝/超时(90s)= 不授权。
+- 用户可在设置里开启「自动接受协作邀请」(默认关)：开启后**对已配对设备的邀请自动接受**——这是用户主动选择把"已配对"提升为"信任邀请",等价于放弃这一层确认;仅对已配对设备生效(配对本身已是一次互信)。
+- **未打开工作区的可发现性(headless 懒打开)**：成员工作区即使没在窗口打开,也会在被授权对端 `ListWorkspaces` 时按需 sync-only 打开并广播——**仍按 `role_of` 过滤**,未授权对端既看不到名字也拉不到内容,不放宽既有 gating。
 
 ## 残留风险（接受并记录）
 

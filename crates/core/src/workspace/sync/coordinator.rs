@@ -87,6 +87,51 @@ impl AppSyncCoordinator {
                         warn!("Failed to save permission op for {workspace_uuid}: {e}");
                     }
                 }
+
+                // React to a removal carried by this update.
+                let has_revoke = ops
+                    .iter()
+                    .any(|o| o.op_kind == crate::workspace::permissions::OpKind::Revoke);
+                if has_revoke {
+                    if let Ok(me) = self.core.identity().peer_id() {
+                        match crate::workspace::permissions::role_of(ws.db(), workspace_uuid, &me)
+                            .await
+                        {
+                            // We were the one removed: stop subscribing + notify.
+                            Ok(None) if !ws.keys().await.is_empty() => {
+                                info!("Revoked from workspace {workspace_uuid}; unsubscribing");
+                                if let Some(ws_sync) = ws.sync().await {
+                                    ws_sync.unsubscribe().await;
+                                }
+                                self.core.event_bus().emit(
+                                    crate::events::AppEvent::MemberRevoked {
+                                        workspace_id: workspace_uuid,
+                                    },
+                                );
+                            }
+                            // Still a member: the owner likely rotated the key on
+                            // removal — re-fetch the current key from the
+                            // broadcaster so post-rotation gossip stays decryptable.
+                            Ok(Some(_)) => {
+                                let core = Arc::clone(&self.core);
+                                let client = self.client.clone();
+                                tokio::spawn(async move {
+                                    if let Some(ws) = core.get_workspace(&workspace_uuid).await {
+                                        full_sync::fetch_workspace_key(
+                                            &core,
+                                            &client,
+                                            source,
+                                            &ws,
+                                            workspace_uuid,
+                                        )
+                                        .await;
+                                    }
+                                });
+                            }
+                            _ => {}
+                        }
+                    }
+                }
             }
         }
     }
@@ -164,6 +209,9 @@ impl AppSyncCoordinator {
         match request {
             SyncRequest::DocList { workspace_uuid } => {
                 info!("Inbound DocList request from {peer_id} for workspace {workspace_uuid}");
+                // 懒打开:对端拉取本设备未在窗口打开的工作区时,先 headless 打开它
+                // 以便鉴权 + 服务(sync-only,不订阅 gossip)。后续 doc 级请求复用。
+                self.core.ensure_open_for_sync(workspace_uuid).await;
                 if !self.is_authorized(workspace_uuid, peer_id).await {
                     warn!("Declining DocList to unauthorized peer {peer_id} for {workspace_uuid}");
                     let resp = AppResponse::Sync(SyncResponse::DocList { docs: vec![] });
@@ -276,6 +324,8 @@ impl AppSyncCoordinator {
             }
             SyncRequest::WorkspaceKey { workspace_uuid } => {
                 info!("Inbound WorkspaceKey request from {peer_id} for workspace {workspace_uuid}");
+                // 懒打开同上:未打开的工作区也能响应密钥请求。
+                self.core.ensure_open_for_sync(workspace_uuid).await;
                 let (sealed, ops) = self
                     .build_workspace_key_response(peer_id, workspace_uuid)
                     .await;
@@ -369,6 +419,17 @@ impl AppSyncCoordinator {
         let Some(ws) = self.core.get_workspace(&workspace_uuid).await else {
             return;
         };
+        // Drop broadcasts from peers who are no longer authorized members — e.g.
+        // a revoked device still publishing under an old key_version we retain in
+        // history. GossipSub can't filter per-subscriber, so we gate on the
+        // source's current role here (the cryptographic cut-off is key rotation;
+        // this is the online-write cut-off).
+        if let Some(src) = source {
+            if !self.is_authorized(workspace_uuid, src).await {
+                tracing::debug!("dropping ws gossip from unauthorized {src} for {workspace_uuid}");
+                return;
+            }
+        }
         let keys = ws.keys().await;
         let (doc_uuid, update) = match super::decode_encrypted_gossip(
             &keys,
@@ -391,10 +452,22 @@ impl AppSyncCoordinator {
 
     /// Handle an incoming **encrypted** awareness GossipSub message: decrypt,
     /// then pure fan-out to the event bus (no persistence/apply/buffer).
-    pub async fn handle_ws_awareness_gossip(&self, workspace_uuid: Uuid, data: Vec<u8>) {
+    pub async fn handle_ws_awareness_gossip(
+        &self,
+        source: Option<PeerId>,
+        workspace_uuid: Uuid,
+        data: Vec<u8>,
+    ) {
         let Some(ws) = self.core.get_workspace(&workspace_uuid).await else {
             return;
         };
+        // Same source-authorization gate as doc-update gossip: don't surface a
+        // revoked peer's cursor/presence.
+        if let Some(src) = source {
+            if !self.is_authorized(workspace_uuid, src).await {
+                return;
+            }
+        }
         let keys = ws.keys().await;
         let (doc_uuid, update) = match super::decode_encrypted_gossip(
             &keys,

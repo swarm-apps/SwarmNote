@@ -10,6 +10,7 @@ use std::sync::{Arc, Weak};
 
 use sea_orm::DatabaseConnection;
 use swarm_p2p_core::libp2p::identity::Keypair;
+use swarm_p2p_core::libp2p::PeerId;
 use tokio::sync::Mutex;
 use tracing::info;
 use uuid::Uuid;
@@ -25,7 +26,7 @@ use crate::keychain::KeychainProvider;
 use crate::network::config::create_node_config;
 use crate::network::event_loop::spawn_event_loop;
 use crate::network::{AppNetClient, NetManager, NodeStatus};
-use crate::protocol::{AppRequest, AppResponse, OsInfo};
+use crate::protocol::{AppRequest, AppResponse, OsInfo, WorkspaceRequest, WorkspaceResponse};
 use crate::workspace::sync::{AppSyncCoordinator, WorkspaceSync};
 use crate::workspace::{
     self, db::init_devices_db, db::init_workspace_db, load_or_create_workspace_info, WorkspaceCore,
@@ -78,6 +79,12 @@ pub struct AppCore {
     /// actually frees the workspace; the map is cleaned on demand in
     /// [`AppCore::open_workspace`].
     workspaces: Mutex<HashMap<Uuid, Weak<WorkspaceCore>>>,
+
+    /// 被「懒打开」（lazy-open）以服务对端拉取的 headless / sync-only 工作区——
+    /// 持**强引用**让它们在无窗口、无 `Weak` 升级来源时仍存活，从而能被发现
+    /// （`build_workspace_list`）与经 RR 同步。它们不订阅 gossip 实时广播;用户真正
+    /// 打开窗口时再经 `open_workspace` 升级为订阅态。见 [`AppCore::ensure_open_for_sync`]。
+    headless: Mutex<HashMap<Uuid, Arc<WorkspaceCore>>>,
 }
 
 /// Builder for [`AppCore`]. Collects the three required platform
@@ -171,6 +178,7 @@ impl AppCoreBuilder {
             net: Mutex::new(None),
             sync_coordinator: Mutex::new(None),
             workspaces: Mutex::new(HashMap::new()),
+            headless: Mutex::new(HashMap::new()),
         }))
     }
 }
@@ -217,7 +225,7 @@ impl AppCore {
         self: &Arc<Self>,
         path: impl Into<PathBuf>,
     ) -> AppResult<Arc<WorkspaceCore>> {
-        self.open_workspace_impl(path, true).await
+        self.open_workspace_impl(path, true, true).await
     }
 
     /// Like [`AppCore::open_workspace`] but for a workspace being synced/joined
@@ -227,13 +235,17 @@ impl AppCore {
         self: &Arc<Self>,
         path: impl Into<PathBuf>,
     ) -> AppResult<Arc<WorkspaceCore>> {
-        self.open_workspace_impl(path, false).await
+        self.open_workspace_impl(path, false, true).await
     }
 
+    /// `register_sync = false` 时打开但**不安装 WorkspaceSync**——即不订阅 gossip
+    /// topic,只能经 request-response 被动服务(供 [`AppCore::ensure_open_for_sync`]
+    /// 的 headless / sync-only 打开使用)。
     async fn open_workspace_impl(
         self: &Arc<Self>,
         path: impl Into<PathBuf>,
         init_keys: bool,
+        register_sync: bool,
     ) -> AppResult<Arc<WorkspaceCore>> {
         let path: PathBuf = path.into();
         if !path.is_dir() {
@@ -313,10 +325,14 @@ impl AppCore {
             }
         };
 
-        // If P2P is running, install per-workspace sync + subscribe.
-        if let Some(coordinator) = self.sync_coordinator().await {
-            self.install_workspace_sync(&winner, coordinator.client(), true)
-                .await;
+        // 若 P2P 在运行且需要实时订阅,安装 per-workspace sync(订阅 gossip)。
+        // headless / sync-only 打开（register_sync=false）跳过——它只经 RR 被动
+        // 服务,不订阅实时广播。
+        if register_sync {
+            if let Some(coordinator) = self.sync_coordinator().await {
+                self.install_workspace_sync(&winner, coordinator.client(), true)
+                    .await;
+            }
         }
 
         // Persist to recent_workspaces so hosts can surface MRU lists without
@@ -340,6 +356,9 @@ impl AppCore {
     /// authoritative shutdown hook used by the host when the last window
     /// referencing a workspace closes.
     pub async fn close_workspace(&self, uuid: Uuid) -> AppResult<()> {
+        // 同时释放可能持有的 headless 强引用,否则关窗口后 WorkspaceCore 不会真正
+        // 释放(下次对端拉取会经 ensure_open_for_sync 重新 headless 打开)。
+        self.headless.lock().await.remove(&uuid);
         let mut guard = self.workspaces.lock().await;
         let Some(weak) = guard.remove(&uuid) else {
             return Ok(());
@@ -359,6 +378,107 @@ impl AppCore {
     pub async fn get_workspace(&self, uuid: &Uuid) -> Option<Arc<WorkspaceCore>> {
         let guard = self.workspaces.lock().await;
         guard.get(uuid).and_then(|w| w.upgrade())
+    }
+
+    /// 邀请已配对设备协作某工作区(owner 发起)。向对端发 `ShareInvitation`
+    /// 请求并**阻塞等待对方接受/拒绝**(对端弹窗,结果经 request-response 回填);
+    /// 仅当对方接受时才签发 `Grant` op 授权——未接受不授权。返回是否被接受。
+    pub async fn invite_device(
+        self: &Arc<Self>,
+        workspace_uuid: Uuid,
+        target_peer_id: &str,
+    ) -> AppResult<bool> {
+        // 仅 owner 可邀请——发邀请前先校验(grant 时还会再校验一次)。
+        let ws = self
+            .get_workspace(&workspace_uuid)
+            .await
+            .ok_or(AppError::NoWorkspaceOpen)?;
+        let me = self.identity.peer_id()?;
+        if crate::workspace::permissions::role_of(ws.db(), workspace_uuid, &me).await?
+            != Some(crate::workspace::permissions::Role::Owner)
+        {
+            return Err(AppError::PermissionDenied(
+                "only the workspace owner can invite members".into(),
+            ));
+        }
+        let name = ws.info.name.clone();
+        let pid: PeerId = target_peer_id.parse().map_err(|e| AppError::SwarmIo {
+            context: "invite parse peer id",
+            reason: format!("{e}"),
+        })?;
+
+        let client = self.client().await?;
+        let resp = client
+            .send_request(
+                pid,
+                AppRequest::Workspace(WorkspaceRequest::ShareInvitation {
+                    workspace_uuid,
+                    name,
+                }),
+            )
+            .await
+            .map_err(|e| AppError::SwarmIo {
+                context: "send share invitation",
+                reason: e.to_string(),
+            })?;
+
+        let accepted = matches!(
+            resp,
+            AppResponse::Workspace(WorkspaceResponse::ShareInvitationResult { accepted: true })
+        );
+        // 对方接受后才真正授权(签 Grant op + 广播链)。
+        if accepted {
+            crate::workspace::sharing::grant_collaborator(self, workspace_uuid, target_peer_id)
+                .await?;
+        }
+        Ok(accepted)
+    }
+
+    /// 被邀请方对一条分享邀请的应答:把结果经 request-response 回填给邀请方
+    /// (`accept=true` 时邀请方随后签发授权)。`pending_id` 来自
+    /// `ShareInvitationReceived` 事件。
+    pub async fn respond_share_invitation(&self, pending_id: u64, accept: bool) -> AppResult<()> {
+        let client = self.client().await?;
+        client
+            .send_response(
+                pending_id,
+                AppResponse::Workspace(WorkspaceResponse::ShareInvitationResult {
+                    accepted: accept,
+                }),
+            )
+            .await
+            .map_err(|e| AppError::SwarmIo {
+                context: "respond share invitation",
+                reason: e.to_string(),
+            })?;
+        Ok(())
+    }
+
+    /// 确保某工作区已打开以供对端拉取(**懒打开**):已打开(窗口或之前 headless)
+    /// 则直接返回;否则按 `recent_workspaces` 记录的路径以 headless / sync-only 方式
+    /// 打开(不订阅 gossip)并持强引用,使其在无窗口时也能经 RR 被发现/服务。
+    /// 找不到路径或打开失败返回 `None`。
+    pub async fn ensure_open_for_sync(self: &Arc<Self>, uuid: Uuid) -> Option<Arc<WorkspaceCore>> {
+        if let Some(ws) = self.get_workspace(&uuid).await {
+            return Some(ws);
+        }
+        let target = uuid.to_string();
+        let path = self
+            .recent_workspaces()
+            .await
+            .into_iter()
+            .find(|w| w.uuid.as_deref() == Some(target.as_str()))
+            .map(|w| w.path)?;
+        match self.open_workspace_impl(path, false, false).await {
+            Ok(ws) => {
+                self.headless.lock().await.insert(uuid, ws.clone());
+                Some(ws)
+            }
+            Err(e) => {
+                tracing::warn!("ensure_open_for_sync: 打开工作区 {uuid} 失败: {e}");
+                None
+            }
+        }
     }
 
     /// Snapshot of every live workspace (active `Arc` upgrades only).

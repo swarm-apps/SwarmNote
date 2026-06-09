@@ -3,6 +3,15 @@
 > **2026-06 调研定稿**。两条路径：① 已配对设备/人之间用 **X25519 Lockbox** 直传密钥；② 给陌生人用 **Mega 式链接分享**（URL fragment 内嵌密钥 + DHT 签名邀请包）。
 > 加密底层见 [08-e2e-encryption.md](08-e2e-encryption.md)，权限见 [04-permissions.md](04-permissions.md)，边界见 [11-threat-model.md](11-threat-model.md)。
 
+## v1.1 实现增量（2026-06，分支 feature/sharing-v1.1，OpenSpec `sharing-v1-1`）
+
+v0.5.0 落地了路径一的密钥分发与权限内核;v1.1 把分享生命周期补全(均已编译 + core 106 tests 绿):
+
+- **邀请→接受握手**：路径一不再是「owner 单方推 grant」,而是 owner 发 `WorkspaceRequest::ShareInvitation`(`AppCore::invite_device`,阻塞等响应)→ 对端经通知队列弹 `ShareInvitationDialog` → **接受后 owner 才 `grant_collaborator`**(未接受不授权)。复用配对的 request-response pending 关联机制。可在设置「网络」tab 开启「自动接受协作邀请」(默认关)对已配对设备免确认。
+- **撤销 = 在线切断 + 密钥轮换**(兑现本文档原「撤销链接 = 轮换 workspace key」的承诺,即 e2e-sharing-v1 延后的 5.4)：`revoke_member` 发完 `Revoke` op 后调 `keys::rotate_workspace_key`(bump `key_version` + 新 self-Lockbox);剩余成员收到 `PermissionOpsUpdate` 时反应式重取新 key(`coordinator` → `fetch_workspace_key`),被移除设备解不开新内容;同时 gossip 入站按 `is_authorized(source)` 预检即时丢弃被移除设备的广播。lazy:旧内容仍可读(见威胁模型)。被移除设备收 `MemberRevoked` 事件自动退订 + 提示。
+- **未打开工作区可同步(headless 懒打开)**：`AppCore::ensure_open_for_sync` 在被授权对端 `ListWorkspaces`/`DocList`/`WorkspaceKey` 时按需以 sync-only(不订阅 gossip)打开本机未在窗口打开的工作区,使其可被发现/拉取(仍 `role_of` 过滤)。
+- **未做(延后)**：接受邀请后 auto-join(需定落盘位置)、被分享方持久「分享给我」清单、链接分享(路径二)、双机实测、i18n。
+
 ## 路径一：配对设备/人分享（Lockbox）
 
 前提：双方已完成现有配对流程（`PairingManager` 已交换 PeerId/Ed25519 公钥并建立信任）。

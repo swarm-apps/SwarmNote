@@ -13,6 +13,7 @@ use crate::error::{AppError, AppResult};
 use crate::events::AppEvent;
 use crate::network::AppNetClient;
 use crate::protocol::{AppRequest, AppResponse, DocMeta, SyncRequest, SyncResponse};
+use crate::workspace::WorkspaceCore;
 
 use super::{asset_sync, doc_sync};
 
@@ -137,7 +138,21 @@ async fn ensure_workspace_key(
     if !ws.keys().await.is_empty() {
         return;
     }
+    fetch_workspace_key(core, client, peer_id, &ws, workspace_uuid).await;
+}
 
+/// Request the **current** workspace key from `peer_id` over Noise RR, persist
+/// the received permission chain, pin the authoritative owner, and install +
+/// reload the key. Unlike [`ensure_workspace_key`], this does NOT early-return
+/// when keys already exist — it is used to pick up a **rotated** key after a
+/// membership change (the broadcaster re-seals its current version to us).
+pub(crate) async fn fetch_workspace_key(
+    core: &Arc<AppCore>,
+    client: &AppNetClient,
+    peer_id: PeerId,
+    ws: &Arc<WorkspaceCore>,
+    workspace_uuid: Uuid,
+) {
     let request = AppRequest::Sync(SyncRequest::WorkspaceKey { workspace_uuid });
     let response = match tokio::time::timeout(
         Duration::from_secs(5),
