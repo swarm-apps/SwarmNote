@@ -1,11 +1,15 @@
 import { create } from "zustand";
 
-import type { PairingRequestReceived } from "@/lib/bindings";
+import type { PairingRequestReceived, ShareInvitationReceived } from "@/lib/bindings";
 
+// 需要用户决策的通知(顺序队列,一次一个对话框)。
 export type ActionNotification = {
   id: string;
   timestamp: number;
-} & { type: "pairing-request"; payload: PairingRequestReceived };
+} & (
+  | { type: "pairing-request"; payload: PairingRequestReceived }
+  | { type: "share-invitation"; payload: ShareInvitationReceived }
+);
 
 interface NotificationState {
   queue: ActionNotification[];

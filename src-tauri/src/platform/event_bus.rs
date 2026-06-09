@@ -11,9 +11,9 @@ use swarmnote_core::{AppEvent, EventBus};
 
 use crate::events::{
     DevicesChanged, DocFlushed, ExternalAwarenessUpdate, ExternalConflict, ExternalUpdate,
-    FileTreeChanged, NetworkStatusChanged, NodeStarted, NodeStopped, PairedDeviceAdded,
-    PairedDeviceRemoved, PairingRequestReceived, SyncCompleted, SyncProgress, SyncResult,
-    SyncStarted,
+    FileTreeChanged, MemberRevoked, NetworkStatusChanged, NodeStarted, NodeStopped,
+    PairedDeviceAdded, PairedDeviceRemoved, PairingRequestReceived, ShareInvitationReceived,
+    SyncCompleted, SyncProgress, SyncResult, SyncStarted,
 };
 
 /// `EventBus` implementation backed by Tauri's `AppHandle::emit`. Broadcasts
@@ -88,6 +88,27 @@ impl EventBus for TauriEventBus {
             }
             AppEvent::PairedDeviceRemoved { peer_id } => {
                 let _ = PairedDeviceRemoved { peer_id }.emit(&self.app);
+            }
+
+            // ── Sharing / membership ──
+            AppEvent::ShareInvitationReceived {
+                pending_id,
+                peer_id,
+                workspace_uuid,
+                workspace_name,
+                expires_at,
+            } => {
+                let _ = ShareInvitationReceived {
+                    pending_id,
+                    peer_id,
+                    workspace_uuid,
+                    workspace_name,
+                    expires_at,
+                }
+                .emit(&self.app);
+            }
+            AppEvent::MemberRevoked { workspace_id } => {
+                let _ = MemberRevoked { workspace_id }.emit(&self.app);
             }
 
             // ── Network ──

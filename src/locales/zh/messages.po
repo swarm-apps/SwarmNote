@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: \n"
 
 #. js-lingui-explicit-id
+#: src/hooks/useKeyboardShortcuts.ts:35
+msgid "新建笔记"
+msgstr "新建笔记"
+
+#. js-lingui-explicit-id
 #: src/lib/dateUtils.ts:4
 msgid "从未在线"
 msgstr "从未在线"
@@ -37,11 +42,6 @@ msgstr "{hours} 小时前"
 #: src/lib/dateUtils.ts:15
 msgid "{days} 天前"
 msgstr "{days} 天前"
-
-#. js-lingui-explicit-id
-#: src/hooks/useKeyboardShortcuts.ts:35
-msgid "新建笔记"
-msgstr "新建笔记"
 
 #. placeholder {0}: event.payload.relPath
 #: src/components/editor/NoteEditor.tsx:466
@@ -78,6 +78,19 @@ msgstr "{0} 篇文档"
 msgid "{doneCount} 个成功，{errorCount} 个失败"
 msgstr "{doneCount} 个成功，{errorCount} 个失败"
 
+#. placeholder {0}: data.workspaceName
+#: src/components/share/ShareInvitationDialog.tsx:55
+msgid "{inviterName} 邀请你协作工作区「{0}」。接受后你将作为协作者加入, 可在「同步」里拉取其内容。"
+msgstr "{inviterName} 邀请你协作工作区「{0}」。接受后你将作为协作者加入, 可在「同步」里拉取其内容。"
+
+#: src/components/share/ShareDialog.tsx:61
+msgid "{name} 已接受邀请"
+msgstr "{name} 已接受邀请"
+
+#: src/components/share/ShareDialog.tsx:64
+msgid "{name} 拒绝了邀请"
+msgstr "{name} 拒绝了邀请"
+
 #: src/components/layout/SyncStatusBar.tsx:32
 msgid "{peerCount} 台 · 同步中 {completed}/{total}"
 msgstr "{peerCount} 台 · 同步中 {completed}/{total}"
@@ -110,7 +123,7 @@ msgstr "Mermaid 图表"
 msgid "P2P 同步"
 msgstr "P2P 同步"
 
-#: src/routes/settings/network.tsx:26
+#: src/routes/settings/network.tsx:28
 msgid "P2P 网络"
 msgstr "P2P 网络"
 
@@ -189,6 +202,14 @@ msgstr "你可以在工作区管理窗口中选择要同步的工作区"
 msgid "你可以稍后在设置 → 设备中配对设备"
 msgstr "你可以稍后在设置 → 设备中配对设备"
 
+#: src/routes/__root.tsx:113
+msgid "你已被移出「{name}」工作区"
+msgstr "你已被移出「{name}」工作区"
+
+#: src/routes/__root.tsx:113
+msgid "你已被移出一个共享工作区"
+msgstr "你已被移出一个共享工作区"
+
 #: src/components/onboarding/PathChoiceStep.tsx:18
 msgid "你是如何开始的？"
 msgstr "你是如何开始的？"
@@ -197,7 +218,7 @@ msgstr "你是如何开始的？"
 msgid "你的设备身份已建立，可以开始使用 SwarmNote 了。"
 msgstr "你的设备身份已建立，可以开始使用 SwarmNote 了。"
 
-#: src/components/share/ShareDialog.tsx:117
+#: src/components/share/ShareDialog.tsx:124
 msgid "先在「设备」设置里配对设备"
 msgstr "先在「设备」设置里配对设备"
 
@@ -209,7 +230,7 @@ msgstr "全新开始"
 msgid "全选"
 msgstr "全选"
 
-#: src/components/share/ShareDialog.tsx:69
+#: src/components/share/ShareDialog.tsx:76
 msgid "共享「{workspaceName}」"
 msgstr "共享「{workspaceName}」"
 
@@ -259,7 +280,7 @@ msgstr "准备同步 · {0} 篇文档"
 msgid "准备就绪!"
 msgstr "准备就绪!"
 
-#: src/components/share/ShareDialog.tsx:139
+#: src/components/share/ShareDialog.tsx:146
 msgid "分享"
 msgstr "分享"
 
@@ -329,6 +350,10 @@ msgstr "刷新码"
 msgid "剪切"
 msgstr "剪切"
 
+#: src/components/share/ShareInvitationDialog.tsx:62
+msgid "剩余时间：{remaining} 秒"
+msgstr "剩余时间：{remaining} 秒"
+
 #: src/components/editor/EditorContextMenu.tsx:185
 msgid "加粗"
 msgstr "加粗"
@@ -337,7 +362,7 @@ msgstr "加粗"
 msgid "加载中..."
 msgstr "加载中..."
 
-#: src/components/share/ShareDialog.tsx:88
+#: src/components/share/ShareDialog.tsx:95
 msgid "加载中…"
 msgstr "加载中…"
 
@@ -549,6 +574,10 @@ msgstr "将 Markdown 图片渲染为内联 / 块级 widget"
 msgid "将一个本地文件夹作为工作区打开。"
 msgstr "将一个本地文件夹作为工作区打开。"
 
+#: src/routes/__root.tsx:114
+msgid "将不再接收其新内容；已同步到本地的内容仍保留。"
+msgstr "将不再接收其新内容；已同步到本地的内容仍保留。"
+
 #: src/routes/workspace-manager.tsx:268
 msgid "将已配对设备的工作区同步到本地。需先启动 P2P 网络。"
 msgstr "将已配对设备的工作区同步到本地。需先启动 P2P 网络。"
@@ -569,6 +598,10 @@ msgstr "居中对齐"
 #: src/components/layout/TitleBar.tsx:88
 msgid "展开侧边栏"
 msgstr "展开侧边栏"
+
+#: src/components/share/ShareInvitationDialog.tsx:50
+msgid "工作区协作邀请"
+msgstr "工作区协作邀请"
 
 #: src/components/workspace/WorkspacePicker.tsx:113
 msgid "工作区管理"
@@ -596,8 +629,8 @@ msgid "已停止"
 msgstr "已停止"
 
 #: src/components/share/ShareDialog.tsx:57
-msgid "已分享给 {name}"
-msgstr "已分享给 {name}"
+#~ msgid "已分享给 {name}"
+#~ msgstr "已分享给 {name}"
 
 #: src/components/pairing/UnpairConfirmDialog.tsx:37
 msgid "已取消与 {deviceName} 的配对"
@@ -611,6 +644,10 @@ msgstr "已同步"
 msgid "已同步 · 最后同步 {timeStr}"
 msgstr "已同步 · 最后同步 {timeStr}"
 
+#: src/components/share/ShareDialog.tsx:57
+msgid "已向 {name} 发送邀请，等待对方接受…"
+msgstr "已向 {name} 发送邀请，等待对方接受…"
+
 #: src/routes/settings/about.tsx:59
 msgid "已是最新"
 msgstr "已是最新"
@@ -618,6 +655,11 @@ msgstr "已是最新"
 #: src/components/share/RevokeMemberDialog.tsx:38
 msgid "已移除 {name}"
 msgstr "已移除 {name}"
+
+#. placeholder {0}: payload.workspaceName
+#: src/routes/__root.tsx:91
+msgid "已自动接受「{0}」的协作邀请"
+msgstr "已自动接受「{0}」的协作邀请"
 
 #: src/components/settings/NetworkStatusCard.tsx:64
 msgid "已连接 {connectedCount} 台设备"
@@ -636,6 +678,10 @@ msgstr "已连接设备 ({0})"
 msgid "已配对设备"
 msgstr "已配对设备"
 
+#: src/routes/settings/network.tsx:49
+msgid "开启后，已配对设备的工作区邀请会自动接受、不再弹窗确认"
+msgstr "开启后，已配对设备的工作区邀请会自动接受、不再弹窗确认"
+
 #: src/components/onboarding/WelcomeStep.tsx:39
 msgid "开始使用"
 msgstr "开始使用"
@@ -644,7 +690,7 @@ msgstr "开始使用"
 msgid "开始同步"
 msgstr "开始同步"
 
-#: src/routes/settings/network.tsx:39
+#: src/routes/settings/network.tsx:41
 msgid "开机自动启动网络"
 msgstr "开机自动启动网络"
 
@@ -664,7 +710,7 @@ msgstr "当前设备"
 msgid "恢复上次工作区"
 msgstr "恢复上次工作区"
 
-#: src/components/share/ShareDialog.tsx:83
+#: src/components/share/ShareDialog.tsx:90
 msgid "成员"
 msgstr "成员"
 
@@ -698,7 +744,7 @@ msgstr "打开"
 msgid "打开工作区文件夹"
 msgstr "打开工作区文件夹"
 
-#: src/routes/settings/network.tsx:40
+#: src/routes/settings/network.tsx:42
 msgid "打开工作区时自动启动 P2P 节点"
 msgstr "打开工作区时自动启动 P2P 节点"
 
@@ -729,6 +775,30 @@ msgstr "找到设备"
 #: src/routes/settings/general.tsx:83
 msgid "把 mermaid 代码块渲染为 SVG"
 msgstr "把 mermaid 代码块渲染为 SVG"
+
+#: src/components/share/ShareInvitationDialog.tsx:67
+msgid "拒绝"
+msgstr "拒绝"
+
+#: src/components/pairing/GlobalActionDialogs.tsx:36
+msgid "拒绝邀请失败"
+msgstr "拒绝邀请失败"
+
+#: src/components/pairing/GlobalActionDialogs.tsx:24
+msgid "拒绝配对失败"
+msgstr "拒绝配对失败"
+
+#: src/components/share/ShareInvitationDialog.tsx:70
+msgid "接受"
+msgstr "接受"
+
+#: src/components/pairing/GlobalActionDialogs.tsx:36
+msgid "接受邀请失败"
+msgstr "接受邀请失败"
+
+#: src/components/pairing/GlobalActionDialogs.tsx:24
+msgid "接受配对失败"
+msgstr "接受配对失败"
 
 #: src/components/editor/EditorContextMenu.tsx:155
 msgid "插入"
@@ -839,7 +909,7 @@ msgstr "暂无工作区"
 msgid "暂无已连接设备"
 msgstr "暂无已连接设备"
 
-#: src/components/share/ShareDialog.tsx:88
+#: src/components/share/ShareDialog.tsx:95
 msgid "暂无成员"
 msgstr "暂无成员"
 
@@ -968,7 +1038,7 @@ msgstr "正在重启..."
 msgid "正文"
 msgstr "正文"
 
-#: src/components/share/ShareDialog.tsx:75
+#: src/components/share/ShareDialog.tsx:82
 msgid "此工作区的成员"
 msgstr "此工作区的成员"
 
@@ -984,7 +1054,7 @@ msgstr "段落设置"
 msgid "没有匹配的文件"
 msgstr "没有匹配的文件"
 
-#: src/components/share/ShareDialog.tsx:114
+#: src/components/share/ShareDialog.tsx:121
 msgid "没有可添加的设备"
 msgstr "没有可添加的设备"
 
@@ -1001,7 +1071,7 @@ msgid "深色"
 msgstr "深色"
 
 #: src/components/onboarding/PathChoiceStep.tsx:57
-#: src/components/share/ShareDialog.tsx:108
+#: src/components/share/ShareDialog.tsx:115
 msgid "添加设备"
 msgstr "添加设备"
 
@@ -1137,7 +1207,7 @@ msgid "编辑器插件"
 msgstr "编辑器插件"
 
 #: src/routes/settings.tsx:27
-#: src/routes/settings/network.tsx:18
+#: src/routes/settings/network.tsx:20
 msgid "网络"
 msgstr "网络"
 
@@ -1153,6 +1223,10 @@ msgstr "网络设置"
 #: src/routes/settings/general.tsx:230
 msgid "自动"
 msgstr "自动"
+
+#: src/routes/settings/network.tsx:48
+msgid "自动接受协作邀请"
+msgstr "自动接受协作邀请"
 
 #: src/components/settings/NetworkStatusCard.tsx:67
 msgid "节点启动失败"
@@ -1193,7 +1267,7 @@ msgstr "设备管理"
 
 #: src/components/layout/TitleBar.tsx:150
 #: src/routes/settings.tsx:50
-#: src/routes/settings/network.tsx:34
+#: src/routes/settings/network.tsx:36
 msgid "设置"
 msgstr "设置"
 
@@ -1319,7 +1393,7 @@ msgstr "通用"
 msgid "通过 DOMPurify 渲染嵌入的原生 HTML"
 msgstr "通过 DOMPurify 渲染嵌入的原生 HTML"
 
-#: src/components/share/ShareDialog.tsx:73
+#: src/components/share/ShareDialog.tsx:80
 msgid "邀请已配对的设备协作编辑此工作区"
 msgstr "邀请已配对的设备协作编辑此工作区"
 

@@ -85,6 +85,25 @@ pub enum AppEvent {
         peer_id: String,
     },
 
+    // ── Sharing / membership ──
+    /// 收到一条工作区协作邀请,等待用户接受/拒绝。前端 SHOULD 弹窗,用户决定后
+    /// 调 `respond_share_invitation(pending_id, accept)`。邀请方的请求在此期间
+    /// 阻塞等待(经 request-response 回填)。
+    ShareInvitationReceived {
+        pending_id: u64,
+        peer_id: String,
+        workspace_uuid: Uuid,
+        workspace_name: String,
+        expires_at: DateTime<Utc>,
+    },
+    /// This device was removed from a shared workspace (its role was revoked by
+    /// the owner). The device has stopped subscribing to that workspace's
+    /// realtime updates; frontend SHOULD notify the user. Content already
+    /// synced stays locally readable.
+    MemberRevoked {
+        workspace_id: Uuid,
+    },
+
     // ── Network / P2P node ──
     /// NAT status changed (behind symmetric NAT, public reachable, etc.).
     NetworkStatusChanged {

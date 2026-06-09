@@ -97,15 +97,37 @@ pub async fn grant_collaborator(
     .await
 }
 
-/// Revoke a member's access. Lazy: the device keeps any key it already holds
-/// (so it can still read content it synced before), but its next key request
-/// is denied and it receives no rotated key. True cut-off needs v2 key rotation.
+/// Revoke a member's access, then rotate the workspace key so the removed
+/// device cannot decrypt **future** content. Lazy: the device keeps any key it
+/// already holds, so content it synced **before** removal stays readable (no
+/// forward secrecy — see threat model); but new broadcasts use a new
+/// `key_version` it never receives a Lockbox for, and its key requests are
+/// denied. Remaining members re-fetch the rotated key on the permission-op
+/// broadcast (see `coordinator::handle_ctrl_message`).
 pub async fn revoke_member(
     core: &Arc<AppCore>,
     ws_id: Uuid,
     target_peer_id: &str,
 ) -> AppResult<()> {
-    issue_owner_op(core, ws_id, OpKind::Revoke, target_peer_id, None).await
+    issue_owner_op(core, ws_id, OpKind::Revoke, target_peer_id, None).await?;
+    rotate_after_revoke(core, ws_id).await
+}
+
+/// Generate a fresh workspace `key_version` and reload it into the live
+/// `WorkspaceCore` so subsequent broadcasts use it. Only the owner reaches here
+/// (revoke is owner-gated in `issue_owner_op`).
+async fn rotate_after_revoke(core: &Arc<AppCore>, ws_id: Uuid) -> AppResult<()> {
+    let ws = core
+        .get_workspace(&ws_id)
+        .await
+        .ok_or(AppError::NoWorkspaceOpen)?;
+    let identity = core.identity();
+    let me = identity.peer_id()?;
+    let secret = identity.x25519_secret()?;
+    let public = identity.x25519_public()?;
+    super::keys::rotate_workspace_key(ws.db(), ws_id, &me, &secret, &public).await?;
+    ws.reload_keys().await?;
+    Ok(())
 }
 
 /// List the workspace's current members (materialized roles joined with device

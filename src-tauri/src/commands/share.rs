@@ -49,3 +49,31 @@ pub async fn revoke_workspace_member(
 ) -> AppResult<()> {
     sharing::revoke_member(core.inner(), parse_uuid(&workspace_uuid)?, &target_peer_id).await
 }
+
+/// 邀请已配对设备协作此工作区(owner 发起)。**阻塞等待对方接受/拒绝**,
+/// 返回是否被接受;接受后内部已签发授权 op。
+#[tauri::command]
+#[specta::specta]
+pub async fn invite_to_workspace(
+    workspace_uuid: String,
+    target_peer_id: String,
+    core: State<'_, Arc<AppCore>>,
+) -> AppResult<bool> {
+    core.inner()
+        .invite_device(parse_uuid(&workspace_uuid)?, &target_peer_id)
+        .await
+}
+
+/// 被邀请方应答一条分享邀请(接受/拒绝)。`pending_id` 来自
+/// `ShareInvitationReceived` 事件。
+#[tauri::command]
+#[specta::specta]
+pub async fn respond_share_invitation(
+    pending_id: u64,
+    accept: bool,
+    core: State<'_, Arc<AppCore>>,
+) -> AppResult<()> {
+    core.inner()
+        .respond_share_invitation(pending_id, accept)
+        .await
+}

@@ -51,11 +51,18 @@ export function ShareDialog({ open, onOpenChange, workspaceId, workspaceName }: 
   const memberPeers = useMemo(() => new Set(members.map((m) => m.peerId)), [members]);
   const addable = pairedDevices.filter((d) => !memberPeers.has(d.peerId));
 
+  // 发邀请(而非立即授权):invite_to_workspace 会阻塞等待对方接受/拒绝,
+  // 仅当对方接受时后端才签发授权 op。
   async function handleShare(peerId: string, name: string) {
+    toast.info(t`已向 ${name} 发送邀请，等待对方接受…`);
     await run(async () => {
-      await commands.shareWorkspaceToDevice(workspaceId, peerId);
-      toast.success(t`已分享给 ${name}`);
-      await refreshMembers();
+      const accepted = await commands.inviteToWorkspace(workspaceId, peerId);
+      if (accepted) {
+        toast.success(t`${name} 已接受邀请`);
+        await refreshMembers();
+      } else {
+        toast.info(t`${name} 拒绝了邀请`);
+      }
     });
   }
 

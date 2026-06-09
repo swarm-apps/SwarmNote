@@ -178,7 +178,9 @@ async fn handle_event(
                     .await;
             } else if let Some(ws_uuid) = parse_ws_awareness_topic(&topic) {
                 // Encrypted workspace awareness broadcast — decrypt + fan-out.
-                coordinator.handle_ws_awareness_gossip(ws_uuid, data).await;
+                coordinator
+                    .handle_ws_awareness_gossip(source, ws_uuid, data)
+                    .await;
             } else {
                 info!("GossipSub message on unknown topic: {topic}");
             }
@@ -229,6 +231,26 @@ async fn handle_inbound_request(
             }
         }
 
+        AppRequest::Workspace(WorkspaceRequest::ShareInvitation {
+            workspace_uuid,
+            name,
+        }) => {
+            // 入站分享邀请:不立即响应,弹给用户决定。请求方的 send_request 在
+            // 此期间阻塞;用户接受/拒绝后经 respond_share_invitation 回填
+            // (send_response(pending_id, ...))。
+            info!(
+                "Received share invitation for {workspace_uuid} from {peer_id} (pending_id={pending_id})"
+            );
+            let expires_at = chrono::Utc::now() + chrono::Duration::seconds(90);
+            core.event_bus.emit(AppEvent::ShareInvitationReceived {
+                pending_id,
+                peer_id: peer_id.to_string(),
+                workspace_uuid: *workspace_uuid,
+                workspace_name: name.clone(),
+                expires_at,
+            });
+        }
+
         AppRequest::Sync(sync_req) => {
             coordinator
                 .handle_inbound_request(peer_id, pending_id, sync_req.clone())
@@ -239,17 +261,43 @@ async fn handle_inbound_request(
 
 /// 构建工作区元数据列表，**只包含请求方被授权访问的工作区**（与 key 分发 /
 /// 同步响应的权限 gating 一致，避免请求方"看得到却拉不动")。
+///
+/// 候选集 = 已打开的工作区 ∪ 最近列表里**未打开**的工作区——后者会被
+/// [`AppCore::ensure_open_for_sync`] 以 headless / sync-only 方式懒打开,使本设备
+/// 即使没在窗口里打开某工作区,授权的对端也能发现并拉取它(仍按 role 过滤)。
 async fn build_workspace_list(core: &Arc<AppCore>, requester: PeerId) -> WorkspaceResponse {
     use entity::workspace::documents;
 
     let requester_str = requester.to_string();
-    let workspaces = core.list_workspaces().await;
-    let mut metas = Vec::with_capacity(workspaces.len());
 
-    for ws in &workspaces {
-        // Only advertise workspaces the requester is an authorized member of.
+    // 收集候选 UUID:先已打开的,再补上最近列表里尚未打开的(去重)。
+    let mut candidates: Vec<uuid::Uuid> = core
+        .list_workspaces()
+        .await
+        .iter()
+        .map(|w| w.info.id)
+        .collect();
+    for rw in core.recent_workspaces().await {
+        if let Some(uuid) = rw
+            .uuid
+            .as_deref()
+            .and_then(|s| uuid::Uuid::parse_str(s).ok())
+        {
+            if !candidates.contains(&uuid) {
+                candidates.push(uuid);
+            }
+        }
+    }
+
+    let mut metas = Vec::new();
+    for uuid in candidates {
+        // 懒打开(已打开则直接拿到;未打开则 sync-only 打开)。
+        let Some(ws) = core.ensure_open_for_sync(uuid).await else {
+            continue;
+        };
+        // 只广播请求方有角色的工作区。
         let authorized = matches!(
-            crate::workspace::permissions::role_of(ws.db(), ws.info.id, &requester_str).await,
+            crate::workspace::permissions::role_of(ws.db(), uuid, &requester_str).await,
             Ok(Some(_))
         );
         if !authorized {
@@ -259,7 +307,7 @@ async fn build_workspace_list(core: &Arc<AppCore>, requester: PeerId) -> Workspa
         let doc_count = documents::Entity::find().count(ws.db()).await.unwrap_or(0) as u32;
 
         metas.push(WorkspaceMeta {
-            uuid: ws.info.id,
+            uuid,
             name: ws.info.name.clone(),
             doc_count,
             updated_at: ws.info.updated_at.timestamp_millis(),

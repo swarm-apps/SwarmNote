@@ -306,6 +306,44 @@ pub async fn install_received_key(
     Ok(())
 }
 
+/// Rotate to a fresh key version: generate new `read_key`/`write_key`, seal a
+/// self-Lockbox for this device, persist it, and return the new `key_version`.
+///
+/// Old versions are **kept** in the DB (and reload on open) so old ciphertexts
+/// stay decryptable — lazy revocation, no forward secrecy (see threat model).
+/// Remaining members pick up the new version on demand: they re-request the
+/// workspace key when membership changes, and the owner re-seals the *current*
+/// version to authorized requesters (`build_workspace_key_response`). The
+/// removed device, lacking a Lockbox for the new version, cannot decrypt
+/// content broadcast under it.
+pub async fn rotate_workspace_key(
+    db: &DatabaseConnection,
+    workspace_id: Uuid,
+    my_peer_id: &str,
+    my_secret: &StaticSecret,
+    my_public: &PublicKey,
+) -> AppResult<u32> {
+    let current = load_workspace_keys(db, workspace_id, my_peer_id, my_secret, my_public).await?;
+    let next = current.current_version().unwrap_or(0) + 1;
+
+    let read = random_key();
+    let write = random_key();
+    let sealed_read = seal_lockbox(my_secret, my_public, &read)?;
+    let sealed_write = seal_lockbox(my_secret, my_public, &write)?;
+
+    install_received_key(
+        db,
+        workspace_id,
+        my_peer_id,
+        my_peer_id,
+        next,
+        sealed_read,
+        Some(sealed_write),
+    )
+    .await?;
+    Ok(next)
+}
+
 fn to_key(bytes: Vec<u8>, what: &'static str) -> AppResult<[u8; KEY_LEN]> {
     bytes.try_into().map_err(|_| AppError::Crypto {
         context: "workspace-keys",
@@ -488,5 +526,68 @@ mod tests {
             decode_encrypted_gossip(&c_keys, &ws, MSG_TYPE_DOC, &wire).is_err(),
             "device without the key must not decrypt"
         );
+    }
+
+    /// Revocation cut-off: after the owner rotates the workspace key, a device
+    /// that only holds the old version can no longer decrypt content broadcast
+    /// under the new version — but old content (old key_version) stays readable
+    /// (lazy, no forward secrecy).
+    #[tokio::test]
+    async fn rotation_cuts_off_old_version_holder() {
+        use crate::workspace::sync::{
+            decode_encrypted_gossip, encode_encrypted_gossip, MSG_TYPE_DOC,
+        };
+
+        let db_a = mem_db().await;
+        let ws = Uuid::now_v7();
+        insert_workspace(&db_a, ws).await;
+        let (peer_a, sec_a, pub_a) = real_device();
+        let (peer_b, sec_b, pub_b) = real_device();
+
+        // A owns v1; B receives v1 only.
+        let a_keys = initialize_workspace_keys(&db_a, ws, &peer_a, &sec_a, &pub_a)
+            .await
+            .unwrap();
+        let b_pub = peer_id_to_x25519_public(&PeerId::from_str(&peer_b).unwrap()).unwrap();
+        let (v, sr, sw) = seal_keys_for_recipient(&sec_a, &b_pub, &a_keys, true).unwrap();
+        let db_b = mem_db().await;
+        insert_workspace(&db_b, ws).await;
+        install_received_key(&db_b, ws, &peer_b, &peer_a, v, sr, sw)
+            .await
+            .unwrap();
+        let b_keys = load_workspace_keys(&db_b, ws, &peer_b, &sec_b, &pub_b)
+            .await
+            .unwrap();
+
+        // A rotates to v2 (e.g. after removing another member).
+        let new_v = rotate_workspace_key(&db_a, ws, &peer_a, &sec_a, &pub_a)
+            .await
+            .unwrap();
+        assert_eq!(new_v, 2);
+        let a_keys = load_workspace_keys(&db_a, ws, &peer_a, &sec_a, &pub_a)
+            .await
+            .unwrap();
+        assert_eq!(a_keys.current_version(), Some(2));
+        assert!(a_keys.read_key(1).is_some(), "old version retained (lazy)");
+
+        // A broadcasts under the current (v2) key — B (v1 only) can't decrypt it.
+        let doc = Uuid::now_v7();
+        let wire =
+            encode_encrypted_gossip(&a_keys, &ws, &doc, MSG_TYPE_DOC, b"v2-content").unwrap();
+        assert!(
+            decode_encrypted_gossip(&b_keys, &ws, MSG_TYPE_DOC, &wire).is_err(),
+            "v1-only holder cannot decrypt content rotated to v2"
+        );
+
+        // Old v1 content stays decryptable for a v1 holder (lazy boundary).
+        let v1_only = WorkspaceKeys::test_single(
+            1,
+            *a_keys.read_key(1).unwrap(),
+            a_keys.write_key(1).copied(),
+        );
+        let old_wire =
+            encode_encrypted_gossip(&v1_only, &ws, &doc, MSG_TYPE_DOC, b"v1-old").unwrap();
+        let (_d, got) = decode_encrypted_gossip(&b_keys, &ws, MSG_TYPE_DOC, &old_wire).unwrap();
+        assert_eq!(got, b"v1-old", "old-version content stays readable");
     }
 }

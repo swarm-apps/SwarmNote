@@ -1,9 +1,11 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
+import { useLingui } from "@lingui/react/macro";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { Loader2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { CommandPalette } from "@/components/layout/CommandPalette";
 import { GlobalActionDialogs } from "@/components/pairing/GlobalActionDialogs";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +15,7 @@ import { commands, events } from "@/lib/bindings";
 import { useEditorStore, waitForEditorHydration } from "@/stores/editorStore";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { waitForOnboardingHydration } from "@/stores/onboardingStore";
+import { usePreferencesStore } from "@/stores/preferencesStore";
 import { useUpgradeStore } from "@/stores/upgradeStore";
 import { useWorkspaceStore } from "@/stores/workspaceStore";
 
@@ -22,6 +25,7 @@ export const Route = createRootRoute({
 
 function RootComponent() {
   useKeyboardShortcuts();
+  const { t } = useLingui();
 
   const initFromBackend = useWorkspaceStore((s) => s.initFromBackend);
   const [hydrated, setHydrated] = useState(false);
@@ -76,6 +80,45 @@ function RootComponent() {
       unlisten.then((fn) => fn());
     };
   }, []);
+
+  // 监听工作区协作邀请。若用户在设置里开启了"自动接受邀请",直接接受、不弹窗;
+  // 否则走通知队列弹窗让用户决定。
+  useEffect(() => {
+    const unlisten = events.shareInvitationReceived.listen((event) => {
+      const payload = event.payload;
+      if (usePreferencesStore.getState().autoAcceptInvitations) {
+        void commands.respondShareInvitation(payload.pendingId, true);
+        toast.info(t`已自动接受「${payload.workspaceName}」的协作邀请`);
+        return;
+      }
+      useNotificationStore.getState().push({
+        id: `share-invite-${payload.pendingId}`,
+        type: "share-invitation",
+        payload,
+        timestamp: Date.now(),
+      });
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [t]);
+
+  // Notify when this device is removed from a shared workspace (owner revoked
+  // our access). The backend has already unsubscribed us from its realtime
+  // updates; we just surface it + refresh workspace state.
+  useEffect(() => {
+    const unlisten = events.memberRevoked.listen((event) => {
+      const current = useWorkspaceStore.getState().workspace;
+      const name = current?.id === event.payload.workspaceId ? current.name : null;
+      toast.info(name ? t`你已被移出「${name}」工作区` : t`你已被移出一个共享工作区`, {
+        description: t`将不再接收其新内容；已同步到本地的内容仍保留。`,
+      });
+      void useWorkspaceStore.getState().initFromBackend();
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, [t]);
 
   if (!hydrated) {
     return (
